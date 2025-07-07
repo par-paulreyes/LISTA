@@ -37,9 +37,15 @@ exports.createItem = async (req, res) => {
     console.log('Creating item with data:', req.body);
     console.log('User:', req.user);
     const company_name = req.user.company_name;
-    const { maintenance_date, maintained_by, maintenance_tasks, diagnostic, ...itemData } = req.body;
+    const { maintenance_date, maintained_by, maintenance_tasks, diagnostic, item_description, ...itemData } = req.body;
     console.log('Extracted maintenance fields:', { maintenance_date, maintained_by, maintenance_tasks, diagnostic });
     console.log('Filtered item data:', itemData);
+    
+    // Map item_description to specifications for Supply/Tool/Utility items
+    if (item_description && !itemData.specifications) {
+      itemData.specifications = item_description;
+    }
+    
     let item = { ...itemData, company_name };
     if (req.body.image_url) {
       item.image_url = req.body.image_url;
