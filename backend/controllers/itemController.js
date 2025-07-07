@@ -258,7 +258,71 @@ exports.exportItems = (req, res) => {
   Item.findAllByCompany(company_name, (err, items) => {
     if (err) return res.status(500).json({ message: 'Error exporting items', error: err });
     
-    if (format === 'pdf') {
+    if (format === 'excel') {
+      try {
+        const ExcelJS = require('exceljs');
+        const workbook = new ExcelJS.Workbook();
+        
+        // Define the fields for all sheets
+        const fields = [
+          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
+          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
+          'quantity', 'item_status', 'remarks'
+        ];
+        
+        // Group items by category
+        const itemsByCategory = {};
+        items.forEach(item => {
+          const category = item.category || 'Uncategorized';
+          if (!itemsByCategory[category]) {
+            itemsByCategory[category] = [];
+          }
+          itemsByCategory[category].push(item);
+        });
+        
+        // Create "All" sheet first
+        const allSheet = workbook.addWorksheet('All');
+        allSheet.columns = fields.map(field => ({
+          header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
+          key: field,
+          width: 15
+        }));
+        
+        // Add data to "All" sheet
+        items.forEach(item => {
+          allSheet.addRow(item);
+        });
+        
+        // Create sheets for each category
+        Object.keys(itemsByCategory).forEach(category => {
+          const sheet = workbook.addWorksheet(category);
+          sheet.columns = fields.map(field => ({
+            header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
+            key: field,
+            width: 15
+          }));
+          
+          // Add data to category sheet
+          itemsByCategory[category].forEach(item => {
+            sheet.addRow(item);
+          });
+        });
+        
+        // Set response headers
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.xlsx');
+        
+        // Write to response
+        workbook.xlsx.write(res).then(() => {
+          res.end();
+        }).catch(err => {
+          return res.status(500).json({ message: 'Error generating Excel file', error: err });
+        });
+        
+      } catch (err) {
+        return res.status(500).json({ message: 'Error generating Excel file', error: err });
+      }
+    } else if (format === 'pdf') {
       try {
         const PDFDocument = require('pdfkit');
         res.setHeader('Content-Type', 'application/pdf');

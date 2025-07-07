@@ -123,13 +123,22 @@ function InventoryPageContent() {
       const response = await apiClient.get(`/items/export?format=${format}`, {
         responseType: 'blob',
       });
-      const blob = new Blob([response.data], {
-        type: format === 'pdf' ? 'application/pdf' : 'text/csv'
-      });
+      
+      let mimeType = 'text/csv';
+      let fileExtension = format;
+      
+      if (format === 'pdf') {
+        mimeType = 'application/pdf';
+      } else if (format === 'excel') {
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        fileExtension = 'xlsx';
+      }
+      
+      const blob = new Blob([response.data], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `inventory.${format}`;
+      link.download = `inventory.${fileExtension}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -154,7 +163,7 @@ function InventoryPageContent() {
         {/* Export Dropdown Row */}
         <div className="export-dropdown-row">
           <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0, textAlign: 'center' }}>
-            Download inventory records as PDF or CSV files
+            Download inventory records as Excel, PDF or CSV files
           </p>
           <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
             <button
@@ -171,6 +180,16 @@ function InventoryPageContent() {
             </button>
             {showExportDropdown && (
               <div className="export-dropdown-menu">
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("excel");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export Excel"}
+                </button>
                 <button
                   className="export-dropdown-item"
                   onClick={() => {
