@@ -99,6 +99,34 @@ export default function ItemDetailPage() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImagePreview, setSelectedImagePreview] = useState<string>('');
 
+  // Category detection logic
+  const detectCategoryFromQR = (qrCode: string) => {
+    if (!qrCode) return null;
+    
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const match = qrCode.match(tagPattern);
+    
+    if (match) {
+      const tag = match[1].toUpperCase();
+      if (["PC","PR","MON","TP","MS","KEY","UPS"].includes(tag)) return "Electronic";
+      else if (tag === "UTLY") return "Utility";
+      else if (tag === "TOOL") return "Tool";
+      else if (tag === "SPLY") return "Supply";
+    }
+    return null;
+  };
+
+  // Determine item type for display logic
+  const getItemType = () => {
+    if (!item?.qr_code) return null;
+    return detectCategoryFromQR(item.qr_code);
+  };
+
+  const itemType = getItemType();
+  const isElectronic = itemType === "Electronic";
+  const isUtility = itemType === "Utility";
+  const isToolOrSupply = itemType === "Tool" || itemType === "Supply";
+
 
 
 
@@ -120,6 +148,17 @@ export default function ItemDetailPage() {
 
 
 
+
+  // Set default active tab based on item type
+  useEffect(() => {
+    if (itemType) {
+      if (isElectronic) {
+        setActiveTab('diagnostics');
+      } else if (isUtility) {
+        setActiveTab('logs');
+      }
+    }
+  }, [itemType, isElectronic, isUtility]);
 
   useEffect(() => {
     if (!mounted || !id) return;
@@ -635,34 +674,68 @@ export default function ItemDetailPage() {
               <>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>QR Code:</span><input value={editingItem.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Property No:</span><input value={editingItem.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} /></div>
+                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Serial No:</span><input value={editingItem.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Location:</span><input value={editingItem.location || ''} onChange={e => handleInputChange('location', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>End User:</span><input value={editingItem.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Date Acquired:</span><input type="date" value={formatDateForInput(editingItem.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Price:</span><input type="number" value={editingItem.price || ''} onChange={e => handleInputChange('price', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Supply Officer:</span><input value={editingItem.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Company:</span><input value={editingItem.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Maintenance Status:</span><input value={editingItem.maintenance_status || ''} onChange={e => handleInputChange('maintenance_status', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Pending Tasks:</span><input value={editingItem.pending_maintenance_count || ''} onChange={e => handleInputChange('pending_maintenance_count', e.target.value)} /></div>
+                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Quantity:</span><input type="number" value={editingItem.quantity || ''} onChange={e => handleInputChange('quantity', e.target.value)} /></div>
+                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Status:</span>
+                  <select value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
+                    <option value="Available">Available</option>
+                    <option value="Bad Condition">Bad Condition</option>
+                    <option value="To be Borrowed">To be Borrowed</option>
+                    <option value="Borrowed">Borrowed</option>
+                    {isToolOrSupply && <option value="Out of Stock">Out of Stock</option>}
+                  </select>
+                </div>
+                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Remarks:</span><input value={editingItem.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} /></div>
+                
+                {/* Electronics-specific fields */}
+                {isElectronic && (
+                  <>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Article Type:</span><input value={editingItem.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Brand:</span><input value={editingItem.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Price:</span><input type="number" value={editingItem.price || ''} onChange={e => handleInputChange('price', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Supply Officer:</span><input value={editingItem.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Company:</span><input value={editingItem.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Maintenance Status:</span><input value={editingItem.maintenance_status || ''} onChange={e => handleInputChange('maintenance_status', e.target.value)} /></div>
+                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Pending Tasks:</span><input value={editingItem.pending_maintenance_count || ''} onChange={e => handleInputChange('pending_maintenance_count', e.target.value)} /></div>
+                  </>
+                )}
               </>
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:'20px',alignItems:'flex-start'}}>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>QR Code:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.qr_code || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Property No:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.property_no}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Article Type:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.article_type}</b></div>
+                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Serial No:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.serial_no || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Location:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.location || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>End User:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.end_user || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Date Acquired:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{formatDisplayDate(item.date_acquired) || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Price:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>₱{item.price || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Supply Officer:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.supply_officer || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Company:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.company_name || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Quantity:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.quantity || 'N/A'}</b></div>
+                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.item_status || 'N/A'}</b></div>
+                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Remarks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.remarks || 'N/A'}</b></div>
+                
+                {/* Electronics-specific fields */}
+                {isElectronic && (
+                  <>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Article Type:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.article_type}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Brand:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.brand || 'N/A'}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Price:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>₱{item.price || 'N/A'}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Supply Officer:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.supply_officer || 'N/A'}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Company:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.company_name || 'N/A'}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
+                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                  </>
+                )}
               </div>
             )}
                 </div>
               </div>
         <div className={styles.infoCard}>
-          <div className={styles.blueHeader}><FaCog style={{marginRight: 8}}/>SPECIFICATIONS</div>
+          <div className={styles.blueHeader}>
+            <FaCog style={{marginRight: 8}}/>
+            {isElectronic ? 'SPECIFICATIONS' : 'ITEM DESCRIPTION/SPECS'}
+          </div>
           <div className={styles.cardContent}>
             {isEditing ? (
               <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
@@ -688,7 +761,7 @@ export default function ItemDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <span style={{color: '#888'}}>No specifications</span>
+                  <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
                 )}
               </div>
                 )}
@@ -698,10 +771,25 @@ export default function ItemDetailPage() {
       {/* Bottom Section: Diagnostics & Logs as Tabs */}
       <div className={styles.bottomSection}>
         <div className={styles.tabBar}>
-          <button className={activeTab === 'diagnostics' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('diagnostics')}><FaStethoscope style={{marginRight: 8}}/>Diagnostics</button>
-          <button className={activeTab === 'logs' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('logs')}><FaClipboardList style={{marginRight: 8}}/>Logs</button>
+          {/* Only show Diagnostics tab for Electronics */}
+          {isElectronic && (
+            <button className={activeTab === 'diagnostics' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('diagnostics')}><FaStethoscope style={{marginRight: 8}}/>Diagnostics</button>
+          )}
+          {/* Show Logs tab for Electronics and Utilities */}
+          {(isElectronic || isUtility) && (
+            <button className={activeTab === 'logs' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('logs')}><FaClipboardList style={{marginRight: 8}}/>Logs</button>
+          )}
         </div>
         <div className={styles.tabsContent}>
+          {/* Show message for Tools and Supplies that don't have tabs */}
+          {isToolOrSupply && (
+            <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
+              <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
+              <p>No additional tabs available for this item type.</p>
+              <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information above.</p>
+            </div>
+          )}
+          
           {activeTab === 'diagnostics' && (
             <>
               <div className={styles.solidBlueHeader}><FaStethoscope style={{marginRight: 8}}/>System Diagnostics</div>
