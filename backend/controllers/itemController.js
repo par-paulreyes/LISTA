@@ -274,18 +274,20 @@ exports.exportItems = (req, res) => {
         
         items.forEach((item, idx) => {
           doc.fontSize(12).text(`Item #${idx + 1}`, { underline: true });
+          doc.fontSize(10).text(`ID: ${item.id || 'N/A'}`);
           doc.fontSize(10).text(`QR Code: ${item.qr_code || 'N/A'}`);
           doc.fontSize(10).text(`Property No: ${item.property_no || 'N/A'}`);
-          doc.fontSize(10).text(`Article Type: ${item.article_type || 'N/A'}`);
+          doc.fontSize(10).text(`Serial No: ${item.serial_no || 'N/A'}`);
           doc.fontSize(10).text(`Category: ${item.category || 'N/A'}`);
-          doc.fontSize(10).text(`Status: ${item.item_status || 'N/A'}`);
+          doc.fontSize(10).text(`Article Type: ${item.article_type || 'N/A'}`);
+          doc.fontSize(10).text(`Brand: ${item.brand || 'N/A'}`);
+          doc.fontSize(10).text(`Specifications: ${item.specifications || 'N/A'}`);
+          doc.fontSize(10).text(`Date Acquired: ${item.date_acquired || 'N/A'}`);
+          doc.fontSize(10).text(`End User: ${item.end_user || 'N/A'}`);
           doc.fontSize(10).text(`Location: ${item.location || 'N/A'}`);
-          if (item.specifications) {
-            doc.fontSize(10).text(`Specifications: ${item.specifications}`);
-          }
-          if (item.remarks) {
-            doc.fontSize(10).text(`Remarks: ${item.remarks}`);
-          }
+          doc.fontSize(10).text(`Quantity: ${item.quantity || 'N/A'}`);
+          doc.fontSize(10).text(`Item Status: ${item.item_status || 'N/A'}`);
+          doc.fontSize(10).text(`Remarks: ${item.remarks || 'N/A'}`);
           doc.moveDown();
         });
         
@@ -297,8 +299,9 @@ exports.exportItems = (req, res) => {
       try {
         const { Parser } = require('json2csv');
         const fields = [
-          'id', 'qr_code', 'property_no', 'article_type', 'category', 
-          'item_status', 'location', 'specifications', 'remarks', 'created_at'
+          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
+          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
+          'quantity', 'item_status', 'remarks'
         ];
         const parser = new Parser({ fields });
         const csv = parser.parse(items);
