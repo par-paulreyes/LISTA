@@ -46,6 +46,17 @@ exports.createItem = async (req, res) => {
       itemData.specifications = item_description;
     }
     
+    // Set default article_type for non-electronic items
+    if (!itemData.article_type) {
+      if (itemData.category === 'Supply') {
+        itemData.article_type = 'Supply Item';
+      } else if (itemData.category === 'Tool') {
+        itemData.article_type = 'Tool';
+      } else if (itemData.category === 'Utility') {
+        itemData.article_type = 'Utility Item';
+      }
+    }
+    
     let item = { ...itemData, company_name };
     if (req.body.image_url) {
       item.image_url = req.body.image_url;
