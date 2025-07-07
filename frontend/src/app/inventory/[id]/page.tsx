@@ -425,7 +425,7 @@ export default function ItemDetailPage() {
     if (field === 'quantity' && (isToolOrSupply)) {
       const quantity = parseInt(value) || 0;
       const newStatus = quantity === 0 ? 'Out of Stock' : 'Available';
-      setEditingItem(prev => ({ ...prev, [field]: value, item_status: newStatus }));
+      setEditingItem((prev: any) => ({ ...prev, [field]: value, item_status: newStatus }));
     }
   };
 
@@ -473,11 +473,11 @@ export default function ItemDetailPage() {
 
 
   const handleLogChange = (index: number, field: string, value: any) => {
-    setEditingLogs(prev => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
+    setEditingLogs((prev: any[]) => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
   };
 
   const handleNewLogChange = (index: number, field: string, value: any) => {
-    setNewLogs(prev => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
+    setNewLogs((prev: any[]) => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
   };
 
   const addNewLog = () => {
@@ -490,11 +490,11 @@ export default function ItemDetailPage() {
       maintenance_date: new Date().toISOString().split('T')[0],
       completed: false
     };
-    setNewLogs(prev => [...prev, newLog]);
+    setNewLogs((prev: any[]) => [...prev, newLog]);
   };
 
   const removeNewLog = (index: number) => {
-    setNewLogs(prev => prev.filter((_, i) => i !== index));
+    setNewLogs((prev: any[]) => prev.filter((_, i) => i !== index));
   };
 
   // Handle image selection for inventory item (preview only, upload on save)
@@ -574,7 +574,7 @@ export default function ItemDetailPage() {
   // Checklist toggle logic (checkbox only)
   const handleChecklistToggle = (i: number) => {
     if (!isEditing) return;
-    setEditingLogs(prev => prev.map((log, idx) => idx === i ? { ...log, status: log.status === 'completed' ? 'pending' : 'completed' } : log));
+    setEditingLogs((prev: any[]) => prev.map((log, idx) => idx === i ? { ...log, status: log.status === 'completed' ? 'pending' : 'completed' } : log));
   };
 
 
