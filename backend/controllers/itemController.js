@@ -301,10 +301,32 @@ exports.exportItems = (req, res) => {
             key: field,
             width: 15
           }));
-          
-          // Add data to category sheet
+
+          // Group items by article_type within this category
+          const itemsByArticle = {};
           itemsByCategory[category].forEach(item => {
-            sheet.addRow(item);
+            const article = item.article_type || 'Unspecified';
+            if (!itemsByArticle[article]) itemsByArticle[article] = [];
+            itemsByArticle[article].push(item);
+          });
+
+          // For each article_type, add a yellow header row and then the items
+          Object.keys(itemsByArticle).forEach(article => {
+            // Add a yellow, bold header row for the article_type
+            const headerRow = sheet.addRow([article]);
+            headerRow.font = { bold: true };
+            headerRow.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFF00' } // Yellow
+            };
+            // Merge the header row across all columns
+            sheet.mergeCells(`A${headerRow.number}:${String.fromCharCode(65+fields.length-1)}${headerRow.number}`);
+
+            // Add the data rows for this article_type
+            itemsByArticle[article].forEach(item => {
+              sheet.addRow(item);
+            });
           });
         });
         
