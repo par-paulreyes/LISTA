@@ -216,64 +216,47 @@ function AddItemPageContent() {
     setError("");
 
     try {
-      let finalImageUrl = imageUrl;
-
-      // Upload image if we have a new one
-      if (imageFile || capturedImage) {
-        const imageToUpload = imageFile || (capturedImage ? dataURLtoFile(capturedImage, 'captured-image.png') : null);
-        
-        if (imageToUpload) {
-          const timestamp = Date.now();
-          const fileName = `item-${timestamp}-${Math.random().toString(36).substring(7)}.${imageToUpload.name.split('.').pop() || 'png'}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('dtc-ims')
-            .upload(fileName, imageToUpload, {
-              cacheControl: '3600',
-              upsert: false
-            });
-
-          if (uploadError) {
-            throw new Error(`Image upload failed: ${uploadError.message}`);
-          }
-
-          finalImageUrl = fileName;
-        }
-      }
-
-      // Prepare item data
+      // 1. Prepare item data (without image_url)
       const itemData = {
         ...form,
-        category: detectedCategory,
-        image_url: finalImageUrl
+        category: detectedCategory
       };
-
       // Remove empty fields
       Object.keys(itemData).forEach(key => {
         if (itemData[key as keyof typeof itemData] === "" || itemData[key as keyof typeof itemData] === null) {
           delete itemData[key as keyof typeof itemData];
         }
       });
-
+      // 2. Create the item first
       const response = await apiClient.post('/items', itemData);
-
-      if (response.status === 201) {
-        router.push('/inventory');
-      } else {
-        throw new Error('Failed to create item');
+      if (!response.data || !response.data.id) throw new Error('Failed to get new item ID');
+      const newId = response.data.id;
+      let finalImageUrl = "";
+      // 3. Upload image if present
+      if (imageFile || capturedImage) {
+        const imageToUpload = imageFile || (capturedImage ? dataURLtoFile(capturedImage, `item-${newId}.png`) : null);
+        if (imageToUpload) {
+          const ext = imageToUpload.name.split('.').pop() || 'png';
+          const fileName = `item-pictures/${newId}.${ext}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('dtc-ims')
+            .upload(fileName, imageToUpload, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          if (uploadError) {
+            throw new Error(`Image upload failed: ${uploadError.message}`);
+          }
+          finalImageUrl = fileName;
+          // 4. Update the item with the image_url
+          await apiClient.put(`/items/${newId}`, { image_url: finalImageUrl });
+        }
       }
+      // 5. Redirect
+      router.push('/inventory');
     } catch (err: any) {
       console.error('Error creating item:', err);
       setError(err.message || 'Failed to create item. Please try again.');
-      
-      // Delete uploaded image if item creation failed
-      if (imageUrl && imageUrl.includes('/')) {
-        try {
-          await supabase.storage.from('dtc-ims').remove([imageUrl]);
-        } catch (deleteErr) {
-          console.error('Error deleting uploaded image:', deleteErr);
-        }
-      }
     } finally {
       setLoading(false);
     }

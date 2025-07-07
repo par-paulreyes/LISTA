@@ -12,8 +12,6 @@ interface Item {
   article_type: string;
   image_url?: string;
   location?: string;
-  status?: string;
-  system_status?: string;
   has_pending_maintenance?: boolean;
   pending_maintenance_count?: number;
   qr_code?: string;
@@ -30,7 +28,6 @@ function InventoryPageContent() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [articleType, setArticleType] = useState("");
-  const [status, setStatus] = useState("");
   const [maintenanceFilter, setMaintenanceFilter] = useState("");
   const [category, setCategory] = useState("");
   const [itemStatus, setItemStatus] = useState("");
@@ -87,8 +84,6 @@ function InventoryPageContent() {
     const matchesCategory = category ? item.category === category : true;
     const matchesArticleType = articleType ? item.article_type === articleType : true;
     const matchesItemStatus = itemStatus ? item.item_status === itemStatus : true;
-    const itemSystemStatus = item.system_status ? item.system_status : "Unknown";
-    const matchesStatus = status ? itemSystemStatus.toLowerCase() === status.toLowerCase() : true;
     
     // Maintenance filter logic
     let matchesMaintenance = true;
@@ -98,18 +93,13 @@ function InventoryPageContent() {
       matchesMaintenance = item.has_pending_maintenance === false;
     }
     
-    return matchesSearch && matchesCategory && matchesArticleType && matchesItemStatus && matchesStatus && matchesMaintenance;
+    return matchesSearch && matchesCategory && matchesArticleType && matchesItemStatus && matchesMaintenance;
   });
 
   // Get unique values for filters
   const categories = ["Electronic", "Utility", "Tool", "Supply"];
   const articleTypes = Array.from(new Set(items.map((item) => item.article_type)));
-  const itemStatuses = ["Available", "Bad Condition", "To be Borrowed", "Borrowed"];
-  const statuses = Array.from(
-    new Set(
-      items.map((item) => (item.system_status ? item.system_status : "Unknown")).map((s) => s || "Unknown")
-    )
-  );
+  const itemStatuses = Array.from(new Set(items.map((item) => item.item_status).filter(Boolean)));
 
   // Handle clicking outside dropdown to close it
   useEffect(() => {
@@ -414,17 +404,19 @@ function InventoryPageContent() {
                         )}
                       </div>
                       <div className="inventory-borrowing-status" style={{ marginTop: 0, fontSize: '0.97em' }}>
-                        <span style={{ fontWeight: 500, color: '#117636' }}>Available</span>
+                        <span style={{ 
+                          fontWeight: 500, 
+                          color: item.item_status === 'Available' ? '#117636' : 
+                                 item.item_status === 'Out of Stock' ? '#dc2626' :
+                                 item.item_status === 'Bad Condition' ? '#dc2626' :
+                                 item.item_status === 'To be Borrowed' ? '#f59e0b' :
+                                 item.item_status === 'Borrowed' ? '#3b82f6' : '#6b7280'
+                        }}>
+                          {item.item_status || 'Available'}
+                        </span>
                       </div>
                     </div>
                     <div className="inventory-type">{item.article_type}</div>
-                    <div className={`inventory-status ${
-                      item.system_status?.toLowerCase() === 'poor' ? 'status-poor' :
-                      item.system_status?.toLowerCase() === 'fair' ? 'status-fair' :
-                      item.system_status?.toLowerCase() === 'good' ? 'status-good' : ''
-                    }`}>
-                      System Status: {item.system_status ? item.system_status : "Unknown"}
-                    </div>
                     {item.has_pending_maintenance && (
                       <div className="text-yellow-500 text-xs font-medium mt-1">
                         {(() => {

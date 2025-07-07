@@ -13,6 +13,13 @@ interface Log {
   maintenance_date: string;
   task_performed: string;
   maintained_by: string;
+  qr_code?: string;
+  serial_no?: string;
+  specifications?: string;
+  category?: string;
+  quantity?: number;
+  notes?: string;
+  status?: string;
 }
 
 
@@ -21,6 +28,7 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [mounted, setMounted] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -90,13 +98,40 @@ export default function LogsPage() {
     }
   };
 
-  // Filter logs by search
-  const filteredLogs = logs.filter(
-    (log) =>
-      log.property_no.toLowerCase().includes(search.toLowerCase()) ||
-      log.article_type.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filter logs by search and category
+  const filteredLogs = logs.filter((log) => {
+    const matchesSearch =
+      (log.qr_code && log.qr_code.toLowerCase().includes(search.toLowerCase())) ||
+      (log.specifications && log.specifications.toLowerCase().includes(search.toLowerCase())) ||
+      (log.property_no && log.property_no.toLowerCase().includes(search.toLowerCase())) ||
+      (log.serial_no && log.serial_no.toLowerCase().includes(search.toLowerCase()));
+    
+    const matchesCategory = categoryFilter ? log.category === categoryFilter : true;
+    
+    return matchesSearch && matchesCategory;
+  });
 
+  // Helper function to detect category from QR code
+  const detectCategoryFromQR = (qrCode: string) => {
+    if (!qrCode) return null;
+    
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const match = qrCode.match(tagPattern);
+    
+    if (match) {
+      const tag = match[1].toUpperCase();
+      if (["PC","PR","MON","TP","MS","KEY","UPS"].includes(tag)) return "Electronic";
+      else if (tag === "UTLY") return "Utility";
+      else if (tag === "TOOL") return "Tool";
+      else if (tag === "SPLY") return "Supply";
+    }
+    return null;
+  };
+
+  // Helper function to get item category
+  const getItemCategory = (log: Log) => {
+    return log.category || detectCategoryFromQR(log.qr_code || '') || 'Unknown';
+  };
 
   return (
     <div className="main-container">
@@ -179,11 +214,40 @@ export default function LogsPage() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search with article id or type"
+            placeholder="Search by QR Code, Item Description/Specs, Property No./Serial No."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+
+        {/* Category Filter */}
+        <div className="filterbar-row" style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '18px',
+          flexWrap: 'wrap'
+        }}>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="filterbar-select"
+            style={{
+              padding: '8px 12px',
+              border: '1.5px solid #d1d5db',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+              fontSize: '14px',
+              minWidth: '120px'
+            }}
+          >
+            <option value="">All Categories</option>
+            <option value="Electronic">Electronics</option>
+            <option value="Utility">Utility</option>
+            <option value="Tool">Tool</option>
+            <option value="Supply">Supply</option>
+          </select>
+        </div>
+
         {!mounted && <div className="loading">Loading...</div>}
         {mounted && loading && <div className="loading">Loading...</div>}
         {mounted && error && <div className="error">{error}</div>}
@@ -193,86 +257,155 @@ export default function LogsPage() {
             {filteredLogs.length === 0 && (
               <div className="no-logs">No logs found.</div>
             )}
-            {filteredLogs.map((log) => (
-              <div key={log.id} className="log-card">
-                <div className="log-card-header">
-                  <div className="log-icon">
-                    {log.article_type.toLowerCase().includes('desktop') && (
-                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                      </svg>
-                    )}
-                    {log.article_type.toLowerCase().includes('laptop') && (
-                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="2" y1="10" x2="22" y2="10"/>
-                      </svg>
-                    )}
-                    {log.article_type.toLowerCase().includes('printer') && (
-                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <polyline points="6,9 6,2 18,2 18,9"/>
-                        <path d="M6,18H4a2,2 0 0,1 -2,-2v-5a2,2 0 0,1 2,-2h16a2,2 0 0,1 2,2v5a2,2 0 0,1 -2,2h-2"/>
-                        <rect x="6" y="14" width="12" height="8"/>
-                      </svg>
-                    )}
-                    {log.article_type.toLowerCase().includes('keyboard') && (
-                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
-                        <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 16h.01M10 16h.01M14 16h.01M18 16h.01"/>
-                      </svg>
-                    )}
-                    {log.article_type.toLowerCase().includes('pc') && (
-                      <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                        <circle cx="12" cy="8" r="1"/>
-                      </svg>
-                    )}
-                    {!log.article_type.toLowerCase().includes('desktop') &&
-                     !log.article_type.toLowerCase().includes('laptop') &&
-                     !log.article_type.toLowerCase().includes('printer') &&
-                     !log.article_type.toLowerCase().includes('keyboard') &&
-                     !log.article_type.toLowerCase().includes('pc') && (
-                      <span className="text-xl">📷</span>
-                    )}
-                  </div>
-                  <div className="log-main-info">
-                    <h3 className="property-no">{log.property_no}</h3>
-                    <p className="article-type">{log.article_type}</p>
-                  </div>
-                  <div className="log-date">
-                    <span className="date-badge">
-                      {new Date(log.maintenance_date).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                </div>
-                <div className="log-card-body">
-                  <div className="detail-section">
-                    <div className="detail-item">
-                      <span className="detail-icon">🔧</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Task Performed</span>
-                        <p className="detail-value">{log.task_performed}</p>
-                      </div>
+            {filteredLogs.map((log) => {
+              const itemCategory = getItemCategory(log);
+              const isElectronic = itemCategory === "Electronic";
+              const isUtility = itemCategory === "Utility";
+              const isToolOrSupply = itemCategory === "Tool" || itemCategory === "Supply";
+
+              return (
+                <div key={log.id} className="log-card">
+                  <div className="log-card-header">
+                    <div className="log-icon">
+                      {log.article_type.toLowerCase().includes('desktop') && (
+                        <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                          <line x1="8" y1="21" x2="16" y2="21"/>
+                          <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                      )}
+                      {log.article_type.toLowerCase().includes('laptop') && (
+                        <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                          <line x1="2" y1="10" x2="22" y2="10"/>
+                        </svg>
+                      )}
+                      {log.article_type.toLowerCase().includes('printer') && (
+                        <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <polyline points="6,9 6,2 18,2 18,9"/>
+                          <path d="M6,18H4a2,2 0 0,1 -2,-2v-5a2,2 0 0,1 2,-2h16a2,2 0 0,1 2,2v5a2,2 0 0,1 -2,2h-2"/>
+                          <rect x="6" y="14" width="12" height="8"/>
+                        </svg>
+                      )}
+                      {log.article_type.toLowerCase().includes('keyboard') && (
+                        <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+                          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M6 16h.01M10 16h.01M14 16h.01M18 16h.01"/>
+                        </svg>
+                      )}
+                      {log.article_type.toLowerCase().includes('pc') && (
+                        <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                          <line x1="8" y1="21" x2="16" y2="21"/>
+                          <line x1="12" y1="17" x2="12" y2="21"/>
+                          <circle cx="12" cy="8" r="1"/>
+                        </svg>
+                      )}
+                      {!log.article_type.toLowerCase().includes('desktop') &&
+                       !log.article_type.toLowerCase().includes('laptop') &&
+                       !log.article_type.toLowerCase().includes('printer') &&
+                       !log.article_type.toLowerCase().includes('keyboard') &&
+                       !log.article_type.toLowerCase().includes('pc') && (
+                        <span className="text-xl">📷</span>
+                      )}
                     </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">👤</span>
-                      <div className="detail-content">
-                        <span className="detail-label">Maintained By</span>
-                        <p className="detail-value">{log.maintained_by}</p>
-                      </div>
+                    <div className="log-main-info">
+                      <h3 className="property-no">
+                        {log.qr_code || log.property_no}
+                        {log.serial_no && ` / ${log.serial_no}`}
+                      </h3>
+                      <p className="article-type">{log.article_type}</p>
+                    </div>
+                    <div className="log-date">
+                      <span className="date-badge">
+                        {new Date(log.maintenance_date).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
                     </div>
                   </div>
+                  <div className="log-card-body">
+                    <div className="detail-section">
+                      {/* Electronics: Show QR Code / Property No. / Serial No., Article Type, Tasks Performed, Date, Maintained by */}
+                      {isElectronic && (
+                        <>
+                          <div className="detail-item">
+                            <span className="detail-icon">🔧</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Task Performed</span>
+                              <p className="detail-value">{log.task_performed}</p>
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">👤</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Maintained By</span>
+                              <p className="detail-value">{log.maintained_by}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Utilities: Show QR Code / Property No. / Serial No., Item Description/Specs, Tasks Performed, Date, Maintained by */}
+                      {isUtility && (
+                        <>
+                          <div className="detail-item">
+                            <span className="detail-icon">📝</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Item Description/Specs</span>
+                              <p className="detail-value">{log.specifications || 'No description available'}</p>
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">🔧</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Task Performed</span>
+                              <p className="detail-value">{log.task_performed}</p>
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">👤</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Maintained By</span>
+                              <p className="detail-value">{log.maintained_by}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Tools & Supplies: Show QR Code / Property No. / Serial No., Item Description/Specs, Quantity change, Date, Updated by */}
+                      {isToolOrSupply && (
+                        <>
+                          <div className="detail-item">
+                            <span className="detail-icon">📝</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Item Description/Specs</span>
+                              <p className="detail-value">{log.specifications || 'No description available'}</p>
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">📊</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Quantity</span>
+                              <p className="detail-value">{log.quantity || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <div className="detail-item">
+                            <span className="detail-icon">👤</span>
+                            <div className="detail-content">
+                              <span className="detail-label">Updated By</span>
+                              <p className="detail-value">{log.maintained_by}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

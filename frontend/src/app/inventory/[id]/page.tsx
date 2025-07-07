@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { apiClient, getImageUrl } from "../../../config/api";
 import imageCompression from 'browser-image-compression';
 import styles from "./page.module.css";
-import { FaEdit, FaSave, FaTrash, FaTimes, FaClipboardList, FaStethoscope, FaInfoCircle, FaCog, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaHeartbeat, FaClock, FaRegSquare, FaRegCheckSquare } from "react-icons/fa";
+import { FaEdit, FaSave, FaTrash, FaTimes, FaClipboardList, FaStethoscope, FaInfoCircle, FaCog, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaHeartbeat, FaClock, FaRegSquare, FaRegCheckSquare, FaPlus } from "react-icons/fa";
 
 
 
@@ -77,24 +77,20 @@ export default function ItemDetailPage() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
-  const [diagnostics, setDiagnostics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(true);
-  const [loadingDiagnostics, setLoadingDiagnostics] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [logsError, setLogsError] = useState("");
-  const [diagnosticsError, setDiagnosticsError] = useState("");
-  const [editingDiagnostics, setEditingDiagnostics] = useState<any[]>([]);
   const [editingLogs, setEditingLogs] = useState<any[]>([]);
+  const [newLogs, setNewLogs] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
-  const [activeTab, setActiveTab] = useState<'diagnostics' | 'logs'>('diagnostics');
-  const [diagnosticsFilter, setDiagnosticsFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState<'logs'>('logs');
   const [itemImageUrl, setItemImageUrl] = useState<string>('');
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [selectedImagePreview, setSelectedImagePreview] = useState<string>('');
@@ -149,16 +145,7 @@ export default function ItemDetailPage() {
 
 
 
-  // Set default active tab based on item type
-  useEffect(() => {
-    if (itemType) {
-      if (isElectronic) {
-        setActiveTab('diagnostics');
-      } else if (isUtility) {
-        setActiveTab('logs');
-      }
-    }
-  }, [itemType, isElectronic, isUtility]);
+
 
   useEffect(() => {
     if (!mounted || !id) return;
@@ -171,11 +158,19 @@ export default function ItemDetailPage() {
    
     setLoading(true);
     setLoadingLogs(true);
-    setLoadingDiagnostics(true);
     setError("");
     setLogsError("");
-    setDiagnosticsError("");
    
+    // Fetch current user profile
+    const fetchUserProfile = async () => {
+      try {
+        const response = await apiClient.get('/users/profile');
+        setCurrentUser(response.data);
+      } catch (err: any) {
+        console.error('Error fetching user profile:', err);
+      }
+    };
+
     // Fetch item details
     const fetchItem = async () => {
       try {
@@ -215,9 +210,6 @@ export default function ItemDetailPage() {
       }
     };
 
-
-
-
     // Fetch maintenance logs
     const fetchLogs = async () => {
       try {
@@ -237,35 +229,9 @@ export default function ItemDetailPage() {
       }
     };
 
-
-
-
-    // Fetch diagnostics
-    const fetchDiagnostics = async () => {
-      try {
-        const response = await apiClient.get(`/diagnostics/item/${id}`);
-        setDiagnostics(response.data);
-        console.log('Diagnostics loaded:', response.data);
-      } catch (err: any) {
-        console.error('Error fetching diagnostics:', err);
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
-        } else {
-          setDiagnosticsError("Error loading diagnostics: " + (err.response?.data?.message || err.message));
-        }
-      } finally {
-        setLoadingDiagnostics(false);
-      }
-    };
-
-
-
-
-    // Fetch all data
+    fetchUserProfile();
     fetchItem();
     fetchLogs();
-    fetchDiagnostics();
   }, [id, router, mounted]);
 
 
@@ -274,8 +240,8 @@ export default function ItemDetailPage() {
   const handleEdit = () => {
     setIsEditing(true);
     setEditingItem({ ...item });
-    setEditingDiagnostics(diagnostics.map(d => ({ ...d })));
     setEditingLogs(logs.map(l => ({ ...l })));
+    setNewLogs([]);
   };
 
 
@@ -284,6 +250,7 @@ export default function ItemDetailPage() {
   const handleCancel = () => {
     setIsEditing(false);
     setEditingItem(item);
+    setNewLogs([]);
     setError("");
     setUploadingImage(false); // Clear uploading state
     
@@ -309,7 +276,8 @@ export default function ItemDetailPage() {
    
     try {
       // Recalculate maintenance_status and pending_maintenance_count
-      const pendingCount = editingLogs.filter(log => log.status === 'pending').length;
+      const allLogs = [...editingLogs, ...newLogs];
+      const pendingCount = allLogs.filter(log => log.status === 'pending').length;
       const newStatus = pendingCount > 0 ? 'pending' : 'completed';
       
       let finalImageUrl = editingItem.image_url;
@@ -356,21 +324,21 @@ export default function ItemDetailPage() {
       // Update item
       await apiClient.put(`/items/${id}`, itemUpdateData);
      
-      // Update diagnostics
-      for (const diagnostic of editingDiagnostics) {
-        if (diagnostic.id) {
-          await apiClient.put(`/diagnostics/${diagnostic.id}`, {
-            system_status: diagnostic.system_status,
-            findings: diagnostic.findings,
-            recommendations: diagnostic.recommendations,
-            diagnostics_date: diagnostic.diagnostics_date ? diagnostic.diagnostics_date.split('T')[0] : (() => new Date().toISOString().split('T')[0])()
-          });
-        }
+      // Create new maintenance logs
+      for (const newLog of newLogs) {
+        await apiClient.post(`/logs`, {
+          item_id: id,
+          task_performed: newLog.task_performed,
+          notes: newLog.notes,
+          status: newLog.status,
+          maintained_by: newLog.maintained_by,
+          maintenance_date: newLog.maintenance_date ? newLog.maintenance_date.split('T')[0] : (() => new Date().toISOString().split('T')[0])()
+        });
       }
      
-      // Update maintenance logs
+      // Update existing maintenance logs
       for (const log of editingLogs) {
-        if (log.id) {
+        if (log.id && typeof log.id === 'number') {
           await apiClient.put(`/logs/${log.id}`, {
             task_performed: log.task_performed,
             notes: log.notes,
@@ -382,9 +350,9 @@ export default function ItemDetailPage() {
      
       setItem(itemUpdateData);
       setEditingItem(itemUpdateData);
-      setDiagnostics(editingDiagnostics);
-      setLogs(editingLogs);
+      setLogs([...editingLogs, ...newLogs]);
       setIsEditing(false);
+      setNewLogs([]);
       
       // Clear selected image states
       setSelectedImageFile(null);
@@ -452,6 +420,13 @@ export default function ItemDetailPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setEditingItem({ ...editingItem, [field]: value });
+    
+    // Auto-update status for Tools and Supplies when quantity changes
+    if (field === 'quantity' && (isToolOrSupply)) {
+      const quantity = parseInt(value) || 0;
+      const newStatus = quantity === 0 ? 'Out of Stock' : 'Available';
+      setEditingItem(prev => ({ ...prev, [field]: value, item_status: newStatus }));
+    }
   };
 
 
@@ -492,9 +467,7 @@ export default function ItemDetailPage() {
 
 
 
-  const handleDiagnosticChange = (index: number, field: string, value: any) => {
-    setEditingDiagnostics(prev => prev.map((d, i) => i === index ? { ...d, [field]: value, diagnostics_date: new Date().toISOString().split('T')[0] } : d));
-  };
+
 
 
 
@@ -503,8 +476,26 @@ export default function ItemDetailPage() {
     setEditingLogs(prev => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
   };
 
+  const handleNewLogChange = (index: number, field: string, value: any) => {
+    setNewLogs(prev => prev.map((l, i) => i === index ? { ...l, [field]: value, maintenance_date: new Date().toISOString().split('T')[0] } : l));
+  };
 
+  const addNewLog = () => {
+    const newLog = {
+      id: `new-${Date.now()}`,
+      task_performed: '',
+      notes: '',
+      status: 'pending',
+      maintained_by: currentUser?.username || '',
+      maintenance_date: new Date().toISOString().split('T')[0],
+      completed: false
+    };
+    setNewLogs(prev => [...prev, newLog]);
+  };
 
+  const removeNewLog = (index: number) => {
+    setNewLogs(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Handle image selection for inventory item (preview only, upload on save)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -558,17 +549,8 @@ export default function ItemDetailPage() {
 
 
 
-  // Use editingDiagnostics/logs in edit mode, diagnostics/logs in view mode
-  const diagnosticsToShow = isEditing ? editingDiagnostics : diagnostics;
-  const logsToShow = isEditing ? editingLogs : logs;
-
-
-
-
-  // Diagnostics filter logic
-  const filteredDiagnostics = diagnosticsToShow.filter(d =>
-    diagnosticsFilter === 'all' ? true : d.system_status === diagnosticsFilter
-  );
+  // Use editingLogs in edit mode, logs in view mode
+  const logsToShow = isEditing ? [...editingLogs, ...newLogs] : logs;
 
 
 
@@ -681,11 +663,19 @@ export default function ItemDetailPage() {
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Quantity:</span><input type="number" value={editingItem.quantity || ''} onChange={e => handleInputChange('quantity', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Status:</span>
                   <select value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
-                    <option value="Available">Available</option>
-                    <option value="Bad Condition">Bad Condition</option>
-                    <option value="To be Borrowed">To be Borrowed</option>
-                    <option value="Borrowed">Borrowed</option>
-                    {isToolOrSupply && <option value="Out of Stock">Out of Stock</option>}
+                    {isToolOrSupply ? (
+                      <>
+                        <option value="Available">Available</option>
+                        <option value="Out of Stock">Out of Stock</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Available">Available</option>
+                        <option value="Bad Condition">Bad Condition</option>
+                        <option value="To be Borrowed">To be Borrowed</option>
+                        <option value="Borrowed">Borrowed</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Remarks:</span><input value={editingItem.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} /></div>
@@ -768,123 +758,114 @@ export default function ItemDetailPage() {
               </div>
                   </div>
                 </div>
-      {/* Bottom Section: Diagnostics & Logs as Tabs */}
+      {/* Bottom Section: Logs as Tabs */}
       <div className={styles.bottomSection}>
-        <div className={styles.tabBar}>
-          {/* Only show Diagnostics tab for Electronics */}
-          {isElectronic && (
-            <button className={activeTab === 'diagnostics' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('diagnostics')}><FaStethoscope style={{marginRight: 8}}/>Diagnostics</button>
-          )}
-          {/* Show Logs tab for Electronics and Utilities */}
-          {(isElectronic || isUtility) && (
-            <button className={activeTab === 'logs' ? styles.tabBtnActive : styles.tabBtn} onClick={() => setActiveTab('logs')}><FaClipboardList style={{marginRight: 8}}/>Logs</button>
-          )}
-        </div>
-        <div className={styles.tabsContent}>
-          {/* Show message for Tools and Supplies that don't have tabs */}
-          {isToolOrSupply && (
+        {(isElectronic || isUtility) ? (
+          <>
+            <div className={styles.tabBar}>
+              <button className={styles.tabBtnActive}><FaClipboardList style={{marginRight: 8}}/>Logs</button>
+            </div>
+            <div className={styles.tabsContent}>
+              <>
+                <div className={styles.solidBlueHeaderLogs} style={{textAlign:'center'}}><FaClipboardList style={{marginRight: 8}}/>Maintenance Tasks & Logs</div>
+                <div className={styles.checklist}>
+                  {logsToShow.length > 0 ? logsToShow.map((log, i) => (
+                    <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start',marginBottom:16}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        {isEditing ? (
+                          <input
+                            type="checkbox"
+                            checked={log.completed}
+                            onChange={() => handleChecklistToggle(i)}
+                            style={{width:18,height:18,cursor:'pointer'}}
+                          />
+                        ) : (
+                          log.completed ? <FaRegCheckSquare style={{color:'#22c55e'}}/> : <FaRegSquare style={{color:'#f59e42'}}/>
+                        )}
+                        {getTaskStatusIcon(log.status)}
+                        <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>
+                          {isEditing && String(log.id)?.startsWith('new-') ? (
+                            <input 
+                              value={log.task_performed || ''} 
+                              onChange={e => handleNewLogChange(i - editingLogs.length, 'task_performed', e.target.value)}
+                              placeholder="Enter task performed"
+                              className={styles.editHighlight}
+                              style={{width: '200px'}}
+                            />
+                          ) : (
+                            log.task_performed
+                          )}
+                        </span>
+                        <span style={{fontSize:12,color:'#888',marginLeft:8}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
+                        {isEditing && String(log.id)?.startsWith('new-') && (
+                          <button 
+                            onClick={() => removeNewLog(i - editingLogs.length)}
+                            style={{marginLeft: 'auto', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer'}}
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <div style={{marginLeft:28}}>
+                        <div>
+                          Maintained By: {isEditing && String(log.id)?.startsWith('new-') ? (
+                            <span style={{fontWeight: 500}}>{log.maintained_by}</span>
+                          ) : (
+                            log.maintained_by
+                          )}
+                        </div>
+                        <div>Status: {log.status.charAt(0).toUpperCase() + log.status.slice(1)}</div>
+                        <div>Date: {formatDisplayDate(log.maintenance_date)}</div>
+                        <div>
+                          Notes: {isEditing ? (
+                            <input 
+                              value={log.notes || ''} 
+                              onChange={e => String(log.id)?.startsWith('new-') ? handleNewLogChange(i - editingLogs.length, 'notes', e.target.value) : handleLogChange(i, 'notes', e.target.value)} 
+                              className={styles.editHighlight} 
+                            />
+                          ) : (
+                            <span>{log.notes}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )) : <div style={{color: '#888'}}>No logs found.</div>}
+                  
+                  {isEditing && (
+                    <div style={{marginTop: '20px', textAlign: 'center'}}>
+                      <button 
+                        type="button"
+                        onClick={addNewLog}
+                        style={{
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        <FaPlus size={14} />
+                        Add New Maintenance Log
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            </div>
+          </>
+        ) : (
+          <div className={styles.tabsContent}>
             <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
               <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
               <p>No additional tabs available for this item type.</p>
               <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information above.</p>
             </div>
-          )}
-          
-          {activeTab === 'diagnostics' && (
-            <>
-              <div className={styles.solidBlueHeader}><FaStethoscope style={{marginRight: 8}}/>System Diagnostics</div>
-              {loadingDiagnostics ? (
-                <div>Loading diagnostics...</div>
-              ) : diagnosticsError ? (
-                <div className="text-red-600">{diagnosticsError}</div>
-              ) : filteredDiagnostics.length > 0 ? filteredDiagnostics.map((diag, i) => (
-                isEditing ? (
-                  <div key={diag.id} className={styles.diagnosticEditBox}>
-                    <div className={styles.diagnosticEditHeader}>
-                      {getStatusIcon(diag.system_status)}
-                      <select value={diag.system_status} onChange={e => handleDiagnosticChange(i, 'system_status', e.target.value)} className={styles.editHighlight + ' ' + styles.diagnosticEditStatus}>
-                        <option value="Good">Good</option>
-                        <option value="Fair">Fair</option>
-                        <option value="Poor">Poor</option>
-                        <option value="Critical">Critical</option>
-                      </select>
-                      <span className={styles.diagnosticEditStatus}>{diag.system_status}</span>
-                      <span className={styles.diagnosticEditDate}>{formatDisplayDate(diag.diagnostics_date)}</span>
-                      <span className={styles.diagnosticEditLabel}>Select the current system status.</span>
-                    </div>
-                    <div style={{marginTop:8}}>
-                      <span>Findings:</span>
-                      <input value={diag.findings || ''} onChange={e => handleDiagnosticChange(i, 'findings', e.target.value)} className={styles.editHighlight} />
-                    </div>
-                    <div style={{marginTop:8}}>
-                      <span>Recommendations:</span>
-                      <input value={diag.recommendations || ''} onChange={e => handleDiagnosticChange(i, 'recommendations', e.target.value)} className={styles.editHighlight} />
-                    </div>
-                  </div>
-                ) : (
-                  <div key={diag.id} className={styles.diagnosticsInfoCard}>
-                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
-                      {diag.system_status === 'Good' ? (
-                        <span style={{color:'#22c55e',fontSize:22}}>&#10003;</span>
-                      ) : (
-                        <span style={{color:'#f59e42',fontSize:22}}>&#9888;</span>
-                      )}
-                      <span style={{fontWeight:700,fontSize:18}}>{diag.system_status}</span>
-                      <span style={{marginLeft:16,color:'#888',fontWeight:500}}>{formatDisplayDate(diag.diagnostics_date)}</span>
-                      <span style={{marginLeft:16,color:'#aaa',fontSize:15}}>Select the current system status.</span>
-                    </div>
-                    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
-                      <span style={{fontWeight:500}}>Findings:</span>
-                      <span style={{background:'#fff',border:'1.5px solid #bbb',borderRadius:7,padding:'2px 12px',fontWeight:500}}>{diag.findings}</span>
-                    </div>
-                    <div style={{display:'flex',alignItems:'center',gap:12}}>
-                      <span style={{fontWeight:500}}>Recommendations:</span>
-                      <span style={{background:'#fff',border:'1.5px solid #bbb',borderRadius:7,padding:'2px 12px',fontWeight:500}}>{diag.recommendations}</span>
-                    </div>
-                  </div>
-                )
-              )) : <div style={{color: '#888'}}>No diagnostics found.</div>}
-            </>
-          )}
-          {activeTab === 'logs' && (
-            <>
-              <div className={styles.solidBlueHeaderLogs} style={{textAlign:'center'}}><FaClipboardList style={{marginRight: 8}}/>Maintenance Tasks & Logs</div>
-              <div className={styles.checklist}>
-                {checklist.length > 0 ? checklist.map((log, i) => (
-                  <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start',marginBottom:16}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      {isEditing ? (
-                        <input
-                          type="checkbox"
-                          checked={log.completed}
-                          onChange={() => handleChecklistToggle(i)}
-                          style={{width:18,height:18,cursor:'pointer'}}
-                        />
-                      ) : (
-                        log.completed ? <FaRegCheckSquare style={{color:'#22c55e'}}/> : <FaRegSquare style={{color:'#f59e42'}}/>
-                      )}
-                      {getTaskStatusIcon(log.status)}
-                      <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>{log.task_performed}</span>
-                      <span style={{fontSize:12,color:'#888',marginLeft:8}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
-                    </div>
-                    <div style={{marginLeft:28}}>
-                      <div>Maintained By: {log.maintained_by}</div>
-                      <div>Status: {log.status.charAt(0).toUpperCase() + log.status.slice(1)}</div>
-                      <div>Date: {formatDisplayDate(log.maintenance_date)}</div>
-                      <div>
-                        Notes: {isEditing ? (
-                          <input value={log.notes || ''} onChange={e => handleLogChange(i, 'notes', e.target.value)} className={styles.editHighlight} />
-                        ) : (
-                          <span>{log.notes}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )) : <div style={{color: '#888'}}>No logs found.</div>}
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
