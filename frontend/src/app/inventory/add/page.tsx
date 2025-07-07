@@ -245,9 +245,7 @@ function AddItemPageContent() {
       const itemData = {
         ...form,
         category: detectedCategory,
-        image_url: finalImageUrl,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        image_url: finalImageUrl
       };
 
       // Remove empty fields

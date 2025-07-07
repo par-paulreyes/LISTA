@@ -37,7 +37,7 @@ exports.createItem = async (req, res) => {
     console.log('Creating item with data:', req.body);
     console.log('User:', req.user);
     const company_name = req.user.company_name;
-    const { maintenance_date, maintained_by, maintenance_tasks, diagnostic, item_description, ...itemData } = req.body;
+    const { maintenance_date, maintained_by, maintenance_tasks, diagnostic, item_description, created_at, updated_at, ...itemData } = req.body;
     console.log('Extracted maintenance fields:', { maintenance_date, maintained_by, maintenance_tasks, diagnostic });
     console.log('Filtered item data:', itemData);
     
