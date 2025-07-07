@@ -8,6 +8,7 @@ const upload = require('../middleware/uploadMiddleware');
 router.get('/maintenance/upcoming', verifyToken, itemController.getUpcomingMaintenance);
 router.get('/maintenance/needed', verifyToken, itemController.getItemsNeedingMaintenance);
 router.get('/qr/:code', verifyToken, itemController.getItemByQRCode);
+router.get('/export', verifyToken, itemController.exportItems);
 
 // General routes
 router.get('/', verifyToken, itemController.getAllItems);

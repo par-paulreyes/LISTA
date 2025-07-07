@@ -249,4 +249,65 @@ exports.getItemsNeedingMaintenance = (req, res) => {
     if (err) return res.status(500).json({ message: 'Error fetching items needing maintenance', error: err });
     res.json(items);
   });
+};
+
+exports.exportItems = (req, res) => {
+  const company_name = req.user.company_name;
+  const format = req.query.format || 'csv';
+  
+  Item.findAllByCompany(company_name, (err, items) => {
+    if (err) return res.status(500).json({ message: 'Error exporting items', error: err });
+    
+    if (format === 'pdf') {
+      try {
+        const PDFDocument = require('pdfkit');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.pdf');
+        const doc = new PDFDocument();
+        doc.pipe(res);
+        
+        doc.fontSize(18).text('Inventory Report', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).text(`Company: ${company_name}`, { align: 'center' });
+        doc.fontSize(10).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
+        doc.moveDown();
+        
+        items.forEach((item, idx) => {
+          doc.fontSize(12).text(`Item #${idx + 1}`, { underline: true });
+          doc.fontSize(10).text(`QR Code: ${item.qr_code || 'N/A'}`);
+          doc.fontSize(10).text(`Property No: ${item.property_no || 'N/A'}`);
+          doc.fontSize(10).text(`Article Type: ${item.article_type || 'N/A'}`);
+          doc.fontSize(10).text(`Category: ${item.category || 'N/A'}`);
+          doc.fontSize(10).text(`Status: ${item.item_status || 'N/A'}`);
+          doc.fontSize(10).text(`Location: ${item.location || 'N/A'}`);
+          if (item.specifications) {
+            doc.fontSize(10).text(`Specifications: ${item.specifications}`);
+          }
+          if (item.remarks) {
+            doc.fontSize(10).text(`Remarks: ${item.remarks}`);
+          }
+          doc.moveDown();
+        });
+        
+        doc.end();
+      } catch (err) {
+        return res.status(500).json({ message: 'Error generating PDF', error: err });
+      }
+    } else {
+      try {
+        const { Parser } = require('json2csv');
+        const fields = [
+          'id', 'qr_code', 'property_no', 'article_type', 'category', 
+          'item_status', 'location', 'specifications', 'remarks', 'created_at'
+        ];
+        const parser = new Parser({ fields });
+        const csv = parser.parse(items);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.csv');
+        return res.send(csv);
+      } catch (err) {
+        return res.status(500).json({ message: 'Error generating CSV', error: err });
+      }
+    }
+  });
 }; 
