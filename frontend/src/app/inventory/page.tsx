@@ -17,6 +17,11 @@ interface Item {
   has_pending_maintenance?: boolean;
   pending_maintenance_count?: number;
   qr_code?: string;
+  serial_no?: string;
+  category?: string;
+  item_status?: string;
+  specifications?: string;
+  remarks?: string;
 }
 
 function InventoryPageContent() {
@@ -27,6 +32,8 @@ function InventoryPageContent() {
   const [articleType, setArticleType] = useState("");
   const [status, setStatus] = useState("");
   const [maintenanceFilter, setMaintenanceFilter] = useState("");
+  const [category, setCategory] = useState("");
+  const [itemStatus, setItemStatus] = useState("");
   const [mounted, setMounted] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -72,10 +79,14 @@ function InventoryPageContent() {
   // Filter logic
   const filteredItems = items.filter((item) => {
     const matchesSearch =
-      item.property_no.toLowerCase().includes(search.toLowerCase()) ||
+      (item.property_no && item.property_no.toLowerCase().includes(search.toLowerCase())) ||
       (item.qr_code && item.qr_code.toLowerCase().includes(search.toLowerCase())) ||
-      item.article_type.toLowerCase().includes(search.toLowerCase());
+      (item.serial_no && item.serial_no.toLowerCase().includes(search.toLowerCase())) ||
+      (item.article_type && item.article_type.toLowerCase().includes(search.toLowerCase())) ||
+      (item.specifications && item.specifications.toLowerCase().includes(search.toLowerCase()));
+    const matchesCategory = category ? item.category === category : true;
     const matchesArticleType = articleType ? item.article_type === articleType : true;
+    const matchesItemStatus = itemStatus ? item.item_status === itemStatus : true;
     const itemSystemStatus = item.system_status ? item.system_status : "Unknown";
     const matchesStatus = status ? itemSystemStatus.toLowerCase() === status.toLowerCase() : true;
     
@@ -87,11 +98,13 @@ function InventoryPageContent() {
       matchesMaintenance = item.has_pending_maintenance === false;
     }
     
-    return matchesSearch && matchesArticleType && matchesStatus && matchesMaintenance;
+    return matchesSearch && matchesCategory && matchesArticleType && matchesItemStatus && matchesStatus && matchesMaintenance;
   });
 
-  // Get unique article types and system statuses for dropdowns
+  // Get unique values for filters
+  const categories = ["Electronic", "Utility", "Tool", "Supply"];
   const articleTypes = Array.from(new Set(items.map((item) => item.article_type)));
+  const itemStatuses = ["Available", "Bad Condition", "To be Borrowed", "Borrowed"];
   const statuses = Array.from(
     new Set(
       items.map((item) => (item.system_status ? item.system_status : "Unknown")).map((s) => s || "Unknown")
@@ -221,13 +234,23 @@ function InventoryPageContent() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search with article id, QR code, or type"
+            placeholder="Search by QR Code, Description/Specs, Property No., Serial No."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         {/* Filter Bar */}
         <div className="filterbar-row">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="filterbar-select"
+          >
+            <option value="">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
           <select
             value={articleType}
             onChange={(e) => setArticleType(e.target.value)}
@@ -239,12 +262,12 @@ function InventoryPageContent() {
             ))}
           </select>
           <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            value={itemStatus}
+            onChange={(e) => setItemStatus(e.target.value)}
             className="filterbar-select"
           >
-            <option value="">All System Statuses</option>
-            {statuses.map((s) => (
+            <option value="">All Statuses</option>
+            {itemStatuses.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>

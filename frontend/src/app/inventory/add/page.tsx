@@ -35,6 +35,12 @@ function AddItemPageContent() {
     price: "",
     supply_officer: "",
     specifications: "",
+    serial_no: "",
+    category: "",
+    brand: "",
+    company_name: "",
+    quantity: 1,
+    remarks: "",
   });
  
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -61,6 +67,7 @@ function AddItemPageContent() {
   const [diagnosticsDropdownOpen, setDiagnosticsDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [detectedCategory, setDetectedCategory] = useState<string>("");
  
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -107,6 +114,25 @@ function AddItemPageContent() {
       setForm(prev => ({ ...prev, qr_code: qrCode }));
     }
   }, [searchParams, mounted]);
+
+
+  // Auto-detect category by TAG from QR code
+  useEffect(() => {
+    if (!form.qr_code) return;
+    // Parse QR code for TAG
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const match = form.qr_code.match(tagPattern);
+    if (match) {
+      const tag = match[1].toUpperCase();
+      if (["PC","PR","MON","TP","MS","KEY","UPS"].includes(tag)) setDetectedCategory("Electronic");
+      else if (tag === "UTLY") setDetectedCategory("Utility");
+      else if (tag === "TOOL") setDetectedCategory("Tool");
+      else if (tag === "SPLY") setDetectedCategory("Supply");
+      else setDetectedCategory("");
+    } else {
+      setDetectedCategory("");
+    }
+  }, [form.qr_code]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -292,8 +318,10 @@ function AddItemPageContent() {
           } else if (key === 'price' && typeof value === 'string') {
             // Convert price to number
             formData.append(key, parseFloat(value).toString());
+          } else if (key === 'quantity') {
+            formData.append(key, value.toString());
           } else {
-            formData.append(key, value);
+            formData.append(key, value as string);
           }
         }
       });
@@ -511,6 +539,22 @@ function AddItemPageContent() {
                     onChange={handleChange}
                     placeholder="Enter QR code or scan to auto-fill"
                   />
+                  {detectedCategory && (
+                    <div style={{ color: '#166534', fontWeight: 500, marginTop: 4 }}>
+                      Detected Category: {detectedCategory}
+                    </div>
+                  )}
+                </div>
+               
+                <div>
+                  <label className={styles.label}>Serial No.</label>
+                  <input
+                    type="text"
+                    name="serial_no"
+                    className={styles.input}
+                    value={form.serial_no || ''}
+                    onChange={handleChange}
+                  />
                 </div>
                
                 <div>
@@ -532,6 +576,30 @@ function AddItemPageContent() {
                     <option value="Server">Server</option>
                     <option value="Other">Other</option>
                   </select>
+                </div>
+
+
+                <div>
+                  <label className={styles.label}>Category</label>
+                  <input
+                    type="text"
+                    name="category"
+                    className={styles.input}
+                    value={detectedCategory}
+                    readOnly
+                  />
+                </div>
+
+
+                <div>
+                  <label className={styles.label}>Brand</label>
+                  <input
+                    type="text"
+                    name="brand"
+                    className={styles.input}
+                    value={form.brand || ''}
+                    onChange={handleChange}
+                  />
                 </div>
 
 
@@ -594,6 +662,20 @@ function AddItemPageContent() {
                     onChange={handleChange}
                   />
                 </div>
+
+
+                <div>
+                  <label className={styles.label}>Company</label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    className={styles.input}
+                    value={form.company_name || ''}
+                    onChange={handleChange}
+                  />
+                </div>
+
+
                 <div>
                   <label className={styles.specsLabel}>Specifications</label>
                   <textarea

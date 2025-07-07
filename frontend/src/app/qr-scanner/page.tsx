@@ -17,6 +17,7 @@ export default function QRScannerPage() {
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualQrCode, setManualQrCode] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [parsedQR, setParsedQR] = useState<{ company: string; tag: string; id: string } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -165,6 +166,25 @@ export default function QRScannerPage() {
     const interval = setInterval(capture, 1000);
     return () => clearInterval(interval);
   }, [capture, scanned, cameraAvailable]);
+
+  useEffect(() => {
+    if (!scanned) return;
+    // Parse QR code format: COMPANY-TAG-ID (e.g., ICTCE-PC-00123)
+    const qrPattern = /^([A-Z]+)-([A-Z]+)-(\d+)$/i;
+    let match = scanned.match(qrPattern);
+    if (!match) {
+      // Try to parse without dashes (e.g., ICTCEPC00123)
+      const altPattern = /^([A-Z]+)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(\d+)$/i;
+      match = scanned.match(altPattern);
+      if (match) {
+        setParsedQR({ company: match[1], tag: match[2], id: match[3] });
+      } else {
+        setParsedQR(null);
+      }
+    } else {
+      setParsedQR({ company: match[1], tag: match[2], id: match[3] });
+    }
+  }, [scanned]);
 
   useEffect(() => {
     if (!scanned) return;
@@ -616,15 +636,29 @@ export default function QRScannerPage() {
             borderRadius: '10px',
             color: '#0369a1',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
             gap: '0.5rem',
             width: '100%',
             maxWidth: '500px'
           }}>
-            <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span style={{ fontWeight: '600' }}>Scanned QR:</span> {scanned}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span style={{ fontWeight: '600' }}>Scanned QR:</span> {scanned}
+            </div>
+            {parsedQR ? (
+              <div style={{ marginTop: '0.5rem', fontSize: '0.98rem', color: '#0e7490' }}>
+                <div><b>Company:</b> {parsedQR.company}</div>
+                <div><b>Tag:</b> {parsedQR.tag}</div>
+                <div><b>ID:</b> {parsedQR.id}</div>
+              </div>
+            ) : (
+              <div style={{ marginTop: '0.5rem', color: '#b91c1c' }}>
+                <b>Unrecognized QR format.</b>
+              </div>
+            )}
           </div>
         )}
         
