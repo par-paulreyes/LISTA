@@ -4,6 +4,7 @@ import Webcam from "react-webcam";
 import jsQR from "jsqr";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../config/api";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function QRScannerPage() {
   const webcamRef = useRef<Webcam>(null);
@@ -19,6 +20,7 @@ export default function QRScannerPage() {
   const [mounted, setMounted] = useState(false);
   const [parsedQR, setParsedQR] = useState<{ company: string; tag: string; id: string } | null>(null);
   const router = useRouter();
+  const { showSuccess, showError, showInfo } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -207,6 +209,7 @@ export default function QRScannerPage() {
         setLoading(false);
         setError("");
         setSuccess(true);
+        showSuccess("Item Found", "Redirecting to item details...");
         setTimeout(() => {
           router.push(`/inventory/${res.data.id}`);
         }, 1000);
@@ -214,13 +217,18 @@ export default function QRScannerPage() {
       .catch((err) => {
         if (err.response?.status === 404) {
           // Automatically redirect to add item page with QR code
+          showInfo("Item Not Found", "Redirecting to add new item...");
           router.push(`/inventory/add?qr=${encodeURIComponent(scanned)}`);
         } else if (err.response?.status === 401) {
-          setError("Authentication failed. Please log in again.");
+          const errorMessage = "Authentication failed. Please log in again.";
+          setError(errorMessage);
+          showError("Authentication Failed", errorMessage);
           localStorage.removeItem("token");
           router.push("/login");
         } else {
-          setError("Error fetching item: " + (err.response?.data?.message || err.message));
+          const errorMessage = "Error fetching item: " + (err.response?.data?.message || err.message);
+          setError(errorMessage);
+          showError("Fetch Error", errorMessage);
         }
       })
       .finally(() => setLoading(false));

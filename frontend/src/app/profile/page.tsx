@@ -7,6 +7,7 @@ import imageCompression from 'browser-image-compression';
 import { Camera, Upload, X, Edit, Check, UserPlus, LogOut } from "lucide-react";
 import './profile.css';
 import { supabase } from '../../config/supabase';
+import { useToast } from '../../contexts/ToastContext';
 
 // Utility to fetch image as base64 and cache in localStorage
 async function fetchAndCacheImageBase64(imageUrl: string, cacheKey: string): Promise<string> {
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const { showSuccess, showError } = useToast();
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -176,22 +178,24 @@ export default function ProfilePage() {
         dataToSend.profile_picture = profilePictureUrl;
       }
       const response = await apiClient.put("/users/profile", dataToSend);
-      setSuccess("Profile updated successfully!");
-      setForm({ ...form, password: "", confirmPassword: "" });
+      showSuccess("Profile Updated", "Profile has been updated successfully!");
+      
+      // Update the profile state with the new data
+      const updatedProfile = { ...profile, ...dataToSend };
+      setProfile(updatedProfile);
+      setForm({ ...updatedProfile, password: "", confirmPassword: "" });
       setIsEditing(false);
       setCapturedImage("");
       setSelectedImageFile(null);
       setImageCompressionInfo(null);
-      const updatedResponse = await apiClient.get("/users/profile");
-      setProfile(updatedResponse.data);
       // Update signed URL for new profile picture
-      if (updatedResponse.data.profile_picture) {
-        const cacheKey = `profile-image-${updatedResponse.data.username || updatedResponse.data.id}`;
+      if (updatedProfile.profile_picture) {
+        const cacheKey = `profile-image-${updatedProfile.username || updatedProfile.id}`;
         // If image was changed, clear cache so it reloads
         if (imageChanged) {
           localStorage.removeItem(cacheKey);
         }
-        const url = await getImageUrl(updatedResponse.data.profile_picture);
+        const url = await getImageUrl(updatedProfile.profile_picture);
         if (url) {
           const base64 = await fetchAndCacheImageBase64(url, cacheKey);
           setImageUrl(base64);
@@ -199,7 +203,9 @@ export default function ProfilePage() {
       }
     } catch (err: any) {
       // Show error from Supabase or backend
-      setError(err.response?.data?.message || err.message || "Error updating profile");
+      const errorMessage = err.response?.data?.message || err.message || "Error updating profile";
+      setError(errorMessage);
+      showError("Update Failed", errorMessage);
     } finally {
       setSaving(false);
       setUploading(false);
@@ -489,29 +495,7 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
-      {/* Success notification banner */}
-      {success && (
-        <div className="profile-notification" style={{ background: '#e0fbe8', border: '1.5px solid #22c55e', color: '#166534', marginBottom: '10px' }}>
-          <div className="flex items-center gap-2 text-green-700 text-sm">
-            <svg className="icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <circle cx="8" cy="8" r="8" fill="#22c55e"/>
-              <path d="M5.5 8.5l2 2 3-3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="notification-title">Profile updated successfully!</span>
-          </div>
-        </div>
-      )}
-      {error && (
-        <div className="profile-notification" style={{ background: '#f8d7da', border: '1.5px solid #dc3545', color: '#721c24', marginBottom: '10px' }}>
-          <div className="flex items-center gap-2 text-red-700 text-sm">
-            <svg className="icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <circle cx="8" cy="8" r="8" fill="#dc3545"/>
-              <path d="M5.5 8.5l2 2 3-3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="notification-title">{error}</span>
-          </div>
-        </div>
-      )}
+
       {/* Button row above the profile-header-card */}
       <div className={`profile-header-btn-row ${isEditing ? 'editing' : ''}`}>
         {isEditing ? (

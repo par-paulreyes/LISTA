@@ -5,6 +5,7 @@ import { apiClient, getImageUrl } from "../../../config/api";
 import imageCompression from 'browser-image-compression';
 import styles from "./page.module.css";
 import { FaEdit, FaSave, FaTrash, FaTimes, FaClipboardList, FaStethoscope, FaInfoCircle, FaCog, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaHeartbeat, FaClock, FaRegSquare, FaRegCheckSquare, FaPlus } from "react-icons/fa";
+import { useToast } from "../../../contexts/ToastContext";
 
 
 
@@ -82,6 +83,8 @@ export default function ItemDetailPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const { showSuccess, showError } = useToast();
   const [logsError, setLogsError] = useState("");
   const [editingLogs, setEditingLogs] = useState<any[]>([]);
   const [newLogs, setNewLogs] = useState<any[]>([]);
@@ -238,10 +241,13 @@ export default function ItemDetailPage() {
 
 
   const handleEdit = () => {
+    if (loading || !item) return;
     setIsEditing(true);
     setEditingItem({ ...item });
     setEditingLogs(logs.map(l => ({ ...l })));
     setNewLogs([]);
+    setError(""); // Clear any previous errors
+    setSuccess(""); // Clear any previous success messages
   };
 
 
@@ -252,6 +258,7 @@ export default function ItemDetailPage() {
     setEditingItem(item);
     setNewLogs([]);
     setError("");
+    setSuccess(""); // Clear any success messages
     setUploadingImage(false); // Clear uploading state
     
     // Clear selected image states
@@ -270,7 +277,7 @@ export default function ItemDetailPage() {
 
 
   const handleSave = async () => {
-    if (!editingItem) return;
+    if (!editingItem || !item || loading) return;
     setSaving(true);
     setError("");
    
@@ -305,17 +312,22 @@ export default function ItemDetailPage() {
       
       // Only send the fields that the backend expects (excluding maintenance fields that are filtered out)
       const itemUpdateData = {
-        property_no: editingItem.property_no,
-        qr_code: editingItem.qr_code,
-        article_type: editingItem.article_type,
-        specifications: editingItem.specifications,
-        location: editingItem.location,
-        end_user: editingItem.end_user,
+        property_no: editingItem.property_no || '',
+        qr_code: editingItem.qr_code || '',
+        article_type: editingItem.article_type || '',
+        specifications: editingItem.specifications || '',
+        location: editingItem.location || '',
+        end_user: editingItem.end_user || '',
         date_acquired: editingItem.date_acquired ? editingItem.date_acquired.split('T')[0] : null,
         price: editingItem.price ? parseFloat(editingItem.price) : null,
-        supply_officer: editingItem.supply_officer,
-        company_name: editingItem.company_name,
+        supply_officer: editingItem.supply_officer || '',
+        company_name: editingItem.company_name || '',
         image_url: finalImageUrl,
+        item_status: editingItem.item_status || 'Available',
+        remarks: editingItem.remarks || '',
+        serial_no: editingItem.serial_no || '',
+        brand: editingItem.brand || '',
+        category: editingItem.category || '',
       };
      
       // Debug: Log what we're about to send
@@ -348,8 +360,10 @@ export default function ItemDetailPage() {
         }
       }
      
-      setItem(itemUpdateData);
-      setEditingItem(itemUpdateData);
+      // Update the item state with the new data
+      const updatedItem = { ...item, ...itemUpdateData };
+      setItem(updatedItem);
+      setEditingItem(updatedItem);
       setLogs([...editingLogs, ...newLogs]);
       setIsEditing(false);
       setNewLogs([]);
@@ -374,12 +388,19 @@ export default function ItemDetailPage() {
      
       // Trigger dashboard refresh by setting a timestamp
       localStorage.setItem('dashboard_refresh_trigger', Date.now().toString());
+      
+      // Show success message
+      setError(""); // Clear any previous errors
+      showSuccess("Item Updated", "Item has been updated successfully!");
+      
     } catch (err: any) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         router.push("/login");
       } else {
-        setError("Error updating item: " + (err.response?.data?.message || err.message));
+        const errorMessage = "Error updating item: " + (err.response?.data?.message || err.message);
+        setError(errorMessage);
+        showError("Update Failed", errorMessage);
       }
     } finally {
       setSaving(false);
@@ -408,7 +429,9 @@ export default function ItemDetailPage() {
         localStorage.removeItem("token");
         router.push("/login");
       } else {
-        setError("Error deleting item: " + (err.response?.data?.message || err.message));
+        const errorMessage = "Error deleting item: " + (err.response?.data?.message || err.message);
+        setError(errorMessage);
+        showError("Delete Failed", errorMessage);
       }
     } finally {
       setDeleting(false);
@@ -420,13 +443,6 @@ export default function ItemDetailPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setEditingItem({ ...editingItem, [field]: value });
-    
-    // Auto-update status for Tools and Supplies when quantity changes
-    if (field === 'quantity' && (isToolOrSupply)) {
-      const quantity = parseInt(value) || 0;
-      const newStatus = quantity === 0 ? 'Out of Stock' : 'Available';
-      setEditingItem((prev: any) => ({ ...prev, [field]: value, item_status: newStatus }));
-    }
   };
 
 
@@ -635,13 +651,13 @@ export default function ItemDetailPage() {
           <div className={styles.topButtonRow}>
             {!isEditing ? (
               <>
-                <button className={styles.editBtn} onClick={handleEdit}><FaEdit style={{marginRight: 8}}/>Edit</button>
-                <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting}><FaTrash style={{marginRight: 8}}/>{deleting ? 'Deleting...' : 'Delete'}</button>
+                <button className={styles.editBtn} onClick={handleEdit} disabled={loading}><FaEdit style={{marginRight: 8}}/>Edit</button>
+                <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting || loading}><FaTrash style={{marginRight: 8}}/>{deleting ? 'Deleting...' : 'Delete'}</button>
               </>
             ) : (
               <>
-                <button className={styles.saveBtn} onClick={handleSave} disabled={saving}><FaSave style={{marginRight: 8}}/>{saving ? 'Saving...' : 'Save'}</button>
-                <button className={styles.cancelBtn} onClick={handleCancel}><FaTimes style={{marginRight: 8}}/>Cancel</button>
+                <button className={styles.saveBtn} onClick={handleSave} disabled={saving || loading}><FaSave style={{marginRight: 8}}/>{saving ? 'Saving...' : 'Save'}</button>
+                <button className={styles.cancelBtn} onClick={handleCancel} disabled={saving}><FaTimes style={{marginRight: 8}}/>Cancel</button>
               </>
             )}
           </div>
@@ -660,7 +676,7 @@ export default function ItemDetailPage() {
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Location:</span><input value={editingItem.location || ''} onChange={e => handleInputChange('location', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>End User:</span><input value={editingItem.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} /></div>
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Date Acquired:</span><input type="date" value={formatDateForInput(editingItem.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Quantity:</span><input type="number" value={editingItem.quantity || ''} onChange={e => handleInputChange('quantity', e.target.value)} /></div>
+
                 <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Status:</span>
                   <select value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
                     {isToolOrSupply ? (
@@ -701,7 +717,7 @@ export default function ItemDetailPage() {
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Location:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.location || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>End User:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.end_user || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Date Acquired:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{formatDisplayDate(item.date_acquired) || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Quantity:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.quantity || 'N/A'}</b></div>
+
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.item_status || 'N/A'}</b></div>
                 <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Remarks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.remarks || 'N/A'}</b></div>
                 

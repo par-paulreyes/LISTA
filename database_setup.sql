@@ -57,7 +57,7 @@ CREATE TABLE items (
     brand VARCHAR(100) DEFAULT NULL,
     category ENUM('Electronic', 'Utility', 'Tool', 'Supply') DEFAULT NULL,
     quantity INT DEFAULT 1,
-    item_status ENUM('Available', 'Bad Condition', 'To be Borrowed', 'Borrowed') DEFAULT 'Available',
+    item_status ENUM('Available', 'Bad Condition', 'To be Borrowed', 'Borrowed', 'Out of Stock') DEFAULT 'Available',
     remarks TEXT DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { apiClient } from '../../config/api';
 import Image from "next/image";
 import styles from './page.module.css';
+import { useToast } from '../../contexts/ToastContext';
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const { showError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +32,9 @@ export default function LoginPage() {
         setError('Login failed - no token received');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Network error. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Network error. Please try again.';
+      setError(errorMessage);
+      showError("Login Failed", errorMessage);
     } finally {
       setLoading(false);
     }

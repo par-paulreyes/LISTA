@@ -6,6 +6,7 @@ import { apiClient, getImageUrl } from "../../../config/api";
 import { Camera, Upload, X, Check, Plus, Trash2, ArrowRight, ArrowLeft, Info, Settings, CheckCircle, AlertTriangle, XCircle, AlertOctagon } from "lucide-react";
 import styles from './page.module.css';
 import { supabase } from '../../../config/supabase';
+import { useToast } from '../../../contexts/ToastContext';
 // No compression - upload raw files as-is
 
 
@@ -42,6 +43,7 @@ function AddItemPageContent() {
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const { showSuccess, showError } = useToast();
   const [detectedCategory, setDetectedCategory] = useState<string>("");
  
   const router = useRouter();
@@ -252,11 +254,14 @@ function AddItemPageContent() {
           await apiClient.put(`/items/${newId}`, { image_url: finalImageUrl });
         }
       }
-      // 5. Redirect
+      // 5. Show success message and redirect
+      showSuccess("Item Created", "Item has been created successfully!");
       router.push('/inventory');
     } catch (err: any) {
       console.error('Error creating item:', err);
-      setError(err.message || 'Failed to create item. Please try again.');
+      const errorMessage = err.message || 'Failed to create item. Please try again.';
+      setError(errorMessage);
+      showError("Creation Failed", errorMessage);
     } finally {
       setLoading(false);
     }

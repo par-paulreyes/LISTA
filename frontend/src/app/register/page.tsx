@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "../../config/api";
 import styles from "./page.module.css";
 import { X, UserPlus } from "lucide-react";
+import { useToast } from "../../contexts/ToastContext";
 
 interface FormData {
   username: string;
@@ -29,6 +30,7 @@ export default function RegisterPage() {
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -70,11 +72,13 @@ export default function RegisterPage() {
     
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
+      showError("Validation Error", "Passwords do not match");
       return;
     }
 
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters long");
+      showError("Validation Error", "Password must be at least 6 characters long");
       return;
     }
 
@@ -91,7 +95,7 @@ export default function RegisterPage() {
       });
 
       if (response.data) {
-        alert("User created successfully!");
+        showSuccess("User Created", "User has been created successfully!");
         setFormData({
           username: "",
           full_name: "",
@@ -102,9 +106,12 @@ export default function RegisterPage() {
         });
       } else {
         setError("Failed to create user");
+        showError("Creation Failed", "Failed to create user");
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Network error. Please try again.");
+      const errorMessage = err.response?.data?.message || "Network error. Please try again.";
+      setError(errorMessage);
+      showError("Registration Failed", errorMessage);
     } finally {
       setSubmitting(false);
     }
