@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import '../../styles/globals.css';
 import NavbarWrapper from '../components/NavbarWrapper';
-import ConditionalTopNavbar from '../components/ConditionalTopNavbar';
+{/*import ConditionalTopNavbar from '../components/ConditionalTopNavbar';*/}
 import { ToastProvider } from '../contexts/ToastContext';
 
 const geistSans = Geist({
@@ -38,7 +38,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ToastProvider>
-          <ConditionalTopNavbar />
+          {/*<ConditionalTopNavbar />*/}
           {children}
           <NavbarWrapper />
         </ToastProvider>
