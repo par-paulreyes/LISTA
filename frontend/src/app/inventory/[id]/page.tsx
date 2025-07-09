@@ -7,17 +7,11 @@ import styles from "./page.module.css";
 import { FaEdit, FaSave, FaTrash, FaTimes, FaClipboardList, FaStethoscope, FaInfoCircle, FaCog, FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaHeartbeat, FaClock, FaRegSquare, FaRegCheckSquare, FaPlus } from "react-icons/fa";
 import { useToast } from "../../../contexts/ToastContext";
 
-
-
-
 // Helper to format date for <input type="date">
 function formatDateForInput(dateString: string) {
   if (!dateString) return '';
   return dateString.split('T')[0];
 }
-
-
-
 
 function formatDisplayDate(dateString: string) {
   if (!dateString) return '';
@@ -29,9 +23,6 @@ function formatDisplayDate(dateString: string) {
   });
 }
 
-
-
-
 function formatSpecifications(specs: string) {
   if (!specs) return [];
   // Split by common delimiters and clean up
@@ -40,9 +31,6 @@ function formatSpecifications(specs: string) {
     .map(spec => spec.trim())
     .filter(spec => spec.length > 0);
 }
-
-
-
 
 // Utility to fetch image as base64 and cache in localStorage
 async function fetchAndCacheImageBase64(imageUrl: string, cacheKey: string): Promise<string> {
@@ -68,10 +56,8 @@ async function fetchAndCacheImageBase64(imageUrl: string, cacheKey: string): Pro
   }
 }
 
-
-
-
 export default function ItemDetailPage() {
+  const [midNavTab, setMidNavTab] = useState<'general' | 'specs' | 'logs'>('general');
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [item, setItem] = useState<any>(null);
@@ -125,9 +111,6 @@ export default function ItemDetailPage() {
   const isElectronic = itemType === "Electronic";
   const isUtility = itemType === "Utility";
   const isToolOrSupply = itemType === "Tool" || itemType === "Supply";
-
-
-
 
   useEffect(() => {
     setMounted(true);
@@ -241,7 +224,6 @@ export default function ItemDetailPage() {
 
 
   const handleEdit = () => {
-    if (loading || !item) return;
     setIsEditing(true);
     setEditingItem({ ...item });
     setEditingLogs(logs.map(l => ({ ...l })));
@@ -249,9 +231,6 @@ export default function ItemDetailPage() {
     setError(""); // Clear any previous errors
     setSuccess(""); // Clear any previous success messages
   };
-
-
-
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -272,9 +251,6 @@ export default function ItemDetailPage() {
     // No need to delete uploaded images when canceling since we use upsert
     // and consistent filenames - the original image remains unchanged
   };
-
-
-
 
   const handleSave = async () => {
     if (!editingItem || !item || loading) return;
@@ -388,11 +364,11 @@ export default function ItemDetailPage() {
      
       // Trigger dashboard refresh by setting a timestamp
       localStorage.setItem('dashboard_refresh_trigger', Date.now().toString());
-      
+
       // Show success message
       setError(""); // Clear any previous errors
       showSuccess("Item Updated", "Item has been updated successfully!");
-      
+
     } catch (err: any) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -613,180 +589,188 @@ export default function ItemDetailPage() {
     <div className="min-h-screen flex items-center justify-center text-gray-500">Item not found.</div>
   );
 
-
-
+  // Determine status class
+  let statusClass = "";
+  if (item.item_status === "Available") statusClass = "status-available";
+  else if (item.item_status === "To be Borrowed") statusClass = "status-to-borrow";
+  else if (item.item_status === "Borrowed") statusClass = "status-borrowed";
+  else if (item.item_status === "Bad Condition") statusClass = "status-bad";
 
   return (
     <div className={styles.detailContainer}>
       {/* Top Section */}
-      <div className={styles.topCard}>
-        <div className={styles.topImageBox} style={{position:'relative'}}>
-          {isEditing && selectedImagePreview ? (
-            <img src={selectedImagePreview} alt="item preview" className={styles.topImage} />
-          ) : itemImageUrl ? (
-            <img src={itemImageUrl} alt="item" className={styles.topImage} />
-          ) : (
-            <span>image</span>
-          )}
-          {isEditing && (
+      <div className={styles.headerRow}>
+        <div>
+          <h3 className={styles.itemDetailTitle}>Item Detail</h3>
+        </div>
+        <div className={styles.topButtonRow}>
+          {!isEditing ? (
             <>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={handleImageChange}
-              />
-              <button className={styles.changeImageBtn} onClick={handleImageButtonClick} disabled={uploadingImage} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
-                {uploadingImage ? 'Processing...' : 'Select Image'}
-              </button>
-            </>
+              <button className={styles.editBtn} onClick={handleEdit} disabled={loading}><FaEdit style={{marginRight: 8}}/>Edit</button>
+              <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting || loading}><FaTrash style={{marginRight: 8}}/>{deleting ? 'Deleting...' : 'Delete'}</button>            </>
+          ) : (
+            <>
+              <button className={styles.saveBtn} onClick={handleSave} disabled={saving || loading}><FaSave style={{marginRight: 8}}/>{saving ? 'Saving...' : 'Save'}</button>
+              <button className={styles.cancelBtn} onClick={handleCancel} disabled={saving}><FaTimes style={{marginRight: 8}}/>Cancel</button>            </>
           )}
         </div>
-        <div className={styles.topMain}>
-          <div className={styles.centeredTitle}>
-            {(isEditing ? editingItem.qr_code : item.qr_code) || (isEditing ? editingItem.property_no : item.property_no)?.toUpperCase()}
-          </div>
-          <div className={styles.centeredSubtitle}>{isEditing ? editingItem.article_type : item.article_type}</div>
-          <div className={styles.topButtonRow}>
-            {!isEditing ? (
-              <>
-                <button className={styles.editBtn} onClick={handleEdit} disabled={loading}><FaEdit style={{marginRight: 8}}/>Edit</button>
-                <button className={styles.deleteBtn} onClick={handleDelete} disabled={deleting || loading}><FaTrash style={{marginRight: 8}}/>{deleting ? 'Deleting...' : 'Delete'}</button>
-              </>
-            ) : (
-              <>
-                <button className={styles.saveBtn} onClick={handleSave} disabled={saving || loading}><FaSave style={{marginRight: 8}}/>{saving ? 'Saving...' : 'Save'}</button>
-                <button className={styles.cancelBtn} onClick={handleCancel} disabled={saving}><FaTimes style={{marginRight: 8}}/>Cancel</button>
-              </>
-            )}
-          </div>
-                </div>
-              </div>
+      </div>
+      <div className={styles.topImageBox} style={{position:'relative'}}>
+        {isEditing && selectedImagePreview ? (
+          <img src={selectedImagePreview} alt="item preview" className={styles.topImage} />
+        ) : itemImageUrl ? (
+          <img src={itemImageUrl} alt="item" className={styles.topImage} />
+        ) : (
+          <span>image</span>
+        )}
+        {isEditing && (
+          <>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleImageChange}
+            />
+            <button className={styles.changeImageBtn} onClick={handleImageButtonClick} disabled={uploadingImage} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
+              {uploadingImage ? 'Processing...' : 'Select Image'}
+            </button>
+          </>
+        )}
+      </div> 
+      <div>
+        <div className={styles.articleTitle}>
+          {(isEditing ? editingItem.qr_code : item.qr_code) || (isEditing ? editingItem.property_no : item.property_no)?.toUpperCase()}
+        </div>
+        <div className={styles.centeredSubtitle}>{isEditing ? editingItem.article_type : item.article_type}</div>
+      </div>
+      <div className={styles.midNav}>
+        <button
+          className={`${styles.tabBtn} ${midNavTab === 'general' ? styles.tabBtnActive : ''}`}
+          onClick={() => setMidNavTab('general')}
+        >
+          General Info
+        </button>
+        <button
+          className={`${styles.tabBtn} ${midNavTab === 'logs' ? styles.tabBtnActive : ''}`}
+          onClick={() => setMidNavTab('logs')}
+        >
+          Maintenance
+        </button>
+      </div>
       {/* Middle Section: General Info & Specifications */}
       <div className={styles.middleSection}>
-        <div className={styles.infoCard}>
-          <div className={styles.blueHeader}><FaInfoCircle style={{marginRight: 8}}/>GENERAL INFO</div>
-          <div className={styles.cardContent}>
-            {isEditing ? (
-              <>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>QR Code:</span><input value={editingItem.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Property No:</span><input value={editingItem.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Serial No:</span><input value={editingItem.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Location:</span><input value={editingItem.location || ''} onChange={e => handleInputChange('location', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>End User:</span><input value={editingItem.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} /></div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Date Acquired:</span><input type="date" value={formatDateForInput(editingItem.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} /></div>
-
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Status:</span>
-                  <select value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
-                    {isToolOrSupply ? (
-                      <>
-                        <option value="Available">Available</option>
-                        <option value="Out of Stock">Out of Stock</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="Available">Available</option>
-                        <option value="Bad Condition">Bad Condition</option>
-                        <option value="To be Borrowed">To be Borrowed</option>
-                        <option value="Borrowed">Borrowed</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-                <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Remarks:</span><input value={editingItem.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} /></div>
-                
-                {/* Electronics-specific fields */}
-                {isElectronic && (
-                  <>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Article Type:</span><input value={editingItem.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Brand:</span><input value={editingItem.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Price:</span><input type="number" value={editingItem.price || ''} onChange={e => handleInputChange('price', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Supply Officer:</span><input value={editingItem.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Company:</span><input value={editingItem.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Maintenance Status:</span><input value={editingItem.maintenance_status || ''} onChange={e => handleInputChange('maintenance_status', e.target.value)} /></div>
-                    <div className={styles.grayRect} style={{marginBottom:'18px'}}><span>Pending Tasks:</span><input value={editingItem.pending_maintenance_count || ''} onChange={e => handleInputChange('pending_maintenance_count', e.target.value)} /></div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div style={{display:'flex',flexDirection:'column',gap:'20px',alignItems:'flex-start'}}>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>QR Code:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.qr_code || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Property No:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.property_no}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Serial No:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.serial_no || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Location:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.location || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>End User:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.end_user || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Date Acquired:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{formatDisplayDate(item.date_acquired) || 'N/A'}</b></div>
-
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.item_status || 'N/A'}</b></div>
-                <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Remarks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.remarks || 'N/A'}</b></div>
-                
-                {/* Electronics-specific fields */}
-                {isElectronic && (
-                  <>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Article Type:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.article_type}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Brand:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.brand || 'N/A'}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Price:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>₱{item.price || 'N/A'}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Supply Officer:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.supply_officer || 'N/A'}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Company:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.company_name || 'N/A'}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
-                    <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
-                  </>
-                )}
-              </div>
-            )}
-                </div>
-              </div>
-        <div className={styles.infoCard}>
-          <div className={styles.blueHeader}>
-            <FaCog style={{marginRight: 8}}/>
-            {isElectronic ? 'SPECIFICATIONS' : 'ITEM DESCRIPTION/SPECS'}
-          </div>
-          <div className={styles.cardContent}>
-            {isEditing ? (
-              <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
-          ) : (
-              <div>
-                {item.specifications ? (
-                  <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
-                    {formatSpecifications(item.specifications).map((spec, index) => (
-                      <span
-                        key={index}
-                        style={{
-                          background: '#e5e7eb',
-                          color: '#374151',
-                          padding: '4px 12px',
-                          borderRadius: '16px',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          border: '1px solid #d1d5db'
-                        }}
-                      >
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
-                )}
-              </div>
-                )}
-              </div>
-                  </div>
-                </div>
-      {/* Bottom Section: Logs as Tabs */}
-      <div className={styles.bottomSection}>
-        {(isElectronic || isUtility) ? (
+        {midNavTab === 'general' && (
           <>
-            <div className={styles.tabBar}>
-              <button className={styles.tabBtnActive}><FaClipboardList style={{marginRight: 8}}/>Logs</button>
+            <div className={styles.infoCard}>
+              <h4>General Information</h4>
+              {isEditing ? (
+                <>
+                  <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={editingItem.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>Property No</span><input value={editingItem.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>Serial No</span><input value={editingItem.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>Location</span><input value={editingItem.location || ''} onChange={e => handleInputChange('location', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>End User</span><input value={editingItem.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>Date Acquired</span><input type="date" value={formatDateForInput(editingItem.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} /></div>
+                  <div className={styles.grayRect}><span className={styles.label}>Status</span>
+                    <select className={styles.statusDropdown} value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
+                      {isToolOrSupply ? (
+                        <>
+                          <option value="Available">Available</option>
+                          <option value="Out of Stock">Out of Stock</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Available">Available</option>
+                          <option value="Bad Condition">Bad Condition</option>
+                          <option value="To be Borrowed">To be Borrowed</option>
+                          <option value="Borrowed">Borrowed</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                  <div className={styles.grayRect}><span className={styles.label}>Remarks</span><input value={editingItem.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} /></div>
+                  
+                  {/* Electronics-specific fields */}
+                  {isElectronic && (
+                    <>
+                      <div className={styles.grayRect}><span className={styles.label}>Article Type</span><input value={editingItem.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} /></div>
+                      <div className={styles.grayRect}><span className={styles.label}>Brand</span><input value={editingItem.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} /></div>
+                      <div className={styles.grayRect}><span className={styles.label}>Price</span><input type="number" value={editingItem.price || ''} onChange={e => handleInputChange('price', e.target.value)} /></div>
+                      <div className={styles.grayRect}><span className={styles.label}>Supply Officer</span><input value={editingItem.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} /></div>
+                      <div className={styles.grayRect}><span className={styles.label}>Company</span><input value={editingItem.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} /></div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:'20px',alignItems:'flex-start'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>QR Code</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.qr_code || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Property No</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.property_no}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Serial No</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.serial_no || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Location</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.location || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>End User</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.end_user || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Date Acquired</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{formatDisplayDate(item.date_acquired) || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.item_status || 'N/A'}</b></div>
+                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Remarks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.remarks || 'N/A'}</b></div>
+                  
+                  {/* Electronics-specific fields */}
+                  {isElectronic && (
+                    <>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Article Type</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.article_type}</b></div>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Brand</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.brand || 'N/A'}</b></div>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Price</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>₱{item.price || 'N/A'}</b></div>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Supply Officer</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.supply_officer || 'N/A'}</b></div>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Company</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.company_name || 'N/A'}</b></div>
+                    </>
+                  )}
+                </div>
+              )}
+              <h4>Specifications</h4>
+              {isEditing ? (
+                <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
+              ) : (
+                <div>
+                  {item.specifications ? (
+                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                      {formatSpecifications(item.specifications).map((spec, index) => (
+                        <span key={index} className={styles.specs}>{spec}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
+                  )}
+                </div>
+              )}
             </div>
-            <div className={styles.tabsContent}>
+          </>
+        )}
+        {midNavTab === 'logs' && (
+          <div className={styles.logsSection}>
+            {/* Logs content (already uses isEditing logic) */}
+            {(isElectronic || isUtility) ? (
               <>
-                <div className={styles.solidBlueHeaderLogs} style={{textAlign:'center'}}><FaClipboardList style={{marginRight: 8}}/>Maintenance Tasks & Logs</div>
+                {/* WAIT LANG DITO
+                  {isEditing ? (
+                    <div className={styles.statusCard}>
+                      <div className={styles.grayRect}><span className={styles.label}>Maintenance Status:</span><input value={editingItem.maintenance_status || ''} onChange={e => handleInputChange('maintenance_status', e.target.value)} /></div>
+                      <div className={styles.grayRect}><span className={styles.label}>Pending Tasks:</span><input value={editingItem.pending_maintenance_count || ''} onChange={e => handleInputChange('pending_maintenance_count', e.target.value)} /></div>
+                    </div>
+                  ) : (
+                    <div className={styles.statusCard}>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
+                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                    </div>
+                  )}
+                */}
+                <div className={styles.statusCard}>
+                  <h4>Status</h4>
+                  <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
+                  <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                </div>
                 <div className={styles.checklist}>
+                  <h4>Logs and Activities</h4>
                   {logsToShow.length > 0 ? logsToShow.map((log, i) => (
-                    <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start',marginBottom:16}}>
+                    <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start'}}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
                         {isEditing ? (
                           <input
@@ -798,7 +782,6 @@ export default function ItemDetailPage() {
                         ) : (
                           log.completed ? <FaRegCheckSquare style={{color:'#22c55e'}}/> : <FaRegSquare style={{color:'#f59e42'}}/>
                         )}
-                        {getTaskStatusIcon(log.status)}
                         <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>
                           {isEditing && String(log.id)?.startsWith('new-') ? (
                             <input 
@@ -812,7 +795,8 @@ export default function ItemDetailPage() {
                             log.task_performed
                           )}
                         </span>
-                        <span style={{fontSize:12,color:'#888',marginLeft:8}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
+                        {getTaskStatusIcon(log.status)}
+                        <span style={{fontSize:12, color:'#888'}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
                         {isEditing && String(log.id)?.startsWith('new-') && (
                           <button 
                             onClick={() => removeNewLog(i - editingLogs.length)}
@@ -846,48 +830,32 @@ export default function ItemDetailPage() {
                       </div>
                     </div>
                   )) : <div style={{color: '#888'}}>No logs found.</div>}
-                  
                   {isEditing && (
-                    <div style={{marginTop: '20px', textAlign: 'center'}}>
+                    <>
                       <button 
                         type="button"
                         onClick={addNewLog}
-                        style={{
-                          background: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}
+                        className={styles.addNewMaintBtn}
                       >
                         <FaPlus size={14} />
                         Add New Maintenance Log
                       </button>
-                    </div>
+                    </>
                   )}
                 </div>
               </>
-            </div>
-          </>
-        ) : (
-          <div className={styles.tabsContent}>
-            <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
-              <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
-              <p>No additional tabs available for this item type.</p>
-              <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information above.</p>
-            </div>
+            ) : (
+              <div className={styles.tabsContent}>
+                <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
+                  <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
+                  <p>No additional tabs available for this item type.</p>
+                  <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information in previous tabs.</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   );
 }
-
-
-
-
-
