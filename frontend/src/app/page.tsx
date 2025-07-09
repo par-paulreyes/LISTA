@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./dashboard.module.css";
 import { apiClient } from "../config/api";
-import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus } from "react-icons/fa";
+import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus, FaBoxOpen, FaMapMarkerAlt } from "react-icons/fa";
+import { FiRefreshCw } from 'react-icons/fi';
 
 
 interface Item {
@@ -373,7 +374,39 @@ export default function DashboardPage() {
 
 
   return (
-    <div className={styles.dashboardContainer}>
+    <div className={styles['main-container']}>
+      {/* Blue box at the top */}
+      <div className={styles.dashboardCard} style={{ background: 'var(--bg-navbar-card)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+          {/* Left: Dashboard title */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div className={styles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Dashboard</div>
+          </div>
+          {/* Right: Inventory System and time updated */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Inventory System</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', opacity: 0.85 }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+              <button
+                onClick={handleManualRefresh}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 4 }}
+                title="Refresh"
+                disabled={refreshing}
+              >
+                <FiRefreshCw
+                  size={16}
+                  style={{
+                    color: 'var(--text-primary)',
+                    verticalAlign: 'middle',
+                    animation: refreshing ? 'spin 1s linear infinite' : undefined
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Main dashboard content */}
       {!mounted && (
         <div style={{
           textAlign: 'center',
@@ -384,7 +417,6 @@ export default function DashboardPage() {
           Loading...
         </div>
       )}
-     
       {mounted && loading && (
         <div style={{
           textAlign: 'center',
@@ -395,7 +427,6 @@ export default function DashboardPage() {
           Loading dashboard data...
         </div>
       )}
-     
       {mounted && error && (
         <div style={{
           backgroundColor: '#fef2f2',
@@ -408,213 +439,197 @@ export default function DashboardPage() {
           {error}
         </div>
       )}
-     
       {mounted && !loading && !error && (
         <>
-          {/* Header Card - matching QR scanner style */}
-          <div className={styles.dashboardCard}>
-            <Image
-              src="/dtc.svg"
-              alt="Inventory Background"
-              className={styles.dashboardCardBg}
-              fill
-              priority
-            />
-            <div className={styles.dashboardCardContent}>
-              <div className={styles.dashboardCardTitle}>Dashboard</div>
-              <div className={styles.dashboardCardRow}>
-                <div className={styles.dashboardCardStatBlock}>
-                  <div className={styles.dashboardCardNumberRow}>
-                    <span className={styles.dashboardCardNumber}>{totalItems}</span>
-                    <span className={styles.dashboardCardItemsLabel}>items</span>
+          {/* Two-column layout for cards */}
+          <div style={{ display: 'flex', gap: 24 }}>
+            {/* Column 1: Needs Action + Total Maintenance */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div className={styles.dashboardCardContainerNeedsAction}>
+                <div
+                  className={`${styles.infoCard} maintenanceCard`}
+                  onClick={() => router.push('/inventory?item_status=Bad%20Condition')}
+                  style={{ cursor: 'pointer', minHeight: 179 }}
+                  title="Click to view all items with Bad Condition status"
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>
+                    <span style={{ color: '#374151', fontWeight: 700, fontSize: '1.25rem' }}>Needs Action</span>
                   </div>
-                  <div className={styles.dashboardCardDetailsRow}>
-                    <span className={styles.dashboardCardBadge} style={{ background: 'none', borderRadius: 0, padding: 0, fontWeight: 400 }}>Inventory Total</span>
+                  <div style={{ color: badConditionCount > 0 ? '#ef4444' : '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 12 }}>
+                    {badConditionCount > 0 ? 'item needs action' : 'All items in good condition'}
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 16 }}>
+                    {/* Good Condition Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}>{goodConditionCount}</span>
+                      </span>
+                      <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Good Condition</span>
                 </div>
-                <div className={styles.dashboardCardInfoBlock}>
-                  <div className={styles.dashboardCardInfoTextBlock}>
-                    <span>Inventory System</span>
-                    <div className={styles.dashboardCardDetailsRow}>
-                      <span>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                      <button
-                        onClick={handleManualRefresh}
-                        disabled={refreshing}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '4px',
-                          borderRadius: '4px',
-                          opacity: refreshing ? 0.5 : 0.8,
-                          transition: 'all 0.2s ease',
-                          marginLeft: '8px'
-                        }}
-                        title="Refresh data"
-                      >
-                        <FaSyncAlt
-                          size={14}
-                          style={{
-                            color: '#fff',
-                            animation: refreshing ? 'spin 1s linear infinite' : 'none'
-                          }}
-                        />
-                      </button>
+                    {/* Divider */}
+                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
+                    {/* Need Action Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}>{badConditionCount}</span>
+                      </span>
+                      <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Need Action</span>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-
-          {/* Dashboard Info Cards - 2x2 grid, custom markup */}
-          <div className={styles.dashboardInfoGrid}>
-            {/* Status Card: Need Action = Bad Condition, Good Condition = Available */}
-            <div
-              className={`${styles.infoCard} ${styles.infoCardTopBorder}`}
-              onClick={() => router.push('/inventory?item_status=Bad%20Condition')}
-              style={{ cursor: 'pointer' }}
-              title="Click to view all items with Bad Condition status"
-            >
-              <div className={styles.cardTopRow}>
-                <span className={styles.cardNumber} style={{ color: 'var(--primary-red-dark)' }}>{badConditionCount}</span>
-                <span className={styles.cardIcon} style={{ background: 'var(--neutral-gray-200)' }}>
-                  <FaTools size={28} style={{ color: 'var(--primary-red-dark)' }} />
-                </span>
-              </div>
-              <div className={styles.cardTitle} style={{ color: 'var(--neutral-gray-900)' }}>Needs Action</div>
-              <div className={`${styles.cardChange} ${badConditionCount > 0 ? styles['cardChange--red'] : styles['cardChange--green']}`}>{badConditionCount > 0 ? 'Items need action' : 'All items in good condition'}</div>
-              <div className={styles.cardStatsRow}>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{goodConditionCount}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>GOOD CONDITION</span>
-                </div>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--red']}`}>{badConditionCount}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>NEED ACTION</span>
-                </div>
-              </div>
-              <div className={styles.cardFooterRow}>
-                <span className={styles.cardDate} style={{ color: 'var(--neutral-gray-900)' }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            </div>
-            {/* Article Card: Total Articles and breakdown */}
-            <div
-              className={`${styles.infoCard} ${styles.infoCardTopBorder}`}
-              onClick={() => router.push('/inventory')}
-              style={{ cursor: 'pointer' }}
-              title="Click to view all inventory items"
-            >
-              <div className={styles.cardTopRow}>
-                <span className={styles.cardNumber} style={{ color: 'var(--primary-red-dark)' }}>{Object.values(categoryCounts).reduce((a, b) => a + b, 0)}</span>
-                <span className={styles.cardIcon} style={{ background: 'var(--neutral-gray-200)' }}>
-                  <FaBoxes size={28} style={{ color: 'var(--primary-red-dark)' }} />
-                </span>
-              </div>
-              <div className={styles.cardTitle} style={{ color: 'var(--neutral-gray-900)' }}>Total Articles</div>
-              <div className={styles.cardStatsRow}>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{categoryCounts['Electronic']}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>ELECTRONIC</span>
-                </div>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{categoryCounts['Utility']}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>UTILITY</span>
-                </div>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{categoryCounts['Tool']}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>TOOL</span>
-                </div>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{categoryCounts['Supply']}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>SUPPLY</span>
-                </div>
-              </div>
-              <div className={styles.cardFooterRow}>
-                <span className={styles.cardDate} style={{ color: 'var(--neutral-gray-900)' }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            </div>
-            {/* Total Maintenance */}
-            <div
-              className={`${styles.infoCard} ${styles.infoCardTopBorder}`}
-              onClick={() => handleCardClick('total-maintenance')}
-              style={{ cursor: 'pointer' }}
-              title="Click to view items with pending maintenance"
-            >
-              <div className={styles.cardTopRow}>
-                <span className={styles.cardNumber} style={{ color: 'var(--primary-red-dark)' }}>{totalMaintenance}</span>
-                <span className={styles.cardIcon} style={{ background: 'var(--neutral-gray-200)' }}>
-                  <FaChartBar size={28} style={{ color: 'var(--primary-red-dark)' }} />
-                </span>
-              </div>
-              <div className={styles.cardTitle} style={{ color: 'var(--neutral-gray-900)' }}>Total Maintenance</div>
-              <div className={`${styles.cardChange} ${pendingMaintenance > 0 ? styles['cardChange--red'] : styles['cardChange--green']}`}>
-                {pendingMaintenance > 0 ? `${pendingMaintenance} pending` : `${completedMaintenance} completed`}
-              </div>
-              <div className={styles.cardProgressBar} title={
-                totalMaintenance === 0
-                  ? 'No maintenance logs yet'
-                  : completedMaintenance === totalMaintenance
-                    ? 'All maintenance completed'
-                    : `${completedMaintenance} of ${totalMaintenance} completed`
-              }>
+              <div className={styles.dashboardCardContainerMaintenance}>
                 <div
-                  className={
-                    completedMaintenance === totalMaintenance && totalMaintenance > 0
-                      ? styles['cardProgress--green']
-                      : styles['cardProgress--red']
-                  }
-                  style={{ width: `${totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) * 100 : 0}%` }}
-                />
+                  className={`${styles.infoCard} totalCard`}
+                  onClick={() => handleCardClick('total-maintenance')}
+                  style={{ cursor: 'pointer', minHeight: 260 }}
+                  title="Click to view items with pending maintenance"
+                >
+                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Total Maintenance</div>
+                  <div style={{ color: pendingMaintenance > 0 ? '#ef4444' : '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 30 }}>
+                    {pendingMaintenance > 0 ? `${pendingMaintenance} Pending` : `${completedMaintenance} Completed`}
+                  </div>
+                  {/* Progress Bar below card change */}
+                  <div style={{ width: '100%', height: 10, background: 'var(--bg-gray-100)', borderRadius: 5, margin: '24px 0 45px 0', overflow: 'hidden', position: 'relative' }}>
+                    <div
+                      className={styles.dashboardProgressBarCompleted}
+                      style={{ width: `${totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                    {/* Good Condition Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: '#e6f9ed', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Green checkmark icon */}
+                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6,13 11,18 18,7" stroke="#10b981" strokeWidth="2" fill="none"/></svg>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{completedMaintenance}</span>
+                        <span style={{ color: '#374151' }}>Completed</span>
+            </div>
+          </div>
+                    {/* Divider */}
+                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
+                    {/* Need Action Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        <svg width="20" height="20" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{pendingMaintenance}</span>
+                        <span style={{ color: '#374151' }}>Pending</span>
+                      </div>
               </div>
-              <div className={styles.cardStatsRow}>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{completedMaintenance}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>COMPLETED</span>
                 </div>
-                <div>
-                  <span className={`${styles.cardStatValue} ${pendingMaintenance > 0 ? styles['stat--red'] : styles['stat--green']}`}>{pendingMaintenance}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>PENDING</span>
                 </div>
-              </div>
-              <div className={styles.cardFooterRow}>
-                <span className={styles.cardDate} style={{ color: 'var(--neutral-gray-900)' }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>
-            {/* Recently Added */}
+            {/* Column 2: Total Articles + Recently Added */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div className={styles.dashboardCardContainerArticles}>
             <div
-              className={`${styles.infoCard} ${styles.infoCardTopBorder}`}
-              onClick={() => handleCardClick('recently-added')}
-              style={{ cursor: 'pointer' }}
+                  className={`${styles.infoCard} articlesCard`}
+              onClick={() => router.push('/inventory')}
+                  style={{ cursor: 'pointer', minHeight: 260 }}
               title="Click to view all inventory items"
             >
-              <div className={styles.cardTopRow}>
-                <span className={styles.cardNumber} style={{ color: 'var(--primary-red-dark)' }}>{recentlyAdded}</span>
-                <span className={styles.cardIcon} style={{ background: 'var(--neutral-gray-200)' }}>
-                  <FaPlus size={28} style={{ color: 'var(--primary-red-dark)' }} />
+                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Total Articles</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 0, marginTop: 24 }}>
+                    {/* Electronics */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
+                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Device icon */}
+                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="8" y1="19" x2="16" y2="19"/></svg>
                 </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Electronic']}</span>
+                        <span style={{ color: '#374151' }}>Electronics</span>
               </div>
-              <div className={styles.cardTitle} style={{ color: 'var(--neutral-gray-900)' }}>Recently Added</div>
-              <div className={`${styles.cardChange} ${styles['cardChange--green']}`}>+{recentlyAdded} this week</div>
-              <div className={styles.cardStatsRow}>
-                <div>
-                  <span className={`${styles.cardStatValue} ${styles['stat--green']}`}>{todayAdded}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>TODAY</span>
                 </div>
-                <div>
-                  <span className={styles.cardStatValue} style={{ color: '#111' }}>{yesterdayAdded}</span> <span className={styles.cardStatLabel} style={{ color: 'var(--neutral-gray-900)' }}>YESTERDAY</span>
+                
+                    {/* Utilities */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
+                      <span style={{ background: '#ede9fe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Plug icon */}
+                        <svg width="20" height="20" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="8" rx="2"/><line x1="12" y1="10" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Utility']}</span>
+                        <span style={{ color: '#374151' }}>Utilities</span>
+                </div>
+                </div>
+                    {/* Tools */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
+                      <span style={{ background: '#e0f2fe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Bag icon */}
+                        <svg width="20" height="20" fill="none" stroke="#38bdf8" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Tool']}</span>
+                        <span style={{ color: '#374151' }}>Tools</span>
                 </div>
               </div>
-              <div className={styles.cardFooterRow}>
-                <span className={styles.cardDate} style={{ color: 'var(--neutral-gray-900)' }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                    {/* Supplies */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
+                      <span style={{ background: '#fef9c3', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Bar chart icon */}
+                        <svg width="20" height="20" fill="none" stroke="#f59e42" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="5" width="4" height="15" rx="1"/></svg>
+                </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Supply']}</span>
+                        <span style={{ color: '#374151' }}>Supplies</span>
+              </div>
+              </div>
+                </div>
+                </div>
+              </div>
+              <div className={styles.dashboardCardContainerRecent}>
+            <div
+                  className={`${styles.infoCard} recentCard`}
+              onClick={() => handleCardClick('recently-added')}
+                  style={{ cursor: 'pointer', minHeight: 189.5 }}
+              title="Click to view all inventory items"
+            >
+                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Recently Added</div>
+                  <div style={{ color: '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 12 }}>+{recentlyAdded} this week</div>
+                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
+                    {/* Today Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Calendar icon */}
+                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="4"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{todayAdded}</span>
+                        <span style={{ color: '#374151' }}>Today</span>
+                      </div>
+                    </div>
+                    {/* Divider */}
+                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
+                    {/* Yesterday Stat */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <span style={{ background: '#dbeafe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Clock icon */}
+                        <svg width="20" height="20" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
+                </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{yesterdayAdded}</span>
+                        <span style={{ color: '#374151' }}>Yesterday</span>
+                      </div>
+              </div>
+                </div>
+                </div>
               </div>
             </div>
           </div>
-
-
-          {/* Recent Section */}
-          <div className={styles.dashboardRecent}>
-            <div className={styles.dashboardRecentTitle}>Recently Added Items</div>
-            <div className={styles.dashboardRecentList}>
+          {/* Recent Items Table/List */}
+          <div className={styles.dashboardTable}>
+            <div className={styles.dashboardTableHeader}>
+              <div className={styles.dashboardTableTitle} style={{ color: 'var(--neutral-gray-700)' }}>Recently Added Items</div>
+            </div>
+            <div className={styles.dashboardTableContent}>
               {recentItems.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '2rem',
-                  color: '#6b7280',
-                  fontSize: '0.9rem'
-                }}>
+                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--neutral-gray-700)', fontSize: '0.9rem' }}>
                   {totalItems === 0 ? 'No items in inventory yet' : 'No recent items to display'}
                   {totalItems > 0 && (
                     <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
@@ -623,127 +638,32 @@ export default function DashboardPage() {
                   )}
                 </div>
               ) : (
-                recentItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={styles.dashboardRecentCard}
-                    onClick={() => router.push(`/inventory/${item.id}`)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      {/* Remove image display */}
-                      {/* {itemImageUrls[item.id] ? (
-                        <img
-                          src={itemImageUrls[item.id]}
-                          alt={item.article_type}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            objectFit: 'cover',
-                            borderRadius: '8px',
-                            border: '1px solid #e5e7eb'
-                          }}
-                        />
-                      ) : ( */}
-                        <div style={{
-                          width: 48,
-                          height: 48,
-                          backgroundColor: '#f3f4f6',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '1px solid #e5e7eb'
-                        }}>
-                          {(item.article_type || '').toLowerCase().includes('desktop') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                              <line x1="8" y1="21" x2="16" y2="21"/>
-                              <line x1="12" y1="17" x2="12" y2="21"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('laptop') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                              <line x1="2" y1="10" x2="22" y2="10"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('printer') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <polyline points="6,9 6,2 18,2 18,9"/>
-                              <path d="M6,18H4a2,2 0 0,1 -2,-2v-5a2,2 0 0,1 2,-2h16a2,2 0 0,1 2,2v5a2,2 0 0,1 -2,2h-2"/>
-                              <rect x="6" y="14" width="12" height="8"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('monitor') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                              <line x1="8" y1="21" x2="16" y2="21"/>
-                              <line x1="12" y1="17" x2="12" y2="21"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('scanner') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                              <line x1="8" y1="21" x2="16" y2="21"/>
-                              <line x1="12" y1="17" x2="12" y2="21"/>
-                              <line x1="6" y1="8" x2="18" y2="8"/>
-                              <line x1="6" y1="12" x2="18" y2="12"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('server') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                              <line x1="6" y1="6" x2="6" y2="6"/>
-                              <line x1="6" y1="18" x2="6" y2="18"/>
-                            </svg>
-                          )}
-                          {(item.article_type || '').toLowerCase().includes('network') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <circle cx="12" cy="12" r="3"/>
-                              <path d="M12 1v6m0 6v6"/>
-                              <path d="M21 12h-6m-6 0H3"/>
-                              <path d="M19.78 4.22l-4.24 4.24m-6.36 6.36l-4.24 4.24"/>
-                              <path d="M4.22 4.22l4.24 4.24m6.36 6.36l4.24 4.24"/>
-                            </svg>
-                          )}
-                          {!(item.article_type || '').toLowerCase().includes('desktop') &&
-                           !(item.article_type || '').toLowerCase().includes('laptop') &&
-                           !(item.article_type || '').toLowerCase().includes('printer') &&
-                           !(item.article_type || '').toLowerCase().includes('monitor') &&
-                           !(item.article_type || '').toLowerCase().includes('scanner') &&
-                           !(item.article_type || '').toLowerCase().includes('server') &&
-                           !(item.article_type || '').toLowerCase().includes('network') && (
-                            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                              <circle cx="8.5" cy="8.5" r="1.5"/>
-                              <polyline points="21,15 16,10 5,21"/>
-                            </svg>
-                          )}
-                        </div>
-                      {/* )} */}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '0.9rem' }}>
-                          {item.article_type || 'Unnamed Item'}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-                          QR: {item.qr_code}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-                          Added: {new Date(item.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <table>
+                  <thead>
+                    <tr>
+                      <th className={styles.recentItemHeader}>Type</th>
+                      <th className={styles.recentItemHeader}>QR Code</th>
+                      <th className={styles.recentItemHeader}>Date Added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentItems.map((item) => (
+                      <tr
+                        key={item.id}
+                        className={styles.recentItemRow}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => router.push(`/inventory/${item.id}`)}
+                      >
+                        <td>{item.article_type || 'Unnamed Item'}</td>
+                        <td>{item.qr_code}</td>
+                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
-        </>
-      )}
-
-
       {/* Add CSS for spinning animation */}
       <style jsx>{`
         @keyframes spin {
@@ -751,9 +671,9 @@ export default function DashboardPage() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+        </>
+      )}
     </div>
   );
 }
-
-
 

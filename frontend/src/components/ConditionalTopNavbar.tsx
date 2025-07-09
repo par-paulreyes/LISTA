@@ -1,5 +1,4 @@
 "use client";
-import TopNavbar from "./TopNavbar";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -17,5 +16,6 @@ export default function ConditionalTopNavbar() {
   }
 
   if (pathname === "/login") return null;
-  return <TopNavbar />;
+  return null;
 } 
+
