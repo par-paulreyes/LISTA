@@ -280,7 +280,6 @@
 .filterbar-select {
   -webkit-appearance: none;
   -moz-appearance: none;
-  /*background-image: url('/filter-bg-2.svg');*/
   border: 1px solid #e5e7eb;
   flex: 1;
   min-width: 0;
@@ -298,24 +297,7 @@
   padding-bottom: 0;
 }
 
-/*
 .inventory-header-row {
-  background: linear-gradient(90deg, #b91c1c 60%, #ef4444 100%);
-  border-radius: 15px 15px 0 0; 
-  padding: 25px 0 10px 15px;
-  height: 120px;
-  marginBottom: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}*/
-
-.inventory-header-row {
-  margin-top: 20px;
   display: flex;
   justify-content: space-between;
 }

@@ -663,7 +663,7 @@ export default function ItemDetailPage() {
         {midNavTab === 'general' && (
           <>
             <div className={styles.infoCard}>
-              <h4>General Information</h4>
+              <h4 className={styles.sectionTitle}>General Information</h4>
               {isEditing ? (
                 <>
                   <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={editingItem.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} /></div>
@@ -725,7 +725,7 @@ export default function ItemDetailPage() {
                   )}
                 </div>
               )}
-              <h4>Specifications</h4>
+              <h4 className={styles.sectionTitle}>Specifications</h4>
               {isEditing ? (
                 <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
               ) : (
