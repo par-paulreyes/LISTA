@@ -50,6 +50,16 @@ function AddItemPageContent() {
   const searchParams = useSearchParams();
   const webcamRef = useRef<Webcam>(null);
 
+  const [cameraConstraints, setCameraConstraints] = useState<any>({
+    width: { ideal: 1280, min: 640 },
+    height: { ideal: 720, min: 480 },
+    facingMode: "environment",
+    aspectRatio: { ideal: 16/9 },
+    frameRate: { ideal: 30, min: 15 }
+  });
+  const [cameraSupportChecked, setCameraSupportChecked] = useState(false);
+  const [cameraSupported, setCameraSupported] = useState(true);
+
   // Define category groups
   const electronicCategories = ["PC", "PR", "MON", "TP", "MS", "KEY", "UPS"];
   const utilityCategories = ["UTLY", "TOOL", "SPLY"];
@@ -113,6 +123,14 @@ function AddItemPageContent() {
       setDetectedCategory("");
     }
   }, [form.qr_code]);
+
+  // Check HTTPS and camera support on mount
+  useEffect(() => {
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraSupported(false);
+    }
+    setCameraSupportChecked(true);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -196,7 +214,37 @@ function AddItemPageContent() {
   };
 
   const handleCameraError = (error: string) => {
-    setCameraError(error);
+    // Fallback to basic constraints if not already tried
+    if (cameraConstraints.width.ideal !== 320) {
+      setCameraConstraints({
+        width: { ideal: 320, min: 160 },
+        height: { ideal: 240, min: 120 },
+        facingMode: "environment",
+        frameRate: { ideal: 10, min: 5 }
+      });
+      return;
+    }
+    let userFriendlyError = 'Camera access denied or not supported.';
+    switch (error) {
+      case 'NotAllowedError':
+        userFriendlyError = 'Camera access denied. Please allow camera permissions in your browser settings.';
+        break;
+      case 'NotFoundError':
+        userFriendlyError = 'No camera found on this device. Please use file upload instead.';
+        break;
+      case 'NotSupportedError':
+        userFriendlyError = 'Camera not supported on this device. Please use file upload instead.';
+        break;
+      case 'NotReadableError':
+        userFriendlyError = 'Camera is in use by another application. Please close other camera apps and try again.';
+        break;
+      case 'OverconstrainedError':
+        userFriendlyError = 'Camera constraints not supported. Please use file upload instead.';
+        break;
+      default:
+        userFriendlyError = `Camera error: ${error}. Please use file upload instead.`;
+    }
+    setCameraError(userFriendlyError);
     setCameraLoading(false);
     setShowCamera(false);
   };
@@ -628,13 +676,7 @@ function AddItemPageContent() {
                         audio={false}
                         screenshotFormat="image/png"
                         screenshotQuality={1}
-                        videoConstraints={{
-                          width: { ideal: 3840, min: 1920 },
-                          height: { ideal: 2160, min: 1080 },
-                          facingMode: "environment",
-                          aspectRatio: { ideal: 16/9 },
-                          frameRate: { ideal: 30, min: 24 }
-                        }}
+                        videoConstraints={cameraConstraints}
                         onUserMedia={() => handleCameraReady()}
                         onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
                         className={styles.webcam}
