@@ -6,6 +6,7 @@ import styles from "./dashboard.module.css";
 import { apiClient } from "../config/api";
 import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus, FaBoxOpen, FaMapMarkerAlt } from "react-icons/fa";
 import { FiRefreshCw } from 'react-icons/fi';
+import React from "react";
 
 
 
@@ -420,6 +421,60 @@ export default function DashboardPage() {
 
 
 
+  // Lightweight CountUp component
+  function CountUp({ end, duration = 1, ...props }: { end: number, duration?: number }) {
+    const [value, setValue] = React.useState(0);
+
+    React.useEffect(() => {
+      setValue(0); // Always start from 0
+      let startTime: number | null = null;
+      let rafId: number;
+
+      function animate(now: number) {
+        if (!startTime) startTime = now;
+        const elapsed = (now - startTime) / 1000;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.round(end * progress);
+        setValue(current);
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animate);
+        }
+      }
+
+      rafId = requestAnimationFrame(animate);
+      return () => rafId && cancelAnimationFrame(rafId);
+    }, [end, duration]);
+
+    return <span {...props}>{value}</span>;
+  }
+
+
+
+
+  // Animated progress bar for maintenance
+  const [animatedWidth, setAnimatedWidth] = useState(0);
+  const progressPercent = totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) * 100 : 0;
+  useEffect(() => {
+    let frame: number;
+    let start: number | null = null;
+    const initial = animatedWidth;
+    const target = progressPercent;
+    const duration = 800; // ms
+    function animate(now: number) {
+      if (start === null) start = now;
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimatedWidth(initial + (target - initial) * progress);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      } else {
+        setAnimatedWidth(target);
+      }
+    }
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressPercent]);
 
 
 
@@ -459,14 +514,7 @@ export default function DashboardPage() {
       </div>
       {/* Main dashboard content */}
       {!mounted && (
-        <div style={{
-          textAlign: 'center',
-          padding: '2rem',
-          fontSize: '1.1rem',
-          color: '#6b7280'
-        }}>
-          Loading...
-        </div>
+        <></>
       )}
       {mounted && loading && (
         <div style={{
@@ -475,7 +523,8 @@ export default function DashboardPage() {
           fontSize: '1.1rem',
           color: '#6b7280'
         }}>
-          Loading dashboard data...
+          <div className={styles.dashboardLoadingSpinner}></div>
+          <div style={{marginTop: '1rem'}}>Loading dashboard data...</div>
         </div>
       )}
       {mounted && error && (
@@ -513,7 +562,7 @@ export default function DashboardPage() {
                     {/* Good Condition Stat */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}>{goodConditionCount}</span>
+                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(goodConditionCount) ? 0 : goodConditionCount} /></span>
                       </span>
                       <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Good Condition</span>
                 </div>
@@ -522,7 +571,7 @@ export default function DashboardPage() {
                     {/* Need Action Stat */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}>{badConditionCount}</span>
+                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(badConditionCount) ? 0 : badConditionCount} /></span>
                       </span>
                       <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Need Action</span>
                     </div>
@@ -544,7 +593,7 @@ export default function DashboardPage() {
                   <div style={{ width: '100%', height: 10, background: 'var(--bg-gray-100)', borderRadius: 5, margin: '24px 0 45px 0', overflow: 'hidden', position: 'relative' }}>
                     <div
                       className={styles.dashboardProgressBarCompleted}
-                      style={{ width: `${totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) * 100 : 0}%` }}
+                      style={{ width: `${animatedWidth}%` }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
@@ -555,7 +604,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6,13 11,18 18,7" stroke="#10b981" strokeWidth="2" fill="none"/></svg>
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{completedMaintenance}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
                         <span style={{ color: '#374151' }}>Completed</span>
             </div>
           </div>
@@ -567,7 +616,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
                 </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{pendingMaintenance}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
                         <span style={{ color: '#374151' }}>Pending</span>
                       </div>
               </div>
@@ -593,7 +642,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="8" y1="19" x2="16" y2="19"/></svg>
                 </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Electronic']}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Electronic']) ? 0 : categoryCounts['Electronic']} /></span>
                         <span style={{ color: '#374151' }}>Electronics</span>
               </div>
                 </div>
@@ -605,7 +654,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="8" rx="2"/><line x1="12" y1="10" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Utility']}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Utility']) ? 0 : categoryCounts['Utility']} /></span>
                         <span style={{ color: '#374151' }}>Utilities</span>
                 </div>
                 </div>
@@ -616,7 +665,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#38bdf8" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Tool']}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Tool']) ? 0 : categoryCounts['Tool']} /></span>
                         <span style={{ color: '#374151' }}>Tools</span>
                 </div>
               </div>
@@ -627,7 +676,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#f59e42" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="5" width="4" height="15" rx="1"/></svg>
                 </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{categoryCounts['Supply']}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Supply']) ? 0 : categoryCounts['Supply']} /></span>
                         <span style={{ color: '#374151' }}>Supplies</span>
               </div>
               </div>
@@ -651,7 +700,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="4"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{todayAdded}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(todayAdded) ? 0 : todayAdded} /></span>
                         <span style={{ color: '#374151' }}>Today</span>
                       </div>
                     </div>
@@ -664,7 +713,7 @@ export default function DashboardPage() {
                         <svg width="20" height="20" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
                 </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}>{yesterdayAdded}</span>
+                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(yesterdayAdded) ? 0 : yesterdayAdded} /></span>
                         <span style={{ color: '#374151' }}>Yesterday</span>
                       </div>
               </div>
