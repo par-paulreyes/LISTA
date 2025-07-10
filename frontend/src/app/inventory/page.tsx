@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { apiClient } from "../../config/api";
 import './inventory.css';
+import { FiRefreshCw } from 'react-icons/fi';
 
 interface Item {
   id: number;
@@ -20,6 +21,7 @@ interface Item {
   item_status?: string;
   specifications?: string;
   remarks?: string;
+  created_at?: string; // Added for recently added calculation
 }
 
 function InventoryPageContent() {
@@ -41,8 +43,41 @@ function InventoryPageContent() {
   const [modalItemStatus, setModalItemStatus] = useState("");
   const [modalMaintenanceFilter, setModalMaintenanceFilter] = useState("");
 
+  // Dashboard statistics state
+  const [goodConditionCount, setGoodConditionCount] = useState(0);
+  const [badConditionCount, setBadConditionCount] = useState(0);
+  const [pendingMaintenance, setPendingMaintenance] = useState(0);
+  const [completedMaintenance, setCompletedMaintenance] = useState(0);
+  const [totalMaintenance, setTotalMaintenance] = useState(0);
+  const [categoryCounts, setCategoryCounts] = useState<{ [key: string]: number }>({});
+  const [recentlyAdded, setRecentlyAdded] = useState(0);
+  const [todayAdded, setTodayAdded] = useState(0);
+  const [yesterdayAdded, setYesterdayAdded] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const fetchItems = async (showLoading = true) => {
+    if (showLoading) setLoading(true); else setRefreshing(true);
+    setError("");
+    try {
+      const res = await apiClient.get("/items");
+      const itemsWithMaintenance = res.data.map((item: any) => ({
+        ...item,
+        has_pending_maintenance: item.maintenance_status === 'pending' || item.pending_maintenance_count > 0,
+        pending_maintenance_count: item.pending_maintenance_count || 0
+      }));
+      setItems(itemsWithMaintenance);
+      setLastUpdated(new Date());
+    } catch (err) {
+      setError("Error loading items");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -50,33 +85,22 @@ function InventoryPageContent() {
 
   useEffect(() => {
     if (!mounted) return;
-    
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
       return;
     }
-
     // Check for URL parameters to set initial filters
     const maintenanceParam = searchParams.get('maintenance');
     if (maintenanceParam) {
       setMaintenanceFilter(maintenanceParam);
     }
-
-    apiClient
-      .get("/items")
-      .then((res) => {
-        // Add maintenance status to items
-        const itemsWithMaintenance = res.data.map((item: any) => ({
-          ...item,
-          has_pending_maintenance: item.maintenance_status === 'pending' || item.pending_maintenance_count > 0,
-          pending_maintenance_count: item.pending_maintenance_count || 0
-        }));
-        setItems(itemsWithMaintenance);
-      })
-      .catch((err) => setError("Error loading items"))
-      .finally(() => setLoading(false));
+    fetchItems();
   }, [router, searchParams, mounted]);
+
+  const handleManualRefresh = () => {
+    fetchItems(false);
+  };
 
   // Filter logic
   const filteredItems = items.filter((item) => {
@@ -175,66 +199,103 @@ function InventoryPageContent() {
 
   return (
     <div className="main-container">
-      <div className="inventory-header-row">
-        <h3 className="inventory-header-title">Inventory</h3>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            className="filter-modal-btn"
-            onClick={openFilterModal}
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-              <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Filter
-          </button>
-          <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+      {/* Inventory Top Card */}
+      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
+        <div className="inventory-header-row" style={{ marginBottom: 0 }}>
+          <h3 className="inventory-header-title">Inventory</h3>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button
-              className="export-dropdown-btn"
-              onClick={() => setShowExportDropdown(!showExportDropdown)}
-              disabled={exporting}
+              className="filter-modal-btn"
+              onClick={openFilterModal}
             >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
+                <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Export
+              Filter
             </button>
-            {showExportDropdown && (
-              <div className="export-dropdown-menu">
-                <button
-                  className="export-dropdown-item"
-                  onClick={() => {
-                    handleExport("excel");
-                    setShowExportDropdown(false);
-                  }}
-                  disabled={exporting}
-                >
-                  {exporting ? "Exporting..." : "Export Excel"}
-                </button>
-                <button
-                  className="export-dropdown-item"
-                  onClick={() => {
-                    handleExport("csv");
-                    setShowExportDropdown(false);
-                  }}
-                  disabled={exporting}
-                >
-                  {exporting ? "Exporting..." : "Export CSV"}
-                </button>
-                <button
-                  className="export-dropdown-item"
-                  onClick={() => {
-                    handleExport("pdf");
-                    setShowExportDropdown(false);
-                  }}
-                  disabled={exporting}
-                >
-                  {exporting ? "Exporting..." : "Export PDF"}
-                </button>
-              </div>
-            )}
+            <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+              <button
+                className="export-dropdown-btn"
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                disabled={exporting}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export
+              </button>
+              {showExportDropdown && (
+                <div className="export-dropdown-menu">
+                  <button
+                    className="export-dropdown-item"
+                    onClick={() => {
+                      handleExport("excel");
+                      setShowExportDropdown(false);
+                    }}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting..." : "Export Excel"}
+                  </button>
+                  <button
+                    className="export-dropdown-item"
+                    onClick={() => {
+                      handleExport("csv");
+                      setShowExportDropdown(false);
+                    }}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting..." : "Export CSV"}
+                  </button>
+                  <button
+                    className="export-dropdown-item"
+                    onClick={() => {
+                      handleExport("pdf");
+                      setShowExportDropdown(false);
+                    }}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting..." : "Export PDF"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+        {/* Search Bar */}
+        <div
+          className="inventory-search-container"
+          style={{
+            background: '#fff',
+            border: '1.5px solid #d1d5db',
+            borderRadius: '12px',
+            marginBottom: '0',
+            marginTop: '15px',
+            padding: '0 10px',
+            boxSizing: 'border-box',
+            height: '48px',
+            boxShadow: 'none',
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <div className="search-icon">
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by QR Code, Description/Specs, Property No., Serial No."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
       {/* Filter Modal */}
@@ -332,40 +393,6 @@ function InventoryPageContent() {
           </div>
         </div>
       )}
-      {/* Search Bar */}
-      <div
-        className="inventory-search-container"
-        style={{
-          background: '#fff',
-          border: '1.5px solid #d1d5db',
-          borderRadius: '12px',
-          marginBottom: '18px',
-          marginTop: '15px',
-          padding: '0 10px',
-          boxSizing: 'border-box',
-          height: '48px',
-          boxShadow: 'none',
-          position: 'relative',
-          zIndex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%'
-        }}
-      >
-        <div className="search-icon">
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </div>
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search by QR Code, Description/Specs, Property No., Serial No."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
       {/* Filter Status Display */}
       {maintenanceFilter === "pending" && (
         <div style={{

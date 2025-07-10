@@ -1,6 +1,6 @@
 .main-container {
   max-width: 700px;
-  margin: 0 auto 0 auto;
+  margin: 40px auto 0 auto;
   background: #fff;
   border-radius: 24px;
   box-shadow: 0 4px 32px rgba(0,0,0,0.10);
@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 120px);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 @media (max-width: 700px) {
@@ -27,7 +27,7 @@
     margin-top: 10px;
   }
   .inventory-header-title {
-    font-size: 1.2rem !important;
+    font-size: 2rem !important;
     text-align: left;
     margin-bottom: 0;
   }
@@ -101,7 +101,7 @@
 }
 
 .inventory-header-title {
-  font-size: 25px;
+  font-size: 2rem;
   font-weight: medium;
   margin: 0;
 }
@@ -116,7 +116,7 @@
   margin-bottom: 18px;
   color: #4b5563;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: box-shadow 0.3s, border-color 0.3s;
   border: 1.5px solid #e5e7eb;
@@ -170,7 +170,7 @@
 }
 
 .inventory-title {
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: bold;
   text-align: left;
   margin-bottom: 0;
@@ -220,7 +220,7 @@
   height: 100%;
   font-size: 1rem;
   color: #1e293b;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   padding: 12px 0;
 }
 
@@ -270,7 +270,7 @@
   padding: 0 16px;
   border-radius: 999px;
   height: 40px;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .filterbar-input {
@@ -287,7 +287,7 @@
   padding: 10px 16px;
   border: none;
   font-size: 14px;
-  color: #000`;
+  color: #000;
   font-weight: 500;
   margin-right: 8px;
   transition: box-shadow 0.2s;
@@ -330,7 +330,7 @@ text-decoration: none !important;
   top: 22px;
   right: 28px;
   padding: 4px 18px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 1rem;
   font-weight: 500;
   border: 1.5px solid #e5e7eb;
@@ -345,21 +345,25 @@ text-decoration: none !important;
   color: #117636;
   border-color: #bbf7d0;
   background: #f0fdf4;
+  border-radius: 6px;
 }
 .status-borrowed {
   color: #3b82f6;
   border-color: #bae6fd;
   background: #f0f9ff;
+  border-radius: 6px;
 }
 .status-to-borrow {
   color: #2563eb;
   border-color: #dbeafe;
   background: #eff6ff;
+  border-radius: 6px;
 }
 .status-bad {
   color: #dc2626;
   border-color: #fecaca;
   background: #fef2f2;
+  border-radius: 6px;
 }
 
 .maintenance-warning {
@@ -410,7 +414,7 @@ text-decoration: none !important;
 option {
   background: #fff;
   color: #000;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-size: 15px;
   font-weight: 500;
 }
@@ -472,7 +476,7 @@ option {
   padding: 10px 20px;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
@@ -528,7 +532,7 @@ option {
   border: none;
   background: transparent;
   color: #333;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-size: 14px;
   text-align: left;
   cursor: pointer;
@@ -617,7 +621,7 @@ option {
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   color: #22223b;
   background: #f9fafb;
   font-weight: 500;
@@ -643,7 +647,7 @@ option {
   border-radius: 8px;
   padding: 10px 28px;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -660,7 +664,7 @@ option {
   border-radius: 8px;
   padding: 10px 28px;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
@@ -707,4 +711,10 @@ option {
 .filter-modal-btn:hover {
   background: #B6D3FA;
   color: #1d4ed8;
+}
+
+@media (min-width: 700px) and (max-width: 800px) {
+  .inventory-header-title {
+    font-size: 2rem !important;
+  }
 }
