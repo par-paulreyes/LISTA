@@ -14,6 +14,11 @@ import dashboardStyles from '../../dashboard.module.css';
 
 
 
+
+
+
+
+
 function AddItemPageContent() {
   const [form, setForm] = useState({
     property_no: "",
@@ -51,6 +56,7 @@ function AddItemPageContent() {
   const searchParams = useSearchParams();
   const webcamRef = useRef<Webcam>(null);
 
+
   const [cameraConstraints, setCameraConstraints] = useState<any>({
     width: { ideal: 1280, min: 640 },
     height: { ideal: 720, min: 480 },
@@ -61,15 +67,19 @@ function AddItemPageContent() {
   const [cameraSupportChecked, setCameraSupportChecked] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
 
+
   // Define category groups
   const electronicCategories = ["PC", "PR", "MON", "TP", "MS", "KEY", "UPS"];
   const utilityCategories = ["UTLY", "TOOL", "SPLY"];
 
 
 
+
+
+
   useEffect(() => {
     setMounted(true);
-    
+   
     // Cleanup function to delete uploaded image if component unmounts
     return () => {
       if (imageUrl && imageUrl.includes('/')) {
@@ -86,6 +96,7 @@ function AddItemPageContent() {
     };
   }, [imageUrl]);
 
+
   // Check for QR code parameter and auto-fill qr_code field
   useEffect(() => {
     if (!mounted) return;
@@ -96,17 +107,18 @@ function AddItemPageContent() {
     }
   }, [searchParams, mounted]);
 
+
   // Auto-detect category by TAG from QR code
   useEffect(() => {
     if (!form.qr_code) {
       setDetectedCategory("");
       return;
     }
-    
+   
     // Parse QR code for TAG - look for patterns like -PC-, -PR-, etc.
     const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
     const match = form.qr_code.match(tagPattern);
-    
+   
     if (match) {
       const tag = match[1].toUpperCase();
       if (electronicCategories.includes(tag)) {
@@ -125,6 +137,7 @@ function AddItemPageContent() {
     }
   }, [form.qr_code]);
 
+
   // Check HTTPS and camera support on mount
   useEffect(() => {
     if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -133,9 +146,11 @@ function AddItemPageContent() {
     setCameraSupportChecked(true);
   }, []);
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,6 +178,7 @@ function AddItemPageContent() {
     }
   };
 
+
   const capturePhoto = () => {
     if (webcamRef.current) {
       // Get the video element from webcam
@@ -171,15 +187,15 @@ function AddItemPageContent() {
         // Create a canvas with the video's actual dimensions
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
+       
         // Set canvas to video's actual dimensions for maximum quality
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+       
         if (ctx) {
           // Draw the video frame to canvas at full resolution
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
+         
           // Convert to high-quality PNG
           const imageSrc = canvas.toDataURL('image/png', 1.0);
           setCapturedImage(imageSrc);
@@ -200,6 +216,7 @@ function AddItemPageContent() {
     }
   };
 
+
   const retakePhoto = () => {
     setCapturedImage("");
     setShowCamera(true);
@@ -207,12 +224,14 @@ function AddItemPageContent() {
     setCameraLoading(true);
   };
 
+
   const removeImage = () => {
     setImageFile(null);
     setImagePreview("");
     setCapturedImage("");
     setImageUrl("");
   };
+
 
   const handleCameraError = (error: string) => {
     // Fallback to basic constraints if not already tried
@@ -250,9 +269,11 @@ function AddItemPageContent() {
     setShowCamera(false);
   };
 
+
   const handleCameraStart = () => {
     setCameraLoading(false);
   };
+
 
   const handleCameraReady = () => {
     setCameraLoading(false);
@@ -261,10 +282,14 @@ function AddItemPageContent() {
 
 
 
+
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+
 
     try {
       // 1. Prepare item data (without image_url)
@@ -316,6 +341,7 @@ function AddItemPageContent() {
     }
   };
 
+
   const dataURLtoFile = (dataurl: string, filename: string): File => {
     const arr = dataurl.split(',');
     const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
@@ -328,6 +354,7 @@ function AddItemPageContent() {
     return new File([u8arr], filename, { type: mime });
   };
 
+
   const handleCancel = async () => {
     if (confirm("Are you sure you want to cancel? All entered data will be lost.")) {
       // Delete uploaded image if it exists
@@ -339,7 +366,7 @@ function AddItemPageContent() {
           console.error('Error deleting uploaded image:', err);
         }
       }
-      
+     
       // Clear all image preview states
       setImageFile(null);
       setImagePreview("");
@@ -348,14 +375,18 @@ function AddItemPageContent() {
       setShowCamera(false);
       setCameraError("");
       setCameraLoading(false);
-      
+     
       router.push("/inventory");
     }
   };
 
 
 
+
+
+
   const previewSrc = imageUrl || imagePreview || capturedImage;
+
 
   if (!mounted) {
     return (
@@ -366,14 +397,16 @@ function AddItemPageContent() {
     );
   }
 
+
   // Determine which fields to show based on category
   const isElectronic = detectedCategory === "Electronic";
   const isUtilityToolSupply = ["Utility", "Tool", "Supply"].includes(detectedCategory);
 
+
   return (
-    <div className="main-container">
-      {/* Top card like dashboard */}
-      <div className={dashboardStyles.dashboardCard} style={{ background: 'var(--bg-navbar-card)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
+    <div className={styles["main-container"]}>
+      {/* Top card exactly like dashboard */}
+      <div className={styles.dashboardCardAddStatic} style={{ color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
           {/* Left: Add Item title */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -392,6 +425,7 @@ function AddItemPageContent() {
           {/* Image Upload/Capture at the top, centered */}
           <div className={styles.imageBoxMargin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
+
             <div className={styles.imageUpload} style={{ margin: '0 auto' }}>
               {/* Show camera if active */}
               {showCamera ? (
@@ -406,10 +440,10 @@ function AddItemPageContent() {
                       onUserMedia={() => handleCameraReady()}
                       onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
                       className={styles.webcam}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover', 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
                         background: '#fff'
                       }}
                     />
@@ -653,7 +687,7 @@ function AddItemPageContent() {
                 </div>
                 <div className={styles.formRow} style={{ alignItems: 'flex-start' }}>
                   <label className={styles.formLabel} style={{ marginTop: 10 }}>Specifications</label>
-                  <div className={styles.inputWrapper}> 
+                  <div className={styles.inputWrapper}>
                     <textarea
                       name="specifications"
                       rows={4}
@@ -811,6 +845,7 @@ function AddItemPageContent() {
   );
 }
 
+
 // Loading component for Suspense fallback
 function AddItemPageLoading() {
   return (
@@ -835,6 +870,7 @@ function AddItemPageLoading() {
   );
 }
 
+
 // Main component with Suspense wrapper
 export default function AddItemPage() {
   return (
@@ -843,3 +879,4 @@ export default function AddItemPage() {
     </Suspense>
   );
 }
+

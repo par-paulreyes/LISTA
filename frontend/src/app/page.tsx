@@ -8,6 +8,8 @@ import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools,
 import { FiRefreshCw } from 'react-icons/fi';
 
 
+
+
 interface Item {
   id: number;
   property_no: string;
@@ -32,6 +34,8 @@ interface Item {
 }
 
 
+
+
 export default function DashboardPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [neededMaintenance, setNeededMaintenance] = useState(0);
@@ -44,6 +48,7 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [criticalItems, setCriticalItems] = useState(0);
@@ -65,6 +70,8 @@ export default function DashboardPage() {
   const router = useRouter();
 
 
+
+
   // Function to fetch dashboard data
   const fetchDashboardData = useCallback(async (showLoading = true) => {
     if (showLoading) {
@@ -80,6 +87,8 @@ export default function DashboardPage() {
         apiClient.get("/items/maintenance/needed"),
         apiClient.get("/logs"),
       ]);
+
+
 
 
       const items = itemsRes.data;
@@ -126,11 +135,13 @@ export default function DashboardPage() {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
+
       const todayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
         const itemDate = new Date(item.created_at);
         return itemDate.toDateString() === today.toDateString();
       }).length;
+
 
       const yesterdayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -138,11 +149,13 @@ export default function DashboardPage() {
         return itemDate.toDateString() === yesterday.toDateString();
       }).length;
 
+
       // Get recently added items (last 5 items)
       const recentItemsList = items
         .filter((item: Item) => item && item.created_at) // Filter out items without creation date
         .sort((a: Item, b: Item) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5);
+
 
       // Calculate recently added count (items added in last 7 days)
       const sevenDaysAgo = new Date();
@@ -153,6 +166,7 @@ export default function DashboardPage() {
         return itemDate >= sevenDaysAgo;
       }).length;
 
+
       // Calculate recently added articles this week
       const recentlyAddedArticles = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -161,6 +175,7 @@ export default function DashboardPage() {
       });
       const recentlyAddedArticlesCount = recentlyAddedArticles.length;
 
+
       // Calculate 'other' articles (not Desktop or Printer) added this week
       const recentlyAddedOthers = recentlyAddedArticles.filter((item: Item) => {
         const type = (item.article_type || '').toLowerCase();
@@ -168,12 +183,14 @@ export default function DashboardPage() {
       });
       const recentlyAddedOthersCount = recentlyAddedOthers.length;
 
+
       // Find the most recently added article type this week (excluding Desktop and Printer)
       let mostRecentOtherArticle = '';
       if (recentlyAddedOthers.length > 0) {
         mostRecentOtherArticle = recentlyAddedOthers[0].article_type || '';
       }
       setMostRecentOtherArticle(mostRecentOtherArticle);
+
 
       // Calculate item_status counts
       const goodCondition = items.filter((item: Item) => item.item_status === 'Available').length;
@@ -236,15 +253,21 @@ export default function DashboardPage() {
   }, []);
 
 
+
+
   // Manual refresh function
   const handleManualRefresh = () => {
     fetchDashboardData(false);
   };
 
 
+
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+
 
 
   useEffect(() => {
@@ -263,6 +286,8 @@ export default function DashboardPage() {
   }, [router, mounted]);
 
 
+
+
   useEffect(() => {
     if (!mounted) return;
    
@@ -273,8 +298,12 @@ export default function DashboardPage() {
     }
 
 
+
+
     // Initial data fetch
     fetchDashboardData();
+
+
 
 
     // Set up automatic refresh every 30 seconds
@@ -283,10 +312,14 @@ export default function DashboardPage() {
     }, 30000); // 30 seconds
 
 
+
+
     // Set up focus refresh (refresh when user returns to tab)
     const handleFocus = () => {
       fetchDashboardData(false);
     };
+
+
 
 
     // Set up visibility change refresh (refresh when user returns to tab)
@@ -297,6 +330,8 @@ export default function DashboardPage() {
     };
 
 
+
+
     // Set up route change refresh (refresh when user navigates back to dashboard)
     const handleRouteChange = () => {
       // Check if we're on the dashboard page
@@ -304,6 +339,8 @@ export default function DashboardPage() {
         fetchDashboardData(false);
       }
     };
+
+
 
 
     // Check for maintenance update triggers
@@ -321,13 +358,19 @@ export default function DashboardPage() {
     };
 
 
+
+
     // Check for maintenance updates every 2 seconds
     const maintenanceCheckInterval = setInterval(checkMaintenanceUpdates, 2000);
+
+
 
 
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('popstate', handleRouteChange);
+
+
 
 
     // Cleanup
@@ -341,6 +384,8 @@ export default function DashboardPage() {
   }, [router, mounted, fetchDashboardData]);
 
 
+
+
   const handleDiagnostic = async (id: string) => {
     try {
       await apiClient.get(`/diagnostics/item/${id}`);
@@ -349,6 +394,8 @@ export default function DashboardPage() {
       console.error("Error running diagnostic:", err);
     }
   };
+
+
 
 
   const handleCardClick = (cardType: string) => {
@@ -373,10 +420,14 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   return (
     <div className={styles['main-container']}>
       {/* Blue box at the top */}
-      <div className={styles.dashboardCard} style={{ background: 'var(--bg-navbar-card)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
+      <div className={styles.dashboardCard} style={{ background: 'var(--neutral-gray-200', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
           {/* Left: Dashboard title */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -546,7 +597,7 @@ export default function DashboardPage() {
                         <span style={{ color: '#374151' }}>Electronics</span>
               </div>
                 </div>
-                
+               
                     {/* Utilities */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
                       <span style={{ background: '#ede9fe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
@@ -676,4 +727,8 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+
+
 

@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;600;700&display=swap');
+
 
 
 .container {
@@ -11,9 +12,11 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   min-height: calc(100vh - 120px);
 }
+
+
 
 
 @media (max-width: 1024px) {
@@ -25,6 +28,8 @@
 }
 
 
+
+
 @media (max-width: 800px) {
   .container {
     max-width: 98vw;
@@ -32,6 +37,8 @@
     gap: 24px;
   }
 }
+
+
 
 
 @media (max-width: 600px) {
@@ -44,6 +51,8 @@
 }
 
 
+
+
 @media (max-width: 400px) {
   .container {
     padding: 8px 1vw 12px 1vw;
@@ -51,6 +60,8 @@
     border-radius: 8px;
   }
 }
+
+
 
 
 @media (max-width: 601px) and (min-width: 601px) {
@@ -83,6 +94,8 @@
     text-align: center;
   }
 }
+
+
 
 
 @media (max-width: 700px) and (min-width: 600px) {
@@ -118,6 +131,9 @@
 
 
 
+
+
+
 .headerCard {
   background: linear-gradient(90deg, #d32d23 0%, #b91c1c 100%);
   border-radius: 24px;
@@ -131,6 +147,8 @@
 }
 
 
+
+
 .headerTitle {
   font-size: 1.4rem;
   font-weight: 700;
@@ -138,10 +156,14 @@
 }
 
 
+
+
 .headerSubtitle {
   font-size: 1rem;
   font-weight: 400;
 }
+
+
 
 
 .cancelBtnHeader {
@@ -168,10 +190,14 @@
 }
 
 
+
+
 .cancelBtnHeader:hover {
   background: rgba(255,255,255,0.28);
   color: #fff;
 }
+
+
 
 
 @media (max-width: 800px) {
@@ -212,6 +238,8 @@
 }
 
 
+
+
 .mainCard {
   background: #fff;
   border-radius: 0 0 15px 15px;
@@ -221,6 +249,8 @@
 }
 
 
+
+
 .tabNav {
   display: flex;
   gap: 12px;
@@ -228,6 +258,8 @@
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
 }
+
+
 
 
 .tabBtn, .tabBtnActive {
@@ -250,16 +282,22 @@
 }
 
 
+
+
 .tabBtn:hover {
   border-color: #264072;
   color:#182848;
 }
 
 
+
+
 .tabBtnActive {
   background: linear-gradient(90deg, #182848 10%, #0c182f 90%);
   color: #fff;
 }
+
+
 
 
 .formGrid {
@@ -273,6 +311,8 @@
 }
 
 
+
+
 .input {
   width: 600px;
   padding: 12px;
@@ -284,15 +324,19 @@
   background: #fff;
   margin-bottom: 18px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   box-sizing: border-box;
 }
+
+
 
 
 .input::placeholder, .select::placeholder, .textareaFindings::placeholder, .textareaRecommendations::placeholder {
   color: #9ca3af;
   opacity: 1;
 }
+
+
 
 
 .label {
@@ -304,8 +348,10 @@
   margin-bottom: 6px;
   font-size: 15px;
   letter-spacing: 0.5px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
+
+
 
 
 .select {
@@ -319,8 +365,10 @@
   background: #fff;
   margin-bottom: 18px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
+
+
 
 
 .imageUpload {
@@ -341,6 +389,8 @@
 }
 
 
+
+
 .imageUploadIcon {
   display: flex;
   align-items: center;
@@ -355,6 +405,8 @@
 }
 
 
+
+
 .imageUploadTitle {
   font-weight: 700;
   color: #222b3a;
@@ -362,6 +414,8 @@
   margin-bottom: 6px;
   text-align: center;
 }
+
+
 
 
 .imageUploadDesc {
@@ -372,6 +426,8 @@
 }
 
 
+
+
 .imageUploadActions {
   display: flex;
   flex-direction: row;
@@ -379,6 +435,8 @@
   justify-content: center;
   margin-top: 12px;
 }
+
+
 
 
 .uploadLabel, .takePhotoBtn {
@@ -401,9 +459,13 @@
 }
 
 
+
+
 .uploadLabel:hover, .takePhotoBtn:hover {
   background: #ad1742;
 }
+
+
 
 
 .imagePreview {
@@ -416,6 +478,8 @@
 }
 
 
+
+
 .removeImageBtn, .retakePhotoBtn {
   padding: 8px 16px;
   border-radius: 8px;
@@ -425,6 +489,8 @@
 }
 
 
+
+
 .removeImageBtn {
   background: #fee2e2;
   color: #dc2626;
@@ -432,9 +498,13 @@
 }
 
 
+
+
 .removeImageBtn:hover {
   background: #fecaca;
 }
+
+
 
 
 .retakePhotoBtn {
@@ -444,9 +514,13 @@
 }
 
 
+
+
 .retakePhotoBtn:hover {
   background: #bfdbfe;
 }
+
+
 
 
 .footerNav {
@@ -457,6 +531,8 @@
   border-top: 1px solid #e2e8f0;
   margin-top: 32px;
 }
+
+
 
 
 .backBtn, .nextBtn, .submitBtn {
@@ -474,6 +550,8 @@
 }
 
 
+
+
 .backBtn {
   background: #f3f4f6;
   color: #6b7280;
@@ -481,10 +559,14 @@
 }
 
 
+
+
 .backBtn:hover {
   background: #e5e7eb;
   color: #374151;
 }
+
+
 
 
 .nextBtn {
@@ -495,10 +577,14 @@
 }
 
 
+
+
 .nextBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
+
+
 
 
 .submitBtn {
@@ -508,10 +594,14 @@
 }
 
 
+
+
 .submitBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
+
+
 
 
 .submitBtn:disabled {
@@ -519,6 +609,8 @@
   cursor: not-allowed;
   transform: none;
 }
+
+
 
 
 .progressCard {
@@ -530,11 +622,15 @@
 }
 
 
+
+
 .checklist {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
+
+
 
 
 .checklistItem {
@@ -546,10 +642,14 @@
 }
 
 
+
+
 .checklistItem:hover {
   border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
+
 
 
 .checkbox {
@@ -562,10 +662,14 @@
 }
 
 
+
+
 .checkbox:checked {
   background: #dc2626;
   border-color: #dc2626;
 }
+
+
 
 
 .notesInput {
@@ -577,7 +681,7 @@
   border: 1px solid #d1d5db;
   border-radius: 12px;
   font-size: 15px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   resize: vertical;
   min-height: 30px;
   background: #f8fafc;
@@ -586,6 +690,8 @@
   display: block;
   box-sizing: border-box;
 }
+
+
 
 
 @media (max-width: 800px) {
@@ -611,6 +717,8 @@
 }
 
 
+
+
 .customTaskInput {
   width: 70%;
   max-width: 100%;
@@ -621,9 +729,11 @@
   border-radius: 12px;
   font-size: 14px;
   height: 30px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   display: block;
 }
+
+
 
 
 @media (max-width: 600px) {
@@ -633,6 +743,8 @@
     font-size: 13px;
   }
 }
+
+
 
 
 .addTaskBtn {
@@ -652,10 +764,14 @@
 }
 
 
+
+
 .addTaskBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
+
+
 
 
 .removeTaskBtn {
@@ -669,9 +785,13 @@
 }
 
 
+
+
 .removeTaskBtn:hover {
   background: #fecaca;
 }
+
+
 
 
 .diagnosticsCard {
@@ -680,6 +800,8 @@
   border-radius: 12px;
   padding: 20px;
 }
+
+
 
 
 .webcam {
@@ -692,6 +814,8 @@
   background: #fff !important;
   display: block;
 }
+
+
 
 
 .capturePhotoBtn, .cancelBtn {
@@ -708,16 +832,22 @@
 }
 
 
+
+
 .capturePhotoBtn {
   background: #059669;
   color: white;
-  
+ 
 }
+
+
 
 
 .capturePhotoBtn:hover {
   background: #069064;
 }
+
+
 
 
 .cancelBtn {
@@ -726,10 +856,14 @@
 }
 
 
+
+
 .cancelBtn:hover {
   background: #e5e7eb;
   color: #374151;
 }
+
+
 
 
 .tryUploadBtn, .tryAgainBtn {
@@ -743,15 +877,21 @@
 }
 
 
+
+
 .tryUploadBtn {
   background: #dbeafe;
   color: #2563eb;
 }
 
 
+
+
 .tryUploadBtn:hover {
   background: #bfdbfe;
 }
+
+
 
 
 .tryAgainBtn {
@@ -760,14 +900,20 @@
 }
 
 
+
+
 .tryAgainBtn:hover {
   background: #fecaca;
 }
 
 
+
+
 .formGridTopMargin {
   margin-top: 10px;
 }
+
+
 
 
 .textareaFindings, .textareaRecommendations, .textarea {
@@ -782,20 +928,23 @@
   color: #222;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   resize: vertical;
   overflow: auto;
   box-sizing: border-box;
 }
 
+
 .textareaFindings, .textareaRecommendations {
   margin: 0 50px 5px 50px;
 }
+
 
 .textarea {
   margin-left: 0px;
   margin-bottom: 18px;
 }
+
 
 .specsLabel {
   min-width: 160px;
@@ -804,6 +953,8 @@
   text-align: left;
   margin-left: 0;
 }
+
+
 
 
 .itemPictureLabel {
@@ -815,9 +966,11 @@
   margin-bottom: 6px;
   font-size: 15px;
   letter-spacing: 0.5px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   margin-left: 50px;
 }
+
+
 
 
 .maintenanceInfoCard {
@@ -835,6 +988,8 @@
 }
 
 
+
+
 .maintenanceProgressCard {
   background: #e6fbe853;
   border-radius: 16px;
@@ -846,6 +1001,8 @@
   gap: 24px;
   margin: 10px 10px 20px 10px;
 }
+
+
 
 
 .maintenanceChecklistTitle {
@@ -861,6 +1018,8 @@
 }
 
 
+
+
 .maintenanceChecklist {
   display: flex;
   flex-direction: column;
@@ -869,12 +1028,16 @@
 }
 
 
+
+
 .maintenanceAddTaskRow  {
   display: flex;
   gap: 10px;
   margin-top: 10px;
   margin-bottom: 10px;
 }
+
+
 
 
 @media (max-width: 600px) {
@@ -892,6 +1055,8 @@
 }
 
 
+
+
 .diagnosticsDropdownWrapper {
   position: relative;
   margin-left: 50px;
@@ -899,11 +1064,15 @@
 }
 
 
+
+
 .diagnosticsSelect {
   width: 220px;
   display: block;
   margin-bottom: 18px;
 }
+
+
 
 
 .diagnosticsStatusIcon {
@@ -915,6 +1084,8 @@
 }
 
 
+
+
 .diagnosticsLabel {
   margin-left: 50px;
   font-weight: 600;
@@ -924,12 +1095,16 @@
 }
 
 
+
+
 .customDropdown {
   position: relative;
   width: 220px;
   user-select: none;
   margin-bottom: 18px;
 }
+
+
 
 
 .customDropdownSelected {
@@ -942,8 +1117,10 @@
   background: #fff;
   cursor: pointer;
   font-size: 15px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
+
+
 
 
 .customDropdownList {
@@ -960,6 +1137,8 @@
 }
 
 
+
+
 .customDropdownOption {
   display: flex;
   align-items: center;
@@ -967,9 +1146,11 @@
   padding: 10px 16px;
   cursor: pointer;
   font-size: 15px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   transition: background 0.2s;
 }
+
+
 
 
 .customDropdownOption:hover {
@@ -977,9 +1158,13 @@
 }
 
 
+
+
 .diagnosticsOptionLabel {
   margin-left: 10px;
 }
+
+
 
 
 .imagePreviewBox {
@@ -999,7 +1184,10 @@
 }
 
 
+
+
 /* --- Enhanced Responsive Styles Start --- */
+
 
 /* Header responsiveness */
 @media (max-width: 800px) {
@@ -1060,6 +1248,7 @@
   }
 }
 
+
 /* Input fields responsiveness */
 @media (max-width: 800px) {
   .input {
@@ -1083,9 +1272,12 @@
   }
 }
 
+
 /* --- Enhanced Responsive Styles End --- */
 
+
 /* --- Enhanced Responsive Styles for Buttons, Cards, and Layouts Start --- */
+
 
 /* Buttons responsiveness */
 @media (max-width: 800px) {
@@ -1116,6 +1308,7 @@
   }
 }
 
+
 /* Cards responsiveness */
 @media (max-width: 800px) {
   .mainCard, .progressCard, .diagnosticsCard, .maintenanceInfoCard, .maintenanceProgressCard {
@@ -1135,6 +1328,7 @@
     padding: 8px;
   }
 }
+
 
 /* Checklist and grid/flex layouts responsiveness */
 @media (max-width: 800px) {
@@ -1163,6 +1357,7 @@
   }
 }
 
+
 /* Flex direction for footerNav on small screens */
 @media (max-width: 600px) {
   .footerNav {
@@ -1177,9 +1372,12 @@
   }
 }
 
+
 /* --- Enhanced Responsive Styles for Buttons, Cards, and Layouts End --- */
 
+
 /* --- Enhanced Responsive Styles for Dropdowns, Image Previews, and Diagnostics/Maintenance Sections Start --- */
+
 
 /* Dropdowns */
 @media (max-width: 800px) {
@@ -1213,6 +1411,7 @@
   }
 }
 
+
 /* Image preview responsiveness */
 @media (max-width: 800px) {
   .imagePreview, .imagePreviewBox {
@@ -1236,6 +1435,7 @@
   }
 }
 
+
 /* Diagnostics and maintenance labels */
 @media (max-width: 800px) {
   .diagnosticsLabel, .specsLabel, .itemPictureLabel {
@@ -1255,6 +1455,7 @@
     margin-left: 2px;
   }
 }
+
 
 /* Diagnostics select responsiveness */
 @media (max-width: 800px) {
@@ -1279,13 +1480,16 @@
   }
 }
 
+
 /* --- Enhanced Responsive Styles for Dropdowns, Image Previews, and Diagnostics/Maintenance Sections End --- */
+
 
 .diagnosticsFormWrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
+
 
 @media (min-width: 900px) {
   .diagnosticsFormWrapper {
@@ -1317,12 +1521,14 @@
   }
 }
 
+
 .diagnosticsStatusRow {
   display: flex;
   align-items: center;
   gap: 18px;
   margin-bottom: 18px;
 }
+
 
 @media (max-width: 600px) {
   .diagnosticsStatusRow {
@@ -1338,6 +1544,7 @@
   }
 }
 
+
 .specInput {
   width: 100%;
   max-width: 100%;
@@ -1347,7 +1554,7 @@
   border: 1.5px solid #cbd5e1;
   border-radius: 12px;
   font-size: 15px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   resize: vertical;
   min-height: 48px;
   background: #fff;
@@ -1356,6 +1563,7 @@
   display: block;
   box-sizing: border-box;
 }
+
 
 @media (max-width: 800px) {
   .specInput {
@@ -1379,6 +1587,7 @@
   }
 }
 
+
 .formTitle {
   font-size: 1.25rem;
   font-weight: 600;
@@ -1387,11 +1596,13 @@
   color: #222;
 }
 
+
 .formRow {
   display: flex;
   align-items: center;
   margin-bottom: 18px;
 }
+
 
 .formLabel {
   min-width: 160px;
@@ -1399,20 +1610,24 @@
   font-weight: 400;
 }
 
+
 .inputWrapper {
   flex: 1;
   display: flex;
   justify-content: flex-end;
 }
 
+
 .inputNarrow {
   max-width: 360px;
   margin-bottom: 0;
 }
 
+
 .imageBoxMargin {
   margin-bottom: 32px;
 }
+
 
 @media (max-width: 600px) {
   .formRow {
@@ -1437,6 +1652,7 @@
   }
 }
 
+
 @media (max-width: 700px) {
   .imagePreviewBox, .webcam {
     width: 98vw !important;
@@ -1447,6 +1663,7 @@
   }
 }
 
+
 @media (max-width: 480px) {
   .imagePreviewBox, .webcam {
     width: 98vw !important;
@@ -1454,5 +1671,71 @@
     max-width: 320px !important;
     max-height: 320px !important;
     border-radius: 10px !important;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .imagePreviewBox, .webcam {
+    width: 160px !important;
+    height: 160px !important;
+    max-width: 98vw;
+    max-height: 98vw;
+  }
+}
+
+
+.dashboardCardAdd {
+  background: var(--neutral-gray-200);
+  color: var(--text-primary);
+  margin-top: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  transition: all 0.2s ease;
+  font-family: 'Host Grotesk', sans-serif;
+}
+
+
+.dashboardCardAddStatic {
+  background: var(--neutral-gray-200) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--border-light) !important;
+  padding: 20px !important;
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+  font-family: 'Host Grotesk', sans-serif !important;
+}
+
+
+.dashboardCardAddStatic:hover {
+  box-shadow: var(--shadow-sm) !important;
+  transform: none !important;
+}
+
+
+.main-container {
+  max-width: 700px;
+  margin: 0 auto 0 auto;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+  padding: 16px 16px 40px 16px;
+  display: flex;
+  margin-top: 40px;
+  flex-direction: column;
+  min-height: calc(100vh - 120px);
+  font-family: 'Host Grotesk', sans-serif;
+}
+
+
+@media (max-width: 700px) {
+  .main-container {
+    max-width: 100vw !important;
+    padding-left: 2vw !important;
+    padding-right: 2vw !important;
   }
 }
