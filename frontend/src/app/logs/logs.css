@@ -759,7 +759,7 @@ select, .export-dropdown select {
 }
 
 th {
-    padding: 16px 20px;
+    padding: 5px 5px 5px 8px;
     text-align: left;
     font-weight: 600;
     color: #495057;
@@ -769,7 +769,7 @@ th {
 }
 
 td {
-    padding: 20px;
+    padding: 5px 5px 5px 8px;
     color: #333333;
     font-weight: 500;
     fontSize: 14px;
@@ -794,4 +794,14 @@ td {
 
 .table-proper tr:nth-child(even) {
     background-color: rgb(248, 249, 250);
+}
+
+td:nth-child(1),
+th:nth-child(1) {
+    width:220px;
+}
+
+td:nth-child(2),
+th:nth-child(2) {
+    width:275px;
 }

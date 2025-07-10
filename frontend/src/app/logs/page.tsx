@@ -341,7 +341,6 @@ export default function LogsPage() {
               <table className="table-proper">
                 <thead>
                   <tr className="table-row">
-                    <th className="th">TYPE</th>
                     <th className="th">QR CODE</th>
                     <th className="th">TASK PERFORMED</th>
                     <th className="th">MAINTAINED BY</th>
@@ -353,7 +352,6 @@ export default function LogsPage() {
                     <tr key={log.id} style={{
                       borderBottom: index < filteredAndSortedLogs.length - 1 ? '1px solid #e9ecef' : 'none'
                     }}>
-                      <td>{log.article_type}</td>
                       <td>{log.qr_code || log.property_no}</td>
                       <td>{log.task_performed}</td>
                       <td>{log.maintained_by}</td>
