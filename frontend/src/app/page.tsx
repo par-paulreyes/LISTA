@@ -428,7 +428,7 @@ export default function DashboardPage() {
     React.useEffect(() => {
       setValue(0); // Always start from 0
       let startTime: number | null = null;
-      let rafId: number;
+      let rafId: number | undefined;
 
       function animate(now: number) {
         if (!startTime) startTime = now;
@@ -442,7 +442,9 @@ export default function DashboardPage() {
       }
 
       rafId = requestAnimationFrame(animate);
-      return () => rafId && cancelAnimationFrame(rafId);
+      return () => {
+        if (rafId !== undefined) cancelAnimationFrame(rafId);
+      };
     }, [end, duration]);
 
     return <span {...props}>{value}</span>;
