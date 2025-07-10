@@ -171,12 +171,19 @@ export default function ProfilePage() {
         imageChanged = true;
         setUploading(false);
       }
-      // Prepare the data to send
-      const dataToSend = form.password ? { ...form, password: form.password } : form;
+      // Prepare the data to send - only include password if user wants to change it
+      const dataToSend = { ...form };
       delete dataToSend.confirmPassword;
+      
+      // Only include password if user actually wants to change it
+      if (!form.password || form.password.trim() === '') {
+        delete dataToSend.password;
+      }
+      
       if (profilePictureUrl !== form.profile_picture) {
         dataToSend.profile_picture = profilePictureUrl;
       }
+      
       const response = await apiClient.put("/users/profile", dataToSend);
       showSuccess("Profile Updated", "Profile has been updated successfully!");
       
