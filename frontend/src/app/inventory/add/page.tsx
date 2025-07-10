@@ -7,6 +7,7 @@ import { Camera, Upload, X, Check, Plus, Trash2, ArrowRight, ArrowLeft, Info, Se
 import styles from './page.module.css';
 import { supabase } from '../../../config/supabase';
 import { useToast } from '../../../contexts/ToastContext';
+import dashboardStyles from '../../dashboard.module.css';
 // No compression - upload raw files as-is
 
 
@@ -370,102 +371,185 @@ function AddItemPageContent() {
   const isUtilityToolSupply = ["Utility", "Tool", "Supply"].includes(detectedCategory);
 
   return (
-    <div className={styles.container}>
-      {/* Header Card */}
-      <div className={styles.headerCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          <div>
-            <h1 className={styles.headerTitle}>Add New Item</h1>
-            <p className={styles.headerSubtitle}>Register a new item in the inventory system</p>
+    <div className="main-container">
+      {/* Top card like dashboard */}
+      <div className={dashboardStyles.dashboardCard} style={{ background: 'var(--bg-navbar-card)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+          {/* Left: Add Item title */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <div className={dashboardStyles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Add Item</div>
           </div>
-          <button
-            onClick={handleCancel}
-            className={styles.cancelBtnHeader}
-          >
-            <X size={18} />
-            Cancel
-          </button>
+          {/* Right: Inventory System label */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Inventory System</div>
+          </div>
         </div>
       </div>
-
+      {/* Only show the title, no header card */}
       {/* Main Content Card */}
-      <form onSubmit={handleSubmit} className={styles.mainCard} encType="multipart/form-data">
-        <div className="p-8">
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-              <div className="flex items-center">
-                <X className="text-red-500 mr-3" size={20} />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
-            </div>
-          )}
+      <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 16, boxShadow: 'none', padding: 0 }} encType="multipart/form-data">
+        <div style={{ padding: 0 }}>
+          {/* Image Upload/Capture at the top, centered */}
+          <div className={styles.imageBoxMargin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-          {/* Item Details */}
-          <div className="space-y-8">
-            <div className={styles.formGrid}>
-              {/* QR Code - Always shown */}
-              <div>
-                <label className={styles.label}>QR Code</label>
+            <div className={styles.imageUpload} style={{ margin: '0 auto' }}>
+              {/* Show camera if active */}
+              {showCamera ? (
+                <div className="flex flex-col items-center w-full">
+                  <div className={styles.imagePreviewBox}>
+                    <Webcam
+                      ref={webcamRef}
+                      audio={false}
+                      screenshotFormat="image/png"
+                      screenshotQuality={1}
+                      videoConstraints={cameraConstraints}
+                      onUserMedia={() => handleCameraReady()}
+                      onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
+                      className={styles.webcam}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover', 
+                        background: '#fff'
+                      }}
+                    />
+                  </div>
+                  <div className={styles.imageUploadActions}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        capturePhoto();
+                        setShowCamera(false);
+                      }}
+                      className={styles.capturePhotoBtn}
+                    >
+                      <Camera size={18} />
+                      Capture Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCamera(false)}
+                      className={styles.takePhotoBtn}
+                    >
+                      <X size={18} />
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : imagePreview || capturedImage ? (
+                <div className="flex flex-col items-center w-full">
+                  <div className={styles.imagePreviewBox}>
+                    <img
+                      src={imagePreview || capturedImage}
+                      alt="Selected Image"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        background: '#fff',
+                        imageRendering: '-webkit-optimize-contrast'
+                      }}
+                    />
+                  </div>
+                  <div className={styles.imageUploadActions}>
+                    <label className={styles.uploadLabel}>
+                      <Upload size={18} style={{marginRight: 6}} />
+                      Upload New Image
+                      <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
+                    </label>
+                    <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
+                      <Camera size={18} style={{marginRight: 6}} />
+                      Take New Photo
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center w-full">
+                  <div className={styles.imageUploadIcon}>
+                    <Camera size={40} />
+                  </div>
+                  <div className={styles.imageUploadTitle}>Add Item Picture</div>
+                  <div className={styles.imageUploadDesc}>Capture or upload an image to help identify this item</div>
+                  <div className={styles.imageUploadActions}>
+                    <label className={styles.uploadLabel}>
+                      <Upload size={18} style={{marginRight: 6}} />
+                      Upload Image
+                      <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
+                    </label>
+                    <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
+                      <Camera size={18} style={{marginRight: 6}} />
+                      Capture Photo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Item Details - horizontal label/input pairs */}
+          <div className={styles.formGrid}>
+            {/* QR Code - Always shown */}
+            <div className={styles.formRow}>
+              <label className={styles.formLabel}>QR Code</label>
+              <div className={styles.inputWrapper}>
                 <input
                   type="text"
                   name="qr_code"
-                  className={styles.input}
+                  className={`${styles.input} ${styles.inputNarrow}`}
                   value={form.qr_code}
                   onChange={handleChange}
                   placeholder="Enter QR code or scan to auto-fill"
                 />
-                {detectedCategory && (
-                  <div style={{ color: '#166534', fontWeight: 500, marginTop: 4 }}>
-                    Detected Category: {detectedCategory}
-                  </div>
-                )}
               </div>
-
-              {/* Category - Always shown but read-only */}
-              <div>
-                <label className={styles.label}>Category</label>
+            </div>
+            {/* Category - Always shown but read-only */}
+            <div className={styles.formRow}>
+              <label className={styles.formLabel}>Detected Category</label>
+              <div className={styles.inputWrapper}>
                 <input
                   type="text"
                   name="category"
-                  className={styles.input}
+                  className={`${styles.input} ${styles.inputNarrow}`}
                   value={detectedCategory}
                   readOnly
                 />
               </div>
-
-              {/* Property No. - Always shown */}
-              <div>
-                <label className={styles.label}>Property No. *</label>
+            </div>
+            {/* Property No. - Always shown */}
+            <div className={styles.formRow}>
+              <label className={styles.formLabel}>Property No. *</label>
+              <div className={styles.inputWrapper}>
                 <input
                   type="text"
                   name="property_no"
-                  className={styles.input}
+                  className={`${styles.input} ${styles.inputNarrow}`}
                   value={form.property_no}
                   onChange={handleChange}
                   required
                 />
               </div>
-
-              {/* Serial No. - Always shown */}
-              <div>
-                <label className={styles.label}>Serial No.</label>
+            </div>
+            {/* Serial No. - Always shown */}
+            <div className={styles.formRow}>
+              <label className={styles.formLabel}>Serial No.</label>
+              <div className={styles.inputWrapper}>
                 <input
                   type="text"
                   name="serial_no"
-                  className={styles.input}
+                  className={`${styles.input} ${styles.inputNarrow}`}
                   value={form.serial_no || ''}
                   onChange={handleChange}
                 />
               </div>
-
-              {/* Electronics-specific fields */}
-              {isElectronic && (
-                <>
-                  <div>
-                    <label className={styles.label}>Article Type *</label>
+            </div>
+            {/* Electronics-specific fields */}
+            {isElectronic && (
+              <>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Article Type *</label>
+                  <div className={styles.inputWrapper}>
                     <select
                       name="article_type"
-                      className={styles.select}
+                      className={`${styles.select} ${styles.inputNarrow}`}
                       value={form.article_type}
                       onChange={handleChange}
                       required
@@ -481,308 +565,245 @@ function AddItemPageContent() {
                       <option value="Other">Other</option>
                     </select>
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Brand</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Brand</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="brand"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.brand || ''}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>End User</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>End User</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="end_user"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.end_user}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Location</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Location</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="location"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.location}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Date Acquired</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Date Acquired</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="date"
                       name="date_acquired"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.date_acquired}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Price (₱)</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Price (₱)</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="number"
                       name="price"
                       step="0.01"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.price}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Supply Officer</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Supply Officer</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="supply_officer"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.supply_officer}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Company</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Company</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="company_name"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.company_name || ''}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.specsLabel}>Specifications</label>
+                </div>
+                <div className={styles.formRow} style={{ alignItems: 'flex-start' }}>
+                  <label className={styles.formLabel} style={{ marginTop: 10 }}>Specifications</label>
+                  <div className={styles.inputWrapper}> 
                     <textarea
                       name="specifications"
                       rows={4}
                       placeholder="Enter specifications separated by commas (e.g., Intel i7-10700K, 16GB RAM, 512GB SSD, Windows 11)"
-                      className={styles.textarea}
+                      className={`${styles.textarea} ${styles.inputNarrow}`}
                       value={form.specifications}
                       onChange={handleChange}
                     />
                   </div>
-                </>
-              )}
-
-              {/* Utility/Tool/Supply specific fields */}
-              {isUtilityToolSupply && (
-                <>
-                  <div>
-                    <label className={styles.label}>Item Description/Specs</label>
+                </div>
+              </>
+            )}
+            {/* Utility/Tool/Supply specific fields */}
+            {isUtilityToolSupply && (
+              <>
+                <div className={styles.formRow} style={{ alignItems: 'flex-start' }}>
+                  <label className={styles.formLabel} style={{ marginTop: 10 }}>Item Description</label>
+                  <div className={styles.inputWrapper}>
                     <textarea
                       name="item_description"
                       rows={4}
                       placeholder="Enter item description and specifications..."
-                      className={styles.textarea}
+                      className={`${styles.textarea} ${styles.inputNarrow}`}
                       value={form.item_description}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>End User</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>End User</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="end_user"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.end_user}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Location</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Location</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="text"
                       name="location"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.location}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Date Acquired</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Date Acquired</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="date"
                       name="date_acquired"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.date_acquired}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Quantity</label>
+                </div>
+                <div className={styles.formRow}>
+                  <label className={styles.formLabel}>Quantity</label>
+                  <div className={styles.inputWrapper}>
                     <input
                       type="number"
                       name="quantity"
                       min="1"
-                      className={styles.input}
+                      className={`${styles.input} ${styles.inputNarrow}`}
                       value={form.quantity}
                       onChange={handleChange}
                     />
                   </div>
-
-                  <div>
-                    <label className={styles.label}>Remarks/Note</label>
+                </div>
+                <div className={styles.formRow} style={{ alignItems: 'flex-start' }}>
+                  <label className={styles.formLabel} style={{ marginTop: 10 }}>Remarks/Note</label>
+                  <div className={styles.inputWrapper}>
                     <textarea
                       name="remarks"
                       rows={3}
                       placeholder="Enter any additional remarks or notes..."
-                      className={styles.textarea}
+                      className={`${styles.textarea} ${styles.inputNarrow}`}
                       value={form.remarks}
                       onChange={handleChange}
                     />
                   </div>
-                </>
-              )}
-
-              {/* Show message when no category is detected */}
-              {!detectedCategory && form.qr_code && (
-                <div className="col-span-2">
-                  <div className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg">
-                    <div className="flex items-center">
-                      <AlertTriangle className="text-yellow-500 mr-3" size={20} />
-                      <p className="text-yellow-700 font-medium">
-                        No category detected from QR code. Please enter a QR code with a valid tag (PC, PR, MON, TP, MS, KEY, UPS, UTLY, TOOL, SPLY).
-                      </p>
-                    </div>
+                </div>
+              </>
+            )}
+            {/* Show message when no category is detected */}
+            {!detectedCategory && form.qr_code && (
+              <div style={{ gridColumn: '1 / -1', marginBottom: 18 }}>
+                <div className="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg">
+                  <div className="flex items-center">
+                    <AlertTriangle className="text-yellow-500 mr-3" size={20} />
+                    <p className="text-yellow-700 font-medium">
+                      No category detected from QR code. Please enter a QR code with a valid tag (PC, PR, MON, TP, MS, KEY, UPS, UTLY, TOOL, SPLY).
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Item Picture - Always shown */}
-            <div>
-              <label className={styles.itemPictureLabel}>Item Picture</label>
-              <div className={styles.imageUpload}>
-                {/* Show camera if active */}
-                {showCamera ? (
-                  <div className="flex flex-col items-center w-full">
-                    <div className={styles.imagePreviewBox}>
-                      <Webcam
-                        ref={webcamRef}
-                        audio={false}
-                        screenshotFormat="image/png"
-                        screenshotQuality={1}
-                        videoConstraints={cameraConstraints}
-                        onUserMedia={() => handleCameraReady()}
-                        onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
-                        className={styles.webcam}
-                        style={{ 
-                          width: '100%', 
-                          height: '100%', 
-                          objectFit: 'cover', 
-                          background: '#fff'
-                        }}
-                      />
-                    </div>
-                    <div className={styles.imageUploadActions}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          capturePhoto();
-                          setShowCamera(false);
-                        }}
-                        className={styles.capturePhotoBtn}
-                      >
-                        <Camera size={18} />
-                        Capture Photo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowCamera(false)}
-                        className={styles.takePhotoBtn}
-                      >
-                        <X size={18} />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : imagePreview || capturedImage ? (
-                  <div className="flex flex-col items-center w-full">
-                    <div className={styles.imagePreviewBox}>
-                      <img
-                        src={imagePreview || capturedImage}
-                        alt="Selected Image"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          background: '#fff',
-                          imageRendering: '-webkit-optimize-contrast'
-                        }}
-                      />
-                    </div>
-                    <div className={styles.imageUploadActions}>
-                      <label className={styles.uploadLabel}>
-                        <Upload size={18} style={{marginRight: 6}} />
-                        Upload New Image
-                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-                      </label>
-                      <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                        <Camera size={18} style={{marginRight: 6}} />
-                        Take New Photo
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center w-full">
-                    <div className={styles.imageUploadIcon}>
-                      <Camera size={40} />
-                    </div>
-                    <div className={styles.imageUploadTitle}>Add Item Picture</div>
-                    <div className={styles.imageUploadDesc}>Capture or upload an image to help identify this item</div>
-                    <div className={styles.imageUploadActions}>
-                      <label className={styles.uploadLabel}>
-                        <Upload size={18} style={{marginRight: 6}} />
-                        Upload Image
-                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-                      </label>
-                      <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                        <Camera size={18} style={{marginRight: 6}} />
-                        Capture Photo
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
+            )}
           </div>
-
-          {/* Submit Button */}
-          <div className={styles.footerNav}>
-            <div></div>
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={loading || !detectedCategory}
-                className={styles.submitBtn}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Save Item
-                  </>
-                )}
-              </button>
-            </div>
+          {/* Submit Button Row - Discard (gray) left, Save Item (blue) right */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32, marginRight: 32, paddingBottom: 16 }}>
+            <button
+              type="button"
+              onClick={handleCancel}
+              style={{
+                background: '#9ca3af',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '10px 24px',
+                fontWeight: 500,
+                fontSize: 15,
+                cursor: 'pointer',
+                boxShadow: 'none',
+                marginRight: 8
+              }}
+            >
+              Discard
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !detectedCategory}
+              style={{
+                background: '#16a34a',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                padding: '10px 24px',
+                fontWeight: 600,
+                fontSize: 15,
+                cursor: loading || !detectedCategory ? 'not-allowed' : 'pointer',
+                opacity: loading || !detectedCategory ? 0.7 : 1
+              }}
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }}></div>
+                  Saving...
+                </>
+              ) : (
+                <>Save Item</>
+              )}
+            </button>
           </div>
         </div>
       </form>
