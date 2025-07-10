@@ -128,7 +128,8 @@ export default function LoginPage() {
                   </span>
                   <input
                     type={showPassword ? "text" : "password"}
-                    className={styles.input}
+                    name="password"
+                    className={`${styles.input} ${styles.loginPasswordInput}`}
                     placeholder="Enter your password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -136,7 +137,7 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
-                    className={styles.passwordToggle}
+                    className={styles.loginPasswordToggleBtn}
                     onClick={togglePasswordVisibility}
                     tabIndex={-1}
                   >
@@ -161,9 +162,8 @@ export default function LoginPage() {
                 {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
-            <div className={styles.forgotPassword}>
-              <span className={styles.forgotText}>Forgot password? </span>
-              <a href="#" className={styles.forgotLink}>Click here</a>
+            <div style={{ textAlign: 'center', fontSize: '0.75rem', color: '#9ca3af', marginTop: '1.5rem', fontFamily: 'Poppins, sans-serif' }}>
+              © 2025 DTC-IMS. All rights reserved.
             </div>
           </div>
         </div>
