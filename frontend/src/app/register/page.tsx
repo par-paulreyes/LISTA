@@ -287,15 +287,12 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.container}>
-      {/* Blue box at the top */}
-      <div className={styles.dashboardCard} style={{ background: 'var(--bg-navbar-card)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 4 }}>
+      {/* Dashboard-style header card */}
+      <div className={styles.dashboardCard} style={{ background: 'var(--neutral-gray-200)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
           {/* Left: Register New User title */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <div className={styles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Register New User</div>
-          </div>
-          {/* Right: Inventory System */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
           </div>
         </div>
       </div>

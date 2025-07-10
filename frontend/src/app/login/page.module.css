@@ -286,7 +286,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  color: #9ca3af;
+  color: #64748b; /* Ensure icon is always visible */
   transition: color 0.3s ease;
 }
 
@@ -296,7 +296,7 @@
 
 .input {
   width: 100%;
-  padding: 12px 12px 12px 40px;
+  padding: 12px 12px 12px 48px;
   border-radius: 12px;
   border: 1.5px solid #e5e7eb;
   font-size: 14px;
@@ -312,7 +312,6 @@
 .input:focus {
   border-color: #dc2626;
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-  transform: translateY(-1px);
 }
 
 .passwordToggle {
@@ -408,50 +407,6 @@
 .submitButton:disabled::before {
   display: none;
 }
-
-.forgotPassword {
-  text-align: center;
-  margin-top: 8px;
-  width: 100%;
-  animation: fadeIn 0.8s ease-out 2.4s both;
-}
-
-.forgotText {
-  color: #64748b;
-  font-size: 14px;
-  font-family: 'Poppins', Arial, sans-serif;
-}
-
-.forgotLink {
-  color: #dc2626;
-  font-size: 14px;
-  text-decoration: underline;
-  cursor: pointer;
-  font-family: 'Poppins', Arial, sans-serif;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.forgotLink::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background-color: #b91c1c;
-  transition: width 0.3s ease;
-}
-
-.forgotLink:hover {
-  color: #b91c1c;
-}
-
-.forgotLink:hover::after {
-  width: 100%;
-}
-
 /* Loading animation for submit button */
 .submitButton:disabled {
   position: relative;
@@ -527,7 +482,7 @@
 }
 
 .loginPasswordInput {
-  padding: 10px 44px 10px 44px;
+  padding: 10px 44px 10px 48px;
 }
 
 .inputIcon {
@@ -563,7 +518,7 @@
   color: #6b7280;
   cursor: pointer;
   position: absolute;
-  right: 12px;
+  right: 4px;
   top: 0;
   bottom: 0;
   z-index: 2;
@@ -574,8 +529,8 @@
 }
 .loginPasswordToggleBtn svg {
   vertical-align: middle;
-  height: 1em;
-  width: 1em;
+  height: 1.5em;
+  width: 1.5em;
   display: block;
 }
 
