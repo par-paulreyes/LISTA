@@ -41,7 +41,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showInfo } = useToast();
   const [uploading, setUploading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!mounted) return;
-    
+   
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
@@ -174,19 +174,19 @@ export default function ProfilePage() {
       // Prepare the data to send - only include password if user wants to change it
       const dataToSend = { ...form };
       delete dataToSend.confirmPassword;
-      
+
       // Only include password if user actually wants to change it
       if (!form.password || form.password.trim() === '') {
         delete dataToSend.password;
       }
-      
+
       if (profilePictureUrl !== form.profile_picture) {
         dataToSend.profile_picture = profilePictureUrl;
       }
-      
+
       const response = await apiClient.put("/users/profile", dataToSend);
       showSuccess("Profile Updated", "Profile has been updated successfully!");
-      
+     
       // Update the profile state with the new data
       const updatedProfile = { ...profile, ...dataToSend };
       setProfile(updatedProfile);
@@ -234,7 +234,7 @@ export default function ProfilePage() {
       setError("Please select a valid image file");
       return;
     }
-    
+   
     // Validate file size (max 10MB before compression)
     if (file.size > 10 * 1024 * 1024) {
       setError("Image file size must be less than 10MB");
@@ -244,27 +244,27 @@ export default function ProfilePage() {
     try {
       // Compress the image for preview and storage
       const compressionOptions = getCompressionOptions();
-      
+     
       console.log('📸 Compressing image...', {
         originalSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         originalType: file.type
       });
-      
+     
       const compressedFile = await imageCompression(file, compressionOptions);
-      
+     
       console.log('✅ Image compressed successfully', {
         compressedSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`,
         compressionRatio: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`,
         compressedType: compressedFile.type
       });
-      
+     
       // Store compression info for UI display
       setImageCompressionInfo({
         originalSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         compressedSize: `${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`,
         ratio: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`
       });
-      
+     
       setSelectedImageFile(compressedFile);
       setCapturedImage(""); // Clear captured image when uploading
       setError(""); // Clear any previous errors
@@ -341,6 +341,18 @@ export default function ProfilePage() {
 
   const previewUrl = getPreviewUrl();
 
+  useEffect(() => {
+    if (capturedImage || selectedImageFile) {
+      let message = 'New profile photo will be uploaded when you save changes';
+      if (imageCompressionInfo) {
+        message += ` (Compressed: ${imageCompressionInfo.originalSize} → ${imageCompressionInfo.compressedSize}, ${imageCompressionInfo.ratio} smaller)`;
+      }
+      showInfo('Profile Photo', message);
+    }
+    // Only run when these change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage, selectedImageFile, imageCompressionInfo]);
+
   if (!mounted) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (mounted && loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (mounted && error) return <div className="min-h-screen flex items-center justify-center text-red-500">{error}</div>;
@@ -348,9 +360,48 @@ export default function ProfilePage() {
 
   return (
     <div className="main-container">
+      {/* Inventory Top Card */}
+      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
+        <div className="profile-header-row" style={{ marginBottom: 0 }}>
+          <h3 className="profile-header-title">Profile</h3>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {isEditing ? (
+              <>
+                <button
+                  type="button"
+                  className="save-changes-btn"
+                  disabled={saving}
+                  onClick={() => formRef.current?.requestSubmit()}
+                >
+                  <Check size={18} style={{ marginRight: 8 }} />
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="cancel-btn"
+                  disabled={saving}
+                >
+                  <X size={18} style={{ marginRight: 8 }} />
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="edit-btn"
+              >
+                <Edit size={18} style={{ marginRight: 8 }} />
+                Edit
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
       {/* Profile Picture Section */}
       <div className="top-card">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="image-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Show camera if active */}
           {showCamera ? (
             <div className="flex flex-col items-center w-full">
@@ -399,8 +450,8 @@ export default function ProfilePage() {
                   src={previewUrl!}
                   alt="Profile Preview"
                   style={{
-                    width: '100%',
-                    height: '100%',
+                    width: '160px',
+                    height: '160px',
                     objectFit: 'cover',
                     background: '#fff'
                   }}
@@ -431,16 +482,16 @@ export default function ProfilePage() {
                 <img
                   src={imageUrl}
                   alt="Profile"
-                  className="w-24 h-24 object-cover border-4 border-white shadow-lg"
-                  style={{ marginBottom: 12, width: 144, height: 144, borderRadius: 16 }}
+                  className="w-24 h-24 object-cover border-1 border-[#F0F1F3] shadow-lg"
+                  style={{ marginBottom: 12, width: 160, height: 160, borderRadius: 16 }}
                 />
               ) : (
-                <div 
+                <div
                   className="w-24 h-24 border-4 border-white shadow-lg flex items-center justify-center"
-                  style={{ 
-                    marginBottom: 12, 
-                    width: 144, 
-                    height: 144, 
+                  style={{
+                    marginBottom: 12,
+                    width: 144,
+                    height: 144,
                     backgroundColor: '#b91c1c',
                     border: '4px solid white',
                     borderRadius: 16
@@ -485,154 +536,116 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
-      {/* Blue notification for new profile photo upload */}
-      {(capturedImage || selectedImageFile) && (
-        <div className="profile-notification">
-          <div className="flex items-center gap-2 text-blue-700 text-sm">
-            <svg className="icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-            </svg>
-            <span className="notification-title">New profile photo will be uploaded when you save changes</span>
-            {imageCompressionInfo && (
-              <span className="notification-detail">
-                (Compressed: {imageCompressionInfo.originalSize} → {imageCompressionInfo.compressedSize}, {imageCompressionInfo.ratio} smaller)
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Button row above the profile-header-card */}
-      <div className={`profile-header-btn-row ${isEditing ? 'editing' : ''}`}>
-        {isEditing ? (
-          <>
-            <button
-              type="button"
-              className="save-changes-btn"
-              disabled={saving}
-              onClick={() => formRef.current?.requestSubmit()}
-            >
-              <Check size={18} style={{ marginRight: 8 }} />
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="cancel-btn"
-              disabled={saving}
-            >
-              <X size={18} style={{ marginRight: 8 }} />
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={handleEdit}
-            className="edit-btn"
-          >
-            <Edit size={18} style={{ marginRight: 8 }} />
-            Edit Profile
-          </button>
-        )}
-      </div>
-      <div className="profile-header-card">
-        <h3 className="text-2xl font-bold mb-4 flex items-center">
-          <svg width="16" height="16" fill="#fff" viewBox="0 0 24 24" style={{ marginRight: 7, display: 'inline-block', verticalAlign: 'middle' }}>
-            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
-          </svg>
-          Profile
-        </h3>
-      </div>
       <div className="profile-info-card">
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="max-w-md bg-white rounded shadow p-6"
-          style={{ marginLeft: 0 }}
+          className="space-y-6"
         >
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Username</label>
-            <input
-              type="text"
-              name="username"
-              className="w-full border rounded px-3 py-2 bg-gray-100"
-              value={form.username || ""}
-              disabled
-            />
+          <div>
+            <div className="rect">
+              <span className="label">
+                Username
+              </span>
+              <input
+                type="text"
+                name="username"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500"
+                value={form.username || ""}
+                disabled
+              />
+            </div>
+            <div className="rect">
+            <span className="label">
+                Full Name
+              </span>
+              <input
+                type="text"
+                name="full_name"
+                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent${isEditing ? ' editable-input' : ''}`}
+                value={form.full_name || ""}
+                onChange={handleChange}
+                required
+                disabled={!isEditing}
+              />
+            </div>
+            <div className="rect">
+              <span className="label">
+                Email
+              </span>
+              <input
+                type="email"
+                name="email"
+                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent${isEditing ? ' editable-input' : ''}`}
+                value={form.email || ""}
+                onChange={handleChange}
+                required
+                disabled={!isEditing}
+              />
+            </div>
+            <div className="rect">
+              <span className="label">
+                Role
+              </span>
+              <input
+                type="text"
+                name="role"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 
+                      bg-gray-100 text-gray-700 
+                      disabled:bg-gray-200 disabled:text-gray-500 disabled:opacity-100"
+                value={form.role || ""}
+                disabled
+              />
+            </div>
+            <div className="rect">
+              <span className="label">
+                Company
+              </span>
+              <input
+                type="text"
+                name="company_name"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500"
+                value={form.company_name || ""}
+                disabled
+              />
+            </div>
+            <div className="change-password-container">
+              {isEditing && (
+                <>
+                  <h4 className="text-sm font-medium text-gray-700 mb-4">Change Password (Optional)</h4>
+                  <div className="space-y-4">
+                    <div className="rect">
+                      <span className="label">
+                        New Password
+                      </span>
+                      <input
+                        type="password"
+                        name="password"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.password || ""}
+                        onChange={handleChange}
+                        placeholder="Leave blank to keep current password"
+                      />
+                    </div>
+                    <div className="rect">
+                      <span className="label">
+                        Confirm New Password
+                      </span>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={form.confirmPassword || ""}
+                        onChange={handleChange}
+                        placeholder="Leave blank to keep current password"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-x medium">Full Name</label>
-            <input
-              type="text"
-              name="full_name"
-              className="w-full border rounded px-3 py-2"
-              value={form.full_name || ""}
-              onChange={handleChange}
-              disabled={!isEditing}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Email</label>
-            <input
-              type="email"
-              name="email"
-              className="w-full border rounded px-3 py-2"
-              value={form.email || ""}
-              onChange={handleChange}
-              disabled={!isEditing}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Role</label>
-            <input
-              type="text"
-              name="role"
-              className="w-full border rounded px-3 py-2 bg-gray-100"
-              value={form.role || ""}
-              disabled
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block mb-1 font-medium">Company</label>
-            <input
-              type="text"
-              name="company_name"
-              className="w-full border rounded px-3 py-2 bg-gray-100"
-              value={form.company_name || ""}
-              disabled
-            />
-          </div>
-          {/* Password fields only visible when editing */}
-          {isEditing && (
-            <>
-              <div className="mb-4">
-                <label className="block mb-1 font-medium">New Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full border rounded px-3 py-2"
-                  value={form.password || ""}
-                  onChange={handleChange}
-                  placeholder="Leave blank to keep current password"
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block mb-1 font-medium">Confirm New Password</label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  className="w-full border rounded px-3 py-2"
-                  value={form.confirmPassword || ""}
-                  onChange={handleChange}
-                  placeholder="Leave blank to keep current password"
-                />
-              </div>
-            </>
-          )}
         </form>
       </div>
       <div className="profile-btn-row">
@@ -657,4 +670,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-} 
+}
