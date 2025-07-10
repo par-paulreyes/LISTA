@@ -173,62 +173,95 @@ export default function LogsPage() {
 
   return (
     <div className="main-container">
-      <div className="logs-header-row">
-        <h3 className="logs-header-title">Logs</h3>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            className="filter-modal-btn"
-            onClick={openFilterModal}
-          >
-            <svg width="16" height="16" fill="none" stroke="currentColor"
-              strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-              <path d="M4 4h16M6 8h12M8 12h8M10 16h4"
-                strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Filter
-          </button>
-          <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+      {/* Logs Top Card (copied from Inventory) */}
+      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
+        <div className="inventory-header-row" style={{ marginBottom: 0 }}>
+          <h3 className="inventory-header-title">Logs</h3>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button
-              className="export-dropdown-btn"
-              onClick={() => setShowExportDropdown(!showExportDropdown)}
-              disabled={exporting}
+              className="filter-modal-btn"
+              onClick={openFilterModal}
             >
-              <svg width="16" height="16" fill="none"
-                stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7,10 12,15 17,10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
+                <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Export
+              Filter
             </button>
-            {showExportDropdown && (
-              <div className="export-dropdown-menu">
-                <button
-                  className="export-dropdown-item"
-                  onClick={() => {
-                    handleExport("csv");
-                    setShowExportDropdown(false);
-                  }}
-                  disabled={exporting}
-                >
-                  {exporting ? "Exporting..." : "Export CSV"}
-                </button>
-                <button
-                  className="export-dropdown-item"
-                  onClick={() => {
-                    handleExport("pdf");
-                    setShowExportDropdown(false);
-                  }}
-                  disabled={exporting}
-                >
-                  {exporting ? "Exporting..." : "Export PDF"}
-                </button>
-              </div>
-            )}
+            <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+              <button
+                className="export-dropdown-btn"
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                disabled={exporting}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export
+              </button>
+              {showExportDropdown && (
+                <div className="export-dropdown-menu">
+                  <button
+                    className="export-dropdown-item"
+                    onClick={() => {
+                      handleExport("csv");
+                      setShowExportDropdown(false);
+                    }}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting..." : "Export CSV"}
+                  </button>
+                  <button
+                    className="export-dropdown-item"
+                    onClick={() => {
+                      handleExport("pdf");
+                      setShowExportDropdown(false);
+                    }}
+                    disabled={exporting}
+                  >
+                    {exporting ? "Exporting..." : "Export PDF"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
+        {/* Search Bar (inventory style) */}
+        <div
+          className="inventory-search-container"
+          style={{
+            background: '#fff',
+            border: '1.5px solid #d1d5db',
+            borderRadius: '12px',
+            marginBottom: '0',
+            marginTop: '15px',
+            padding: '0 10px',
+            boxSizing: 'border-box',
+            height: '48px',
+            boxShadow: 'none',
+            position: 'relative',
+            zIndex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%'
+          }}
+        >
+          <div className="search-icon">
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </div>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search by QR Code, Type"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
       </div>
-
       {/* Filter Modal */}
       {showFilterModal && (
         <div className="filter-modal-overlay">
@@ -308,24 +341,6 @@ export default function LogsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Bar */}
-      <div className="logs-search-container">
-        <div className="search-icon">
-          <svg width="20" height="20" fill="none" stroke="currentColor"
-            strokeWidth="2" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </div>
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search by QR Code, Type"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
 
       {!mounted && <div className="loading">Loading...</div>}
       {mounted && loading && <div className="loading">Loading...</div>}
