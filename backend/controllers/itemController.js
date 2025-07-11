@@ -257,119 +257,278 @@ exports.exportItems = (req, res) => {
   
   Item.findAllByCompany(company_name, (err, items) => {
     if (err) return res.status(500).json({ message: 'Error exporting items', error: err });
-
-    // Group items by numeric ID from QR code
-    const groups = {};
-    items.forEach(item => {
-      const match = item.qr_code && item.qr_code.match(/(\d{3,})$/);
-      if (!match) return;
-      const id = match[1];
-      if (!groups[id]) groups[id] = {};
-      if (item.article_type === 'Desktop Computer') groups[id].pc = item;
-      else if (item.article_type === 'Monitor') groups[id].monitor = item;
-      else if (item.article_type === 'Keyboard') groups[id].keyboard = item;
-      else if (item.article_type === 'Mouse') groups[id].mouse = item;
-      else if (item.article_type === 'UPS') groups[id].ups = item;
-      else {
-        if (!groups[id].other) groups[id].other = [];
-        groups[id].other.push(item);
-      }
-    });
-
-    // Build export rows
-    const exportRows = Object.entries(groups).map(([id, group]) => ({
-      pc_no: id,
-      pc_brand: group.pc?.brand || '',
-      pc_serial: group.pc?.serial_no || '',
-      pc_property: group.pc?.property_no || '',
-      monitor_brand: group.monitor?.brand || '',
-      monitor_serial: group.monitor?.serial_no || '',
-      monitor_property: group.monitor?.property_no || '',
-      keyboard_brand: group.keyboard?.brand || '',
-      keyboard_serial: group.keyboard?.serial_no || group.keyboard?.property_no || '',
-      mouse_brand: group.mouse?.brand || '',
-      mouse_serial: group.mouse?.serial_no || group.mouse?.property_no || '',
-      ups_brand: group.ups?.brand || '',
-      ups_serial: group.ups?.serial_no || group.ups?.property_no || '',
-      other_type: group.other?.[0]?.article_type || '',
-      other_brand: group.other?.[0]?.brand || '',
-      other_serial: group.other?.[0]?.serial_no || group.other?.[0]?.property_no || '',
-      remarks: group.pc?.remarks || group.monitor?.remarks || group.keyboard?.remarks || group.mouse?.remarks || group.ups?.remarks || group.other?.[0]?.remarks || ''
-    }));
-
-    // Define export fields/columns
-    const exportFields = [
-      { label: 'PC No.', value: 'pc_no' },
-      { label: 'System Unit Brand', value: 'pc_brand' },
-      { label: 'System Unit Serial No.', value: 'pc_serial' },
-      { label: 'System Unit Property No.', value: 'pc_property' },
-      { label: 'Monitor Brand', value: 'monitor_brand' },
-      { label: 'Monitor Serial No.', value: 'monitor_serial' },
-      { label: 'Monitor Property No.', value: 'monitor_property' },
-      { label: 'Keyboard Brand', value: 'keyboard_brand' },
-      { label: 'Keyboard Serial/Property No.', value: 'keyboard_serial' },
-      { label: 'Mouse Brand', value: 'mouse_brand' },
-      { label: 'Mouse Serial/Property No.', value: 'mouse_serial' },
-      { label: 'UPS Brand', value: 'ups_brand' },
-      { label: 'UPS Serial/Property No.', value: 'ups_serial' },
-      { label: 'Other Type', value: 'other_type' },
-      { label: 'Other Brand', value: 'other_brand' },
-      { label: 'Other Serial/Property No.', value: 'other_serial' },
-      { label: 'Remarks', value: 'remarks' }
-    ];
-
+    
     if (format === 'excel') {
       try {
         const ExcelJS = require('exceljs');
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet('Grouped Inventory');
-        sheet.columns = exportFields.map(f => ({ header: f.label, key: f.value, width: 18 }));
-        exportRows.forEach(row => sheet.addRow(row));
-        // Add another tab for DTC PC (Date)
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0];
-        const dtcSheet = workbook.addWorksheet(`DTC PC (${dateStr})`);
-        dtcSheet.columns = exportFields.map(f => ({ header: f.label, key: f.value, width: 18 }));
-        exportRows.forEach(row => dtcSheet.addRow(row));
+        
+        // Define the fields for all sheets
+        const fields = [
+          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
+          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
+          'quantity', 'item_status', 'remarks'
+        ];
+        
+        // Group items by category
+        const itemsByCategory = {};
+        items.forEach(item => {
+          const category = item.category || 'Uncategorized';
+          if (!itemsByCategory[category]) {
+            itemsByCategory[category] = [];
+          }
+          itemsByCategory[category].push(item);
+        });
+        
+        // Create "All" sheet first
+        const allSheet = workbook.addWorksheet('All');
+        allSheet.columns = fields.map(field => ({
+          header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
+          key: field,
+          width: 15
+        }));
+        
+        // Add data to "All" sheet, separated by article type with color-coded header and thick border
+        const itemsByArticleAll = {};
+        items.forEach(item => {
+          const article = item.article_type || 'Unspecified';
+          if (!itemsByArticleAll[article]) itemsByArticleAll[article] = [];
+          itemsByArticleAll[article].push(item);
+        });
+        Object.keys(itemsByArticleAll).forEach(article => {
+          // Add a yellow, bold header row for the article_type
+          const headerRow = allSheet.addRow([article]);
+          headerRow.font = { bold: true };
+          headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFFFFF00' } // Yellow
+          };
+          // Merge the header row across all columns
+          allSheet.mergeCells(`A${headerRow.number}:${String.fromCharCode(65+fields.length-1)}${headerRow.number}`);
+          // Add thick border to the header row
+          headerRow.eachCell({ includeEmpty: true }, cell => {
+            cell.border = {
+              top: { style: 'thick' },
+              left: { style: 'thick' },
+              bottom: { style: 'thick' },
+              right: { style: 'thick' }
+            };
+          });
+          // Add the data rows for this article_type
+          itemsByArticleAll[article].forEach(item => {
+            allSheet.addRow(item);
+          });
+        });
+
+        // --- DTC PCs (Date) Sheet ---
+        const dtcSheetName = `DTC PCs (${new Date().toISOString().slice(0,10)})`;
+        const dtcSheet = workbook.addWorksheet(dtcSheetName);
+        // Title bar (merged cells, matching screenshot)
+        const titleBar = [
+          'PC No.',
+          'System Unit', '', '',
+          'Monitor', '', '',
+          'Keyboard', '',
+          'Mouse', '',
+          'UPS / AVR', '',
+          'Other Peripherals', '', '',
+          'Remarks'
+        ];
+        const titleRow = dtcSheet.addRow(titleBar);
+        titleRow.font = { bold: true };
+        titleRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+        // Merge cells for group headers (matching screenshot)
+        dtcSheet.mergeCells('B1:D1'); // System Unit
+        dtcSheet.mergeCells('E1:G1'); // Monitor
+        dtcSheet.mergeCells('H1:I1'); // Keyboard
+        dtcSheet.mergeCells('J1:K1'); // Mouse
+        dtcSheet.mergeCells('L1:M1'); // UPS/AVR
+        dtcSheet.mergeCells('N1:P1'); // Other Peripherals
+        // The rest are single columns
+        // Second row: detailed headers (matching screenshot, no duplicate PC No. or Remarks)
+        const dtcHeader = [
+          'PC No.',
+          'Brand', 'Serial No.', 'Property No.',
+          'Brand', 'Serial No.', 'Property No.',
+          'Brand', 'Serial / Property No.',
+          'Brand', 'Serial / Property No.',
+          'Brand', 'Serial / Property No.',
+          'Type', 'Brand', 'Serial / Property No.',
+          'Remarks'
+        ];
+        const dtcHeaderRow = dtcSheet.addRow(dtcHeader);
+        dtcHeaderRow.font = { bold: true };
+        dtcHeaderRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+        // Set column widths to fit all text
+        const dtcColWidths = [15, 15, 18, 18, 15, 18, 18, 15, 18, 15, 18, 15, 18, 12, 15, 18, 20];
+        dtcColWidths.forEach((w, i) => dtcSheet.getColumn(i+1).width = w);
+        // Center align all cells in the DTC PCs sheet
+        dtcSheet.eachRow({ includeEmpty: true }, row => {
+          row.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        });
+        // Helper: extract ID from QR code (e.g., ICTCE-PC-001 => 001)
+        function extractId(qr) {
+          if (!qr) return '';
+          const match = qr.match(/(\d{3,})$/);
+          return match ? match[1] : '';
+        }
+        // Group items by shared ID (last 3+ digits of QR code)
+        const pcGroups = {};
+        items.forEach(item => {
+          // Only group Desktop Computer, Monitor, Keyboard, Mouse, UPS, and Other Peripherals
+          const type = (item.article_type || '').toLowerCase();
+          if (["desktop computer","monitor","keyboard","mouse","ups","avr","other"].some(t => type.includes(t))) {
+            const id = extractId(item.qr_code);
+            if (!id) return;
+            if (!pcGroups[id]) pcGroups[id] = { pc: null, monitor: null, keyboard: null, mouse: null, ups: null, others: [], remarks: [] };
+            if (type === 'desktop computer') pcGroups[id].pc = item;
+            else if (type === 'monitor') pcGroups[id].monitor = item;
+            else if (type === 'keyboard') pcGroups[id].keyboard = item;
+            else if (type === 'mouse') pcGroups[id].mouse = item;
+            else if (type === 'ups' || type === 'avr') pcGroups[id].ups = item;
+            else pcGroups[id].others.push(item);
+            if (item.remarks) pcGroups[id].remarks.push(item.remarks);
+          }
+        });
+        // Add rows for each PC group (start from row 3)
+        Object.keys(pcGroups).forEach(id => {
+          const g = pcGroups[id];
+          const row = dtcSheet.addRow([
+            g.pc?.qr_code || '',
+            g.pc?.brand || '', g.pc?.serial_no || '', g.pc?.property_no || '',
+            g.monitor?.brand || '', g.monitor?.serial_no || '', g.monitor?.property_no || '',
+            g.keyboard?.brand || '', g.keyboard?.serial_no || g.keyboard?.property_no || '',
+            g.mouse?.brand || '', g.mouse?.serial_no || g.mouse?.property_no || '',
+            g.ups?.brand || '', g.ups?.serial_no || g.ups?.property_no || '',
+            g.others[0]?.article_type || '', g.others[0]?.brand || '', g.others[0]?.serial_no || g.others[0]?.property_no || '',
+            g.remarks.concat(g.others.map(o=>o.remarks)).filter(Boolean).join('; ')
+          ]);
+          row.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        });
+        // Add thick border to all cells in the DTC PCs sheet
+        dtcSheet.eachRow({ includeEmpty: true }, row => {
+          row.eachCell({ includeEmpty: true }, cell => {
+            cell.border = {
+              top: { style: 'thick' },
+              left: { style: 'thick' },
+              bottom: { style: 'thick' },
+              right: { style: 'thick' }
+            };
+          });
+        });
+        
+        // Create sheets for each category
+        Object.keys(itemsByCategory).forEach(category => {
+          const sheet = workbook.addWorksheet(category);
+          sheet.columns = fields.map(field => ({
+            header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
+            key: field,
+            width: 15
+          }));
+
+          // Group items by article_type within this category
+          const itemsByArticle = {};
+          itemsByCategory[category].forEach(item => {
+            const article = item.article_type || 'Unspecified';
+            if (!itemsByArticle[article]) itemsByArticle[article] = [];
+            itemsByArticle[article].push(item);
+          });
+
+          // For each article_type, add a yellow, bold header row with thick border, then the items
+          Object.keys(itemsByArticle).forEach(article => {
+            // Add a yellow, bold header row for the article_type
+            const headerRow = sheet.addRow([article]);
+            headerRow.font = { bold: true };
+            headerRow.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFFFFF00' } // Yellow
+            };
+            // Merge the header row across all columns
+            sheet.mergeCells(`A${headerRow.number}:${String.fromCharCode(65+fields.length-1)}${headerRow.number}`);
+            // Add thick border to the header row
+            headerRow.eachCell({ includeEmpty: true }, cell => {
+              cell.border = {
+                top: { style: 'thick' },
+                left: { style: 'thick' },
+                bottom: { style: 'thick' },
+                right: { style: 'thick' }
+              };
+            });
+            // Add the data rows for this article_type
+            itemsByArticle[article].forEach(item => {
+              sheet.addRow(item);
+            });
+          });
+        });
+        
+        // Set response headers
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.xlsx');
-        workbook.xlsx.write(res).then(() => res.end());
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.xlsx');
+        
+        // Write to response
+        workbook.xlsx.write(res).then(() => {
+          res.end();
+        }).catch(err => {
+          return res.status(500).json({ message: 'Error generating Excel file', error: err });
+        });
+        
       } catch (err) {
         return res.status(500).json({ message: 'Error generating Excel file', error: err });
       }
-    } else if (format === 'csv') {
-      try {
-        const { Parser } = require('json2csv');
-        const parser = new Parser({ fields: exportFields.map(f => ({ label: f.label, value: f.value })) });
-        const csv = parser.parse(exportRows);
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.csv');
-        return res.send(csv);
-      } catch (err) {
-        return res.status(500).json({ message: 'Error generating CSV', error: err });
-      }
-    } else {
-      // fallback to default (PDF or other)
+    } else if (format === 'pdf') {
       try {
         const PDFDocument = require('pdfkit');
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.pdf');
         const doc = new PDFDocument();
         doc.pipe(res);
-        doc.fontSize(18).text('Grouped Inventory Report', { align: 'center' });
+        
+        doc.fontSize(18).text('Inventory Report', { align: 'center' });
         doc.moveDown();
         doc.fontSize(12).text(`Company: ${company_name}`, { align: 'center' });
         doc.fontSize(10).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
         doc.moveDown();
-        // Table header
-        doc.fontSize(10).text(exportFields.map(f => f.label).join(' | '));
-        doc.moveDown(0.5);
-        exportRows.forEach(row => {
-          doc.fontSize(9).text(exportFields.map(f => row[f.value] || '').join(' | '));
+        
+        items.forEach((item, idx) => {
+          doc.fontSize(12).text(`Item #${idx + 1}`, { underline: true });
+          doc.fontSize(10).text(`ID: ${item.id || 'N/A'}`);
+          doc.fontSize(10).text(`QR Code: ${item.qr_code || 'N/A'}`);
+          doc.fontSize(10).text(`Property No: ${item.property_no || 'N/A'}`);
+          doc.fontSize(10).text(`Serial No: ${item.serial_no || 'N/A'}`);
+          doc.fontSize(10).text(`Category: ${item.category || 'N/A'}`);
+          doc.fontSize(10).text(`Article Type: ${item.article_type || 'N/A'}`);
+          doc.fontSize(10).text(`Brand: ${item.brand || 'N/A'}`);
+          doc.fontSize(10).text(`Specifications: ${item.specifications || 'N/A'}`);
+          doc.fontSize(10).text(`Date Acquired: ${item.date_acquired || 'N/A'}`);
+          doc.fontSize(10).text(`End User: ${item.end_user || 'N/A'}`);
+          doc.fontSize(10).text(`Location: ${item.location || 'N/A'}`);
+          doc.fontSize(10).text(`Quantity: ${item.quantity || 'N/A'}`);
+          doc.fontSize(10).text(`Item Status: ${item.item_status || 'N/A'}`);
+          doc.fontSize(10).text(`Remarks: ${item.remarks || 'N/A'}`);
+          doc.moveDown();
         });
+        
         doc.end();
       } catch (err) {
         return res.status(500).json({ message: 'Error generating PDF', error: err });
+      }
+    } else {
+      try {
+        const { Parser } = require('json2csv');
+        const fields = [
+          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
+          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
+          'quantity', 'item_status', 'remarks'
+        ];
+        const parser = new Parser({ fields });
+        const csv = parser.parse(items);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory.csv');
+        return res.send(csv);
+      } catch (err) {
+        return res.status(500).json({ message: 'Error generating CSV', error: err });
       }
     }
   });

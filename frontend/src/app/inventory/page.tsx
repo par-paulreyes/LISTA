@@ -24,45 +24,6 @@ interface Item {
   created_at?: string; // Added for recently added calculation
 }
 
-// Utility: Group items for export (PC, monitor, keyboard, mouse, UPS, other by shared ID)
-function groupItemsForExport(items: any[]): any[] {
-  const groups: Record<string, Record<string, any>> = {};
-  items.forEach(item => {
-    const match = item.qr_code && item.qr_code.match(/(\d{3,})$/);
-    if (!match) return;
-    const id = match[1];
-    if (!groups[id]) groups[id] = {};
-    if (item.article_type === 'Desktop Computer') groups[id].pc = item;
-    else if (item.article_type === 'Monitor') groups[id].monitor = item;
-    else if (item.article_type === 'Keyboard') groups[id].keyboard = item;
-    else if (item.article_type === 'Mouse') groups[id].mouse = item;
-    else if (item.article_type === 'UPS') groups[id].ups = item;
-    else {
-      if (!groups[id].other) groups[id].other = [];
-      groups[id].other.push(item);
-    }
-  });
-  return Object.entries(groups).map(([id, group]) => ({
-    pc_no: id,
-    pc_brand: group.pc?.brand || '',
-    pc_serial: group.pc?.serial_no || '',
-    pc_property: group.pc?.property_no || '',
-    monitor_brand: group.monitor?.brand || '',
-    monitor_serial: group.monitor?.serial_no || '',
-    monitor_property: group.monitor?.property_no || '',
-    keyboard_brand: group.keyboard?.brand || '',
-    keyboard_serial: group.keyboard?.serial_no || group.keyboard?.property_no || '',
-    mouse_brand: group.mouse?.brand || '',
-    mouse_serial: group.mouse?.serial_no || group.mouse?.property_no || '',
-    ups_brand: group.ups?.brand || '',
-    ups_serial: group.ups?.serial_no || group.ups?.property_no || '',
-    other_type: group.other?.[0]?.article_type || '',
-    other_brand: group.other?.[0]?.brand || '',
-    other_serial: group.other?.[0]?.serial_no || group.other?.[0]?.property_no || '',
-    remarks: group.pc?.remarks || group.monitor?.remarks || group.keyboard?.remarks || group.mouse?.remarks || group.ups?.remarks || group.other?.[0]?.remarks || ''
-  }));
-}
-
 function InventoryPageContent() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
