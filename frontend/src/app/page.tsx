@@ -704,7 +704,7 @@ export default function DashboardPage() {
             )}
             <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               {hasCachedData ? 'Showing Cached Data' : 'Connection Error'}
-            </div>
+        </div>
             <div style={{ fontSize: '0.95rem', opacity: 0.9 }}>{error}</div>
           </div>
           <button
@@ -816,7 +816,7 @@ export default function DashboardPage() {
                           zIndex: 3,
                           boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
                         }}
-                      />
+                    />
                     )}
                     {/* Pending maintenance (red bar) - positioned after green bar */}
                     {pendingMaintenance > 0 && (

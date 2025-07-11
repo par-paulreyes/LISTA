@@ -69,12 +69,21 @@ function AddItemPageContent() {
 
 
   // Define category groups
-  const electronicCategories = ["PC", "PR", "MON", "TP", "MS", "KEY", "UPS"];
+  const electronicCategories = ["PC", "PR", "MON", "TP", "MS", "KEY", "UPS", "TAB", "PWB"];
   const utilityCategories = ["UTLY", "TOOL", "SPLY"];
 
-
-
-
+  // Add this mapping near the top, after category arrays
+  const tagToArticleType: Record<string, string> = {
+    PC: "Desktop Computer",
+    PR: "Printer",
+    MON: "Monitor",
+    TP: "Laptop",
+    MS: "Mouse",
+    KEY: "Keyboard",
+    UPS: "UPS",
+    TAB: "Tablet",
+    PWB: "Power Bank"
+  };
 
 
   useEffect(() => {
@@ -116,7 +125,7 @@ function AddItemPageContent() {
     }
    
     // Parse QR code for TAG - look for patterns like -PC-, -PR-, etc.
-    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|TAB|PWB|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
     const match = form.qr_code.match(tagPattern);
    
     if (match) {
@@ -134,6 +143,21 @@ function AddItemPageContent() {
       }
     } else {
       setDetectedCategory("");
+    }
+  }, [form.qr_code]);
+
+  // Auto-detect and set the article_type field based on the QR code tag whenever the QR code changes. Only set it if the detected tag matches a known article type and the user hasn't manually changed it.
+  useEffect(() => {
+    if (!form.qr_code) return;
+    // Parse tag from QR code
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|TAB|PWB)(?:-|\d|$)/i;
+    const match = form.qr_code.match(tagPattern);
+    if (match) {
+      const tag = match[1].toUpperCase();
+      const detectedArticle = tagToArticleType[tag];
+      if (detectedArticle && form.article_type !== detectedArticle) {
+        setForm(prev => ({ ...prev, article_type: detectedArticle }));
+      }
     }
   }, [form.qr_code]);
 
@@ -596,6 +620,8 @@ function AddItemPageContent() {
                       <option value="Scanner">Scanner</option>
                       <option value="Network Equipment">Network Equipment</option>
                       <option value="Server">Server</option>
+                      <option value="Tablet">Tablet</option>
+                      <option value="Power Bank">Power Bank</option>
                       <option value="Other">Other</option>
                     </select>
                   </div>
@@ -787,7 +813,7 @@ function AddItemPageContent() {
                   <div className="flex items-center">
                     <AlertTriangle className="text-yellow-500 mr-3" size={20} />
                     <p className="text-yellow-700 font-medium">
-                      No category detected from QR code. Please enter a QR code with a valid tag (PC, PR, MON, TP, MS, KEY, UPS, UTLY, TOOL, SPLY).
+                      No category detected from QR code. Please enter a QR code with a valid tag (PC, PR, MON, TP, MS, KEY, UPS, TAB, PWB, UTLY, TOOL, SPLY).
                     </p>
                   </div>
                 </div>

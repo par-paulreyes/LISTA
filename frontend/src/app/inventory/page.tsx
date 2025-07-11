@@ -583,13 +583,29 @@ function InventoryPageContent() {
                         <path d="M4.22 4.22l4.24 4.24m6.36 6.36l4.24 4.24"/>
                       </svg>
                     )}
+                    {item.article_type.toLowerCase().includes('tablet') && (
+                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                      </svg>
+                    )}
+                    {item.article_type.toLowerCase().includes('power bank') && (
+                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <rect x="2" y="7" width="20" height="10" rx="2" ry="2"/>
+                        <line x1="8" y1="2" x2="8" y2="7"/>
+                        <line x1="16" y1="2" x2="16" y2="7"/>
+                        <line x1="12" y1="17" x2="12" y2="17"/>
+                      </svg>
+                    )}
                     {!item.article_type.toLowerCase().includes('desktop') && 
                     !item.article_type.toLowerCase().includes('laptop') && 
                     !item.article_type.toLowerCase().includes('printer') && 
                     !item.article_type.toLowerCase().includes('monitor') && 
                     !item.article_type.toLowerCase().includes('scanner') && 
                     !item.article_type.toLowerCase().includes('server') && 
-                    !item.article_type.toLowerCase().includes('network') && (
+                    !item.article_type.toLowerCase().includes('network') && 
+                    !item.article_type.toLowerCase().includes('tablet') && 
+                    !item.article_type.toLowerCase().includes('power bank') && (
                       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/>

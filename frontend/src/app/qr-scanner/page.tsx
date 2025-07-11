@@ -186,26 +186,6 @@ export default function QRScannerPage() {
 
   useEffect(() => {
     if (!scanned) return;
-    // Parse QR code format: COMPANY-TAG-ID (e.g., ICTCE-PC-00123)
-    const qrPattern = /^([A-Z]+)-([A-Z]+)-(\d+)$/i;
-    let match = scanned.match(qrPattern);
-    if (!match) {
-      // Try to parse without dashes (e.g., ICTCEPC00123)
-      const altPattern = /^([A-Z]+)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(\d+)$/i;
-      match = scanned.match(altPattern);
-      if (match) {
-        setParsedQR({ company: match[1], tag: match[2], id: match[3] });
-      } else {
-        setParsedQR(null);
-      }
-    } else {
-      setParsedQR({ company: match[1], tag: match[2], id: match[3] });
-    }
-  }, [scanned]);
-
-
-  useEffect(() => {
-    if (!scanned) return;
     setLoading(true);
     setError("");
     setSuccess(false);
@@ -217,7 +197,16 @@ export default function QRScannerPage() {
       router.push("/login");
       return;
     }
-   
+
+    // Check for valid tag before proceeding
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|TAB|PWB|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const tagMatch = scanned.match(tagPattern);
+    if (!tagMatch) {
+      setError("No valid tag detected in QR code. Please scan or enter a QR code with a valid tag (PC, PR, MON, TP, MS, KEY, UPS, TAB, PWB, UTLY, TOOL, SPLY).");
+      setLoading(false);
+      return;
+    }
+
     apiClient
       .get(`/items/qr/${encodeURIComponent(scanned)}`)
       .then((res) => {
@@ -249,6 +238,19 @@ export default function QRScannerPage() {
       })
       .finally(() => setLoading(false));
   }, [scanned, router]);
+
+
+  useEffect(() => {
+    if (error) {
+      showError("Error", error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (success) {
+      showSuccess("Success", "Item found! Redirecting to details...");
+    }
+  }, [success]);
 
 
   const renderScannerContent = () => {
@@ -375,7 +377,7 @@ export default function QRScannerPage() {
       return (
         <div style={{
           width: 360,
-          height:360,
+          height: 360,
           margin: '60px auto 0 auto',
           border: '1.5px dashed #b7b8b9',
           borderRadius: 12,
@@ -398,11 +400,12 @@ export default function QRScannerPage() {
               <rect x="14" y="14" width="2" height="2" rx="0.5"/>
             </svg>
           </div>
+          
           <input
             type="text"
             value={manualQrCode}
             onChange={(e) => setManualQrCode(e.target.value)}
-            placeholder="Enter QR code manually..."
+            placeholder="Enter QR code (COMPANY-TAG-ID)"
             style={{
               width: '100%',
               padding: '10px 16px',
@@ -429,6 +432,7 @@ export default function QRScannerPage() {
             }}
             onKeyPress={e => e.key === 'Enter' && handleManualSubmit()}
           />
+          
           <div style={{ display: 'flex', gap: 10, width: '100%', marginTop: 0 }}>
             <button
               onClick={handleManualSubmit}
@@ -675,58 +679,6 @@ export default function QRScannerPage() {
 
       {/* Error, scanned, loading, success messages (unchanged) */}
       <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginBottom: 24 }}>
-        {error && (
-          <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '10px',
-            color: '#b91c1c',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            width: '100%',
-          }}>
-            <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-            {error}
-          </div>
-        )}
-        {scanned && (
-          <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: '10px',
-            color: '#0369a1',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            gap: '0.5rem',
-            width: '100%',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span style={{ fontWeight: '600' }}>Scanned QR:</span> {scanned}
-            </div>
-            {parsedQR ? (
-              <div style={{ marginTop: '0.5rem', fontSize: '0.98rem', color: '#0e7490' }}>
-                <div><b>Company:</b> {parsedQR.company}</div>
-                <div><b>Tag:</b> {parsedQR.tag}</div>
-                <div><b>ID:</b> {parsedQR.id}</div>
-              </div>
-            ) : (
-              <div style={{ marginTop: '0.5rem', color: '#b91c1c' }}>
-                <b>Unrecognized QR format.</b>
-              </div>
-            )}
-          </div>
-        )}
         {loading && (
           <div style={{
             marginTop: '1.5rem',
@@ -749,25 +701,6 @@ export default function QRScannerPage() {
               animation: 'spin 1s linear infinite'
             }}></div>
             Loading...
-          </div>
-        )}
-        {success && (
-          <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: '10px',
-            color: '#166534',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            width: '100%',
-          }}>
-            <svg style={{ width: '1rem', height: '1rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span style={{ fontWeight: '600' }}>Item found! Redirecting to details...</span>
           </div>
         )}
       </div>

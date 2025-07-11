@@ -103,11 +103,11 @@ export default function LogsPage() {
   // Helper function to detect category from QR code
   const detectCategoryFromQR = (qrCode: string) => {
     if (!qrCode) return null;
-    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
+    const tagPattern = /(?:-|^)(PC|PR|MON|TP|MS|KEY|UPS|TAB|PWB|UTLY|TOOL|SPLY)(?:-|\d|$)/i;
     const match = qrCode.match(tagPattern);
     if (match) {
       const tag = match[1].toUpperCase();
-      if (["PC","PR","MON","TP","MS","KEY","UPS"].includes(tag)) return "Electronic";
+      if (["PC","PR","MON","TP","MS","KEY","UPS","TAB","PWB"].includes(tag)) return "Electronic";
       else if (tag === "UTLY") return "Utility";
       else if (tag === "TOOL") return "Tool";
       else if (tag === "SPLY") return "Supply";
