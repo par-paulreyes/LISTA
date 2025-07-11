@@ -6,15 +6,18 @@
 
 .top-card {
   color: #000;
-  border-radius: 15px 15px 0 0;
+  border-radius: 15px;
+  border: 1px solid #F0F1F3;
   padding: 25px 0 10px 0;
   height: 230px;
-  margin-bottom: 5px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 300px;
+  background: url('/profile-bg.svg') no-repeat center center;
+  background-size: cover;
 }
 
 .main-container {
@@ -31,7 +34,7 @@
 }
 
 .profile-info-card {
-  padding: 0 10px;
+  padding: 20px 5px;
   display: flex;
   flex-direction: column;
   transition: height 0.3s, padding 0.3s;
@@ -39,6 +42,8 @@
   min-height: 0;
   overflow: hidden;
   box-sizing: border-box;
+  border: 1px solid #F0F1F3;
+  border-radius: 12px;
 }
 
 .profile-header-row {
@@ -51,7 +56,7 @@ h3 {
 }
 
 input {
-  border-radius: 10px;
+  border-radius: 20px;
   padding: 10px;
   margin-bottom: 10px;
   border: none !important;
@@ -67,7 +72,11 @@ input:disabled {
   background: #f9f9f9 !important;
 }
 
-.logout-btn, .admin-register-btn, .change-photo-btn {
+.logout-btn, .admin-register-btn {
+  width: 300px;
+}
+
+.change-photo-btn {
   flex: 1;
   color: #fff;
   border-radius: 10px;
@@ -79,6 +88,7 @@ input:disabled {
 
 .profile-btn-row {
   display: flex;
+  flex-direction: flex-end;
   gap: 10px;
   margin-top: 24px;
   width: 615px;
@@ -209,7 +219,7 @@ input:disabled {
 .profile-photo-options {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin: 10px 0 15px;
 }
 
 
@@ -390,7 +400,6 @@ input:disabled {
 
 .admin-register-btn:hover {
   color: #182848;
-  border: 1px solid #182848 !important;
 }
 
 

@@ -664,83 +664,66 @@ export default function ItemDetailPage() {
           <>
             <div className={styles.infoCard}>
               <h4 className={styles.sectionTitle}>General Information</h4>
-              {isEditing ? (
-                <>
-                  <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={editingItem.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>Property No</span><input value={editingItem.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>Serial No</span><input value={editingItem.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>Location</span><input value={editingItem.location || ''} onChange={e => handleInputChange('location', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>End User</span><input value={editingItem.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>Date Acquired</span><input type="date" value={formatDateForInput(editingItem.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} /></div>
-                  <div className={styles.grayRect}><span className={styles.label}>Status</span>
-                    <select className={styles.statusDropdown} value={editingItem.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)}>
-                      {isToolOrSupply ? (
-                        <>
-                          <option value="Available">Available</option>
-                          <option value="Out of Stock">Out of Stock</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="Available">Available</option>
-                          <option value="Bad Condition">Bad Condition</option>
-                          <option value="To be Borrowed">To be Borrowed</option>
-                          <option value="Borrowed">Borrowed</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                  <div className={styles.grayRect}><span className={styles.label}>Remarks</span><input value={editingItem.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} /></div>
-                  
-                  {/* Electronics-specific fields */}
-                  {isElectronic && (
-                    <>
-                      <div className={styles.grayRect}><span className={styles.label}>Article Type</span><input value={editingItem.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} /></div>
-                      <div className={styles.grayRect}><span className={styles.label}>Brand</span><input value={editingItem.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} /></div>
-                      <div className={styles.grayRect}><span className={styles.label}>Price</span><input type="number" value={editingItem.price || ''} onChange={e => handleInputChange('price', e.target.value)} /></div>
-                      <div className={styles.grayRect}><span className={styles.label}>Supply Officer</span><input value={editingItem.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} /></div>
-                      <div className={styles.grayRect}><span className={styles.label}>Company</span><input value={editingItem.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} /></div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div style={{display:'flex',flexDirection:'column',gap:'20px',alignItems:'flex-start'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>QR Code</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.qr_code || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Property No</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.property_no}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Serial No</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.serial_no || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Location</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.location || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>End User</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.end_user || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Date Acquired</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{formatDisplayDate(item.date_acquired) || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.item_status || 'N/A'}</b></div>
-                  <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Remarks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.remarks || 'N/A'}</b></div>
-                  
-                  {/* Electronics-specific fields */}
-                  {isElectronic && (
-                    <>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Article Type</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.article_type}</b></div>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Brand</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.brand || 'N/A'}</b></div>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Price</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>₱{item.price || 'N/A'}</b></div>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Supply Officer</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.supply_officer || 'N/A'}</b></div>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Company</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.company_name || 'N/A'}</b></div>
-                    </>
-                  )}
-                </div>
-              )}
-              <h4 className={styles.sectionTitle}>Specifications</h4>
-              {isEditing ? (
-                <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
-              ) : (
-                <div>
-                  {item.specifications ? (
-                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
-                      {formatSpecifications(item.specifications).map((spec, index) => (
-                        <span key={index} className={styles.specs}>{spec}</span>
-                      ))}
+              <div className={styles.infoCardContent}>
+                {isEditing || !isEditing ? (
+                  <div className={styles.recContainer}>
+                    <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={isEditing ? editingItem.qr_code || '' : item.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>Property No</span><input value={isEditing ? editingItem.property_no || '' : item.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>Serial No</span><input value={isEditing ? editingItem.serial_no || '' : item.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>Location</span><input value={isEditing ? editingItem.location || '' : item.location || ''} onChange={e => handleInputChange('location', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>End User</span><input value={isEditing ? editingItem.end_user || '' : item.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>Date Acquired</span><input type="date" value={isEditing ? formatDateForInput(editingItem.date_acquired) : formatDateForInput(item.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} disabled={!isEditing} /></div>
+                    <div className={styles.grayRect}><span className={styles.label}>Status</span>
+                      <select className={styles.statusDropdown} value={isEditing ? editingItem.item_status || 'Available' : item.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)} disabled={!isEditing}>
+                        {isToolOrSupply ? (
+                          <>
+                            <option value="Available">Available</option>
+                            <option value="Out of Stock">Out of Stock</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="Available">Available</option>
+                            <option value="Bad Condition">Bad Condition</option>
+                            <option value="To be Borrowed">To be Borrowed</option>
+                            <option value="Borrowed">Borrowed</option>
+                          </>
+                        )}
+                      </select>
                     </div>
-                  ) : (
-                    <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
-                  )}
-                </div>
-              )}
+                    <div className={styles.grayRect}><span className={styles.label}>Remarks</span><input value={isEditing ? editingItem.remarks || '' : item.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} disabled={!isEditing} /></div>
+                    {/* Electronics-specific fields */}
+                    {isElectronic && (
+                      <>
+                        <div className={styles.grayRect}><span className={styles.label}>Article Type</span><input value={isEditing ? editingItem.article_type || '' : item.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Brand</span><input value={isEditing ? editingItem.brand || '' : item.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Price</span><input type="number" value={isEditing ? editingItem.price || '' : item.price || ''} onChange={e => handleInputChange('price', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Supply Officer</span><input value={isEditing ? editingItem.supply_officer || '' : item.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Company</span><input value={isEditing ? editingItem.company_name || '' : item.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} disabled={!isEditing} /></div>
+                      </>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+              <h4 className={styles.sectionTitle}>Specifications</h4>
+              <div className={styles.infoCardContent}>
+                {isEditing ? (
+                  <div className={styles.specsContainer}>
+                    <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
+                  </div>
+                ) : (
+                  <div className={styles.specsContainer}>
+                    {item.specifications ? (
+                      <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                        {formatSpecifications(item.specifications).map((spec, index) => (
+                          <span key={index} className={styles.specs}>{spec}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -749,23 +732,12 @@ export default function ItemDetailPage() {
             {/* Logs content (already uses isEditing logic) */}
             {(isElectronic || isUtility) ? (
               <>
-                {/* WAIT LANG DITO
-                  {isEditing ? (
-                    <div className={styles.statusCard}>
-                      <div className={styles.grayRect}><span className={styles.label}>Maintenance Status:</span><input value={editingItem.maintenance_status || ''} onChange={e => handleInputChange('maintenance_status', e.target.value)} /></div>
-                      <div className={styles.grayRect}><span className={styles.label}>Pending Tasks:</span><input value={editingItem.pending_maintenance_count || ''} onChange={e => handleInputChange('pending_maintenance_count', e.target.value)} /></div>
-                    </div>
-                  ) : (
-                    <div className={styles.statusCard}>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
-                      <div style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks:</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
-                    </div>
-                  )}
-                */}
                 <div className={styles.statusCard}>
                   <h4>Status</h4>
-                  <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
-                  <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                  <div className={styles.statusTxtContainer}>
+                    <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
+                    <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+                  </div>
                 </div>
                 <div className={styles.checklist}>
                   <h4>Logs and Activities</h4>
@@ -784,8 +756,8 @@ export default function ItemDetailPage() {
                         )}
                         <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>
                           {isEditing && String(log.id)?.startsWith('new-') ? (
-                            <input 
-                              value={log.task_performed || ''} 
+                            <input
+                              value={log.task_performed || ''}
                               onChange={e => handleNewLogChange(i - editingLogs.length, 'task_performed', e.target.value)}
                               placeholder="Enter task performed"
                               className={styles.editHighlight}
@@ -798,7 +770,7 @@ export default function ItemDetailPage() {
                         {getTaskStatusIcon(log.status)}
                         <span style={{fontSize:12, color:'#888'}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
                         {isEditing && String(log.id)?.startsWith('new-') && (
-                          <button 
+                          <button
                             onClick={() => removeNewLog(i - editingLogs.length)}
                             style={{marginLeft: 'auto', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer'}}
                           >
@@ -818,10 +790,10 @@ export default function ItemDetailPage() {
                         <div>Date: {formatDisplayDate(log.maintenance_date)}</div>
                         <div>
                           Notes: {isEditing ? (
-                            <input 
-                              value={log.notes || ''} 
-                              onChange={e => String(log.id)?.startsWith('new-') ? handleNewLogChange(i - editingLogs.length, 'notes', e.target.value) : handleLogChange(i, 'notes', e.target.value)} 
-                              className={styles.editHighlight} 
+                            <input
+                              value={log.notes || ''}
+                              onChange={e => String(log.id)?.startsWith('new-') ? handleNewLogChange(i - editingLogs.length, 'notes', e.target.value) : handleLogChange(i, 'notes', e.target.value)}
+                              className={styles.editHighlight}
                             />
                           ) : (
                             <span>{log.notes}</span>
@@ -832,7 +804,7 @@ export default function ItemDetailPage() {
                   )) : <div style={{color: '#888'}}>No logs found.</div>}
                   {isEditing && (
                     <>
-                      <button 
+                      <button
                         type="button"
                         onClick={addNewLog}
                         className={styles.addNewMaintBtn}

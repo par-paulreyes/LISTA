@@ -360,7 +360,7 @@ export default function ProfilePage() {
 
   return (
     <div className="main-container">
-      {/* Inventory Top Card */}
+      {/* Profile Top Card */}
       <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
         <div className="profile-header-row" style={{ marginBottom: 0 }}>
           <h3 className="profile-header-title">Profile</h3>
@@ -405,20 +405,20 @@ export default function ProfilePage() {
           {/* Show camera if active */}
           {showCamera ? (
             <div className="flex flex-col items-center w-full">
-              <div className="profile-image-preview-box">
+              <div className="profile-image-preview-box" style={{ width: 220, height: 220 }}>
                 <Webcam
                   ref={webcamRef}
                   audio={false}
                   screenshotFormat="image/png"
                   videoConstraints={{
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
+                    width: { ideal: 220 },
+                    height: { ideal: 220 },
                     facingMode: "environment"
                   }}
                   onUserMedia={() => handleCameraReady()}
                   onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
                   className="profile-webcam"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#fff' }}
+                  style={{ width: 220, height: 220, objectFit: 'cover', background: '#fff' }}
                 />
               </div>
               <div className="profile-image-upload-actions">
@@ -445,15 +445,16 @@ export default function ProfilePage() {
             </div>
           ) : capturedImage || selectedImageFile ? (
             <div className="flex flex-col items-center w-full">
-              <div className="profile-image-preview-box">
+              <div className="profile-image-preview-box" style={{ width: 220, height: 220 }}>
                 <img
                   src={previewUrl!}
                   alt="Profile Preview"
                   style={{
-                    width: '160px',
-                    height: '160px',
+                    width: 220,
+                    height: 220,
                     objectFit: 'cover',
-                    background: '#fff'
+                    background: '#fff',
+                    borderRadius: 16
                   }}
                 />
               </div>
@@ -482,22 +483,22 @@ export default function ProfilePage() {
                 <img
                   src={imageUrl}
                   alt="Profile"
-                  className="w-24 h-24 object-cover border-1 border-[#F0F1F3] shadow-lg"
-                  style={{ marginBottom: 12, width: 160, height: 160, borderRadius: 16 }}
+                  className="object-cover border-1 border-[#F0F1F3] shadow-lg"
+                  style={{ marginBottom: 12, width: 220, height: 220, borderRadius: 16 }}
                 />
               ) : (
                 <div
-                  className="w-24 h-24 border-4 border-white shadow-lg flex items-center justify-center"
+                  className="border-4 border-white shadow-lg flex items-center justify-center"
                   style={{
                     marginBottom: 12,
-                    width: 144,
-                    height: 144,
+                    width: 220,
+                    height: 220,
                     backgroundColor: '#b91c1c',
                     border: '4px solid white',
                     borderRadius: 16
                   }}
                 >
-                  <svg width="64" height="64" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="96" height="96" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
