@@ -48,6 +48,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [connectionError, setConnectionError] = useState(false);
+  const [hasCachedData, setHasCachedData] = useState(false);
   const [mounted, setMounted] = useState(false);
 
 
@@ -88,9 +90,6 @@ export default function DashboardPage() {
         apiClient.get("/items/maintenance/needed"),
         apiClient.get("/logs"),
       ]);
-
-
-
 
       const items = itemsRes.data;
       const neededMaintenance = neededMaintenanceRes.data;
@@ -136,13 +135,11 @@ export default function DashboardPage() {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
-
       const todayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
         const itemDate = new Date(item.created_at);
         return itemDate.toDateString() === today.toDateString();
       }).length;
-
 
       const yesterdayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -150,13 +147,11 @@ export default function DashboardPage() {
         return itemDate.toDateString() === yesterday.toDateString();
       }).length;
 
-
       // Get recently added items (last 5 items)
       const recentItemsList = items
         .filter((item: Item) => item && item.created_at) // Filter out items without creation date
         .sort((a: Item, b: Item) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5);
-
 
       // Calculate recently added count (items added in last 7 days)
       const sevenDaysAgo = new Date();
@@ -167,7 +162,6 @@ export default function DashboardPage() {
         return itemDate >= sevenDaysAgo;
       }).length;
 
-
       // Calculate recently added articles this week
       const recentlyAddedArticles = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -176,7 +170,6 @@ export default function DashboardPage() {
       });
       const recentlyAddedArticlesCount = recentlyAddedArticles.length;
 
-
       // Calculate 'other' articles (not Desktop or Printer) added this week
       const recentlyAddedOthers = recentlyAddedArticles.filter((item: Item) => {
         const type = (item.article_type || '').toLowerCase();
@@ -184,14 +177,12 @@ export default function DashboardPage() {
       });
       const recentlyAddedOthersCount = recentlyAddedOthers.length;
 
-
       // Find the most recently added article type this week (excluding Desktop and Printer)
       let mostRecentOtherArticle = '';
       if (recentlyAddedOthers.length > 0) {
         mostRecentOtherArticle = recentlyAddedOthers[0].article_type || '';
       }
       setMostRecentOtherArticle(mostRecentOtherArticle);
-
 
       // Calculate item_status counts
       const goodCondition = items.filter((item: Item) => item.item_status === 'Available').length;
@@ -228,6 +219,27 @@ export default function DashboardPage() {
       setOthersAddedThisWeek(recentlyAddedOthersCount);
      
       setLastUpdated(new Date());
+      
+      // Clear connection error state on successful fetch
+      setConnectionError(false);
+      localStorage.removeItem('dashboard_connection_error');
+      
+      // Cache the successful data
+      const cacheData = {
+        totalItems,
+        neededMaintenance: itemsNeedingMaintenance,
+        totalMaintenance: totalMaintenanceCount,
+        recentlyAdded: recentlyAddedCount,
+        totalArticles: totalItems,
+        criticalItems: criticalItemsCount,
+        completedMaintenance: completedMaintenanceCount,
+        pendingMaintenance: pendingMaintenanceCount,
+        goodConditionCount: goodCondition,
+        badConditionCount: badCondition,
+        categoryCounts: catCounts,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('dashboard_cached_data', JSON.stringify(cacheData));
      
       // Log the fetched data for debugging
       console.log('Dashboard data updated:', {
@@ -246,12 +258,62 @@ export default function DashboardPage() {
      
     } catch (err: any) {
       console.error("Error loading dashboard stats:", err);
-      setError("Error loading dashboard stats");
+      
+      // Check for cached data first
+      const hasCached = checkCachedData();
+      
+      // Load cached data if available
+      if (hasCached) {
+        loadCachedData();
+      }
+      
+      // Determine the type of error and set appropriate message
+      let errorMessage = "Error loading dashboard stats";
+      let isConnectionError = false;
+      
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.code === 'ERR_INTERNET_DISCONNECTED') {
+        errorMessage = hasCached 
+          ? "Cannot connect to server. Showing cached data from last successful connection."
+          : "Cannot connect to server. Please check your internet connection and try again.";
+        isConnectionError = true;
+      } else if (err.response?.status === 0) {
+        errorMessage = hasCached
+          ? "Network error. Showing cached data from last successful connection."
+          : "Network error. Please check your connection and try again.";
+        isConnectionError = true;
+      } else if (err.response?.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (err.response?.status === 401) {
+        errorMessage = "Session expired. Please log in again.";
+        localStorage.removeItem("token");
+        router.push("/login");
+        return;
+      } else if (err.message?.includes('timeout')) {
+        errorMessage = hasCached
+          ? "Request timed out. Showing cached data from last successful connection."
+          : "Request timed out. Please check your connection and try again.";
+        isConnectionError = true;
+      } else if (err.message?.includes('Network Error')) {
+        errorMessage = hasCached
+          ? "Network error. Showing cached data from last successful connection."
+          : "Network error. Please check your connection and try again.";
+        isConnectionError = true;
+      }
+      
+      setError(errorMessage);
+      setConnectionError(isConnectionError);
+      
+      // Store connection error state for UI
+      if (isConnectionError) {
+        localStorage.setItem('dashboard_connection_error', 'true');
+      } else {
+        localStorage.removeItem('dashboard_connection_error');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [router]);
 
 
 
@@ -261,11 +323,61 @@ export default function DashboardPage() {
     fetchDashboardData(false);
   };
 
+  // Check if we have cached dashboard data
+  const checkCachedData = () => {
+    const cachedData = localStorage.getItem('dashboard_cached_data');
+    if (cachedData) {
+      try {
+        const data = JSON.parse(cachedData);
+        const cacheTime = data.timestamp || 0;
+        const now = Date.now();
+        // Consider cache valid for 5 minutes
+        if (now - cacheTime < 5 * 60 * 1000) {
+          setHasCachedData(true);
+          return true;
+        }
+      } catch (e) {
+        // Invalid cache data
+      }
+    }
+    setHasCachedData(false);
+    return false;
+  };
+
+  // Load cached dashboard data
+  const loadCachedData = () => {
+    const cachedData = localStorage.getItem('dashboard_cached_data');
+    if (cachedData) {
+      try {
+        const data = JSON.parse(cachedData);
+        setTotalItems(data.totalItems || 0);
+        setNeededMaintenance(data.neededMaintenance || 0);
+        setTotalMaintenance(data.totalMaintenance || 0);
+        setRecentlyAdded(data.recentlyAdded || 0);
+        setTotalArticles(data.totalArticles || 0);
+        setCriticalItems(data.criticalItems || 0);
+        setCompletedMaintenance(data.completedMaintenance || 0);
+        setPendingMaintenance(data.pendingMaintenance || 0);
+        setGoodConditionCount(data.goodConditionCount || 0);
+        setBadConditionCount(data.badConditionCount || 0);
+        setCategoryCounts(data.categoryCounts || {});
+        setLastUpdated(new Date(data.timestamp || Date.now()));
+        return true;
+      } catch (e) {
+        console.error('Error loading cached data:', e);
+      }
+    }
+    return false;
+  };
+
 
 
 
   useEffect(() => {
     setMounted(true);
+    // Clear any previous connection error state
+    setConnectionError(false);
+    localStorage.removeItem('dashboard_connection_error');
   }, []);
 
 
@@ -455,7 +567,9 @@ export default function DashboardPage() {
 
   // Animated progress bar for maintenance
   const [animatedWidth, setAnimatedWidth] = useState(0);
+  const [animatedPendingWidth, setAnimatedPendingWidth] = useState(0);
   const progressPercent = totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) * 100 : 0;
+  const pendingPercent = totalMaintenance > 0 ? (pendingMaintenance / totalMaintenance) * 100 : 0;
   useEffect(() => {
     let frame: number;
     let start: number | null = null;
@@ -477,6 +591,29 @@ export default function DashboardPage() {
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressPercent]);
+
+  // Animate pending maintenance width
+  useEffect(() => {
+    let frame: number;
+    let start: number | null = null;
+    const initial = animatedPendingWidth;
+    const target = pendingPercent;
+    const duration = 800; // ms
+    function animate(now: number) {
+      if (start === null) start = now;
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      setAnimatedPendingWidth(initial + (target - initial) * progress);
+      if (progress < 1) {
+        frame = requestAnimationFrame(animate);
+      } else {
+        setAnimatedPendingWidth(target);
+      }
+    }
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPercent]);
 
 
 
@@ -526,22 +663,87 @@ export default function DashboardPage() {
           color: '#6b7280'
         }}>
           <div className={styles.dashboardLoadingSpinner}></div>
-          <div style={{marginTop: '1rem'}}>Loading dashboard data...</div>
+          <div style={{marginTop: '1rem'}}>
+            {connectionError ? 'Reconnecting to server...' : 'Loading dashboard data...'}
+          </div>
+          {connectionError && (
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#9ca3af',
+              marginTop: '0.5rem'
+            }}>
+              This may take a moment if the server is starting up
+            </div>
+          )}
         </div>
       )}
       {mounted && error && (
         <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
+          backgroundColor: hasCachedData ? '#fef3cd' : '#fef2f2',
+          border: hasCachedData ? '1px solid #fde68a' : '1px solid #fecaca',
           borderRadius: '0.5rem',
-          padding: '1rem',
+          padding: '1.5rem',
           marginBottom: '1rem',
-          color: '#b91c1c'
+          color: hasCachedData ? '#92400e' : '#b91c1c',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center'
         }}>
-          {error}
+          <div style={{ marginBottom: '1rem' }}>
+            {hasCachedData ? (
+              <svg width="48" height="48" fill="none" stroke="#92400e" strokeWidth="2" viewBox="0 0 24 24" style={{ marginBottom: '0.5rem' }}>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ) : (
+              <svg width="48" height="48" fill="none" stroke="#b91c1c" strokeWidth="2" viewBox="0 0 24 24" style={{ marginBottom: '0.5rem' }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            )}
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              {hasCachedData ? 'Showing Cached Data' : 'Connection Error'}
+            </div>
+            <div style={{ fontSize: '0.95rem', opacity: 0.9 }}>{error}</div>
+          </div>
+          <button
+            onClick={() => fetchDashboardData(true)}
+            disabled={loading}
+            style={{
+              backgroundColor: hasCachedData ? '#92400e' : '#b91c1c',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              padding: '0.75rem 1.5rem',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {loading ? (
+              <>
+                <div className={styles.dashboardLoadingSpinner} style={{ width: '16px', height: '16px', border: '2px solid #ffffff', borderTop: '2px solid transparent' }}></div>
+                Retrying...
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M1 4v6h6"/>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                </svg>
+                Retry Connection
+              </>
+            )}
+          </button>
         </div>
       )}
-      {mounted && !loading && !error && (
+      {mounted && !loading && (!error || hasCachedData) && (
         <>
           {/* Two-column layout for cards */}
           <div style={{ display: 'flex', gap: 24 }}>
@@ -593,10 +795,46 @@ export default function DashboardPage() {
                   </div>
                   {/* Progress Bar below card change */}
                   <div style={{ width: '100%', height: 10, background: 'var(--bg-gray-100)', borderRadius: 5, margin: '24px 0 45px 0', overflow: 'hidden', position: 'relative' }}>
+                    {/* Completed maintenance (green bar) */}
                     <div
                       className={styles.dashboardProgressBarCompleted}
-                      style={{ width: `${animatedWidth}%` }}
+                      style={{ 
+                        width: `${animatedWidth}%`,
+                        zIndex: 2
+                      }}
                     />
+                    {/* Divider between completed and pending */}
+                    {pendingMaintenance > 0 && animatedWidth > 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: `${animatedWidth}%`,
+                          top: 0,
+                          height: '100%',
+                          width: '2px',
+                          background: 'rgba(255, 255, 255, 0.8)',
+                          zIndex: 3,
+                          boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
+                        }}
+                      />
+                    )}
+                    {/* Pending maintenance (red bar) - positioned after green bar */}
+                    {pendingMaintenance > 0 && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: `${animatedWidth}%`,
+                          top: 0,
+                          height: '100%',
+                          width: `${animatedPendingWidth}%`,
+                          background: 'linear-gradient(90deg, #fca5a5 0%, #ef4444 100%)',
+                          borderRadius: '5px',
+                          zIndex: 1,
+                          animation: 'pending-pulse 2s ease-in-out infinite',
+                          boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)'
+                        }}
+                      />
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
                     {/* Good Condition Stat */}
