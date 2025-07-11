@@ -257,145 +257,119 @@ exports.exportItems = (req, res) => {
   
   Item.findAllByCompany(company_name, (err, items) => {
     if (err) return res.status(500).json({ message: 'Error exporting items', error: err });
-    
+
+    // Group items by numeric ID from QR code
+    const groups = {};
+    items.forEach(item => {
+      const match = item.qr_code && item.qr_code.match(/(\d{3,})$/);
+      if (!match) return;
+      const id = match[1];
+      if (!groups[id]) groups[id] = {};
+      if (item.article_type === 'Desktop Computer') groups[id].pc = item;
+      else if (item.article_type === 'Monitor') groups[id].monitor = item;
+      else if (item.article_type === 'Keyboard') groups[id].keyboard = item;
+      else if (item.article_type === 'Mouse') groups[id].mouse = item;
+      else if (item.article_type === 'UPS') groups[id].ups = item;
+      else {
+        if (!groups[id].other) groups[id].other = [];
+        groups[id].other.push(item);
+      }
+    });
+
+    // Build export rows
+    const exportRows = Object.entries(groups).map(([id, group]) => ({
+      pc_no: id,
+      pc_brand: group.pc?.brand || '',
+      pc_serial: group.pc?.serial_no || '',
+      pc_property: group.pc?.property_no || '',
+      monitor_brand: group.monitor?.brand || '',
+      monitor_serial: group.monitor?.serial_no || '',
+      monitor_property: group.monitor?.property_no || '',
+      keyboard_brand: group.keyboard?.brand || '',
+      keyboard_serial: group.keyboard?.serial_no || group.keyboard?.property_no || '',
+      mouse_brand: group.mouse?.brand || '',
+      mouse_serial: group.mouse?.serial_no || group.mouse?.property_no || '',
+      ups_brand: group.ups?.brand || '',
+      ups_serial: group.ups?.serial_no || group.ups?.property_no || '',
+      other_type: group.other?.[0]?.article_type || '',
+      other_brand: group.other?.[0]?.brand || '',
+      other_serial: group.other?.[0]?.serial_no || group.other?.[0]?.property_no || '',
+      remarks: group.pc?.remarks || group.monitor?.remarks || group.keyboard?.remarks || group.mouse?.remarks || group.ups?.remarks || group.other?.[0]?.remarks || ''
+    }));
+
+    // Define export fields/columns
+    const exportFields = [
+      { label: 'PC No.', value: 'pc_no' },
+      { label: 'System Unit Brand', value: 'pc_brand' },
+      { label: 'System Unit Serial No.', value: 'pc_serial' },
+      { label: 'System Unit Property No.', value: 'pc_property' },
+      { label: 'Monitor Brand', value: 'monitor_brand' },
+      { label: 'Monitor Serial No.', value: 'monitor_serial' },
+      { label: 'Monitor Property No.', value: 'monitor_property' },
+      { label: 'Keyboard Brand', value: 'keyboard_brand' },
+      { label: 'Keyboard Serial/Property No.', value: 'keyboard_serial' },
+      { label: 'Mouse Brand', value: 'mouse_brand' },
+      { label: 'Mouse Serial/Property No.', value: 'mouse_serial' },
+      { label: 'UPS Brand', value: 'ups_brand' },
+      { label: 'UPS Serial/Property No.', value: 'ups_serial' },
+      { label: 'Other Type', value: 'other_type' },
+      { label: 'Other Brand', value: 'other_brand' },
+      { label: 'Other Serial/Property No.', value: 'other_serial' },
+      { label: 'Remarks', value: 'remarks' }
+    ];
+
     if (format === 'excel') {
       try {
         const ExcelJS = require('exceljs');
         const workbook = new ExcelJS.Workbook();
-        
-        // Define the fields for all sheets
-        const fields = [
-          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
-          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
-          'quantity', 'item_status', 'remarks'
-        ];
-        
-        // Group items by category
-        const itemsByCategory = {};
-        items.forEach(item => {
-          const category = item.category || 'Uncategorized';
-          if (!itemsByCategory[category]) {
-            itemsByCategory[category] = [];
-          }
-          itemsByCategory[category].push(item);
-        });
-        
-        // Create "All" sheet first
-        const allSheet = workbook.addWorksheet('All');
-        allSheet.columns = fields.map(field => ({
-          header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
-          key: field,
-          width: 15
-        }));
-        
-        // Add data to "All" sheet
-        items.forEach(item => {
-          allSheet.addRow(item);
-        });
-        
-        // Create sheets for each category
-        Object.keys(itemsByCategory).forEach(category => {
-          const sheet = workbook.addWorksheet(category);
-          sheet.columns = fields.map(field => ({
-            header: field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' '),
-            key: field,
-            width: 15
-          }));
-
-          // Group items by article_type within this category
-          const itemsByArticle = {};
-          itemsByCategory[category].forEach(item => {
-            const article = item.article_type || 'Unspecified';
-            if (!itemsByArticle[article]) itemsByArticle[article] = [];
-            itemsByArticle[article].push(item);
-          });
-
-          // For each article_type, add a yellow header row and then the items
-          Object.keys(itemsByArticle).forEach(article => {
-            // Add a yellow, bold header row for the article_type
-            const headerRow = sheet.addRow([article]);
-            headerRow.font = { bold: true };
-            headerRow.fill = {
-              type: 'pattern',
-              pattern: 'solid',
-              fgColor: { argb: 'FFFFFF00' } // Yellow
-            };
-            // Merge the header row across all columns
-            sheet.mergeCells(`A${headerRow.number}:${String.fromCharCode(65+fields.length-1)}${headerRow.number}`);
-
-            // Add the data rows for this article_type
-            itemsByArticle[article].forEach(item => {
-              sheet.addRow(item);
-            });
-          });
-        });
-        
-        // Set response headers
+        const sheet = workbook.addWorksheet('Grouped Inventory');
+        sheet.columns = exportFields.map(f => ({ header: f.label, key: f.value, width: 18 }));
+        exportRows.forEach(row => sheet.addRow(row));
+        // Add another tab for DTC PC (Date)
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        const dtcSheet = workbook.addWorksheet(`DTC PC (${dateStr})`);
+        dtcSheet.columns = exportFields.map(f => ({ header: f.label, key: f.value, width: 18 }));
+        exportRows.forEach(row => dtcSheet.addRow(row));
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory.xlsx');
-        
-        // Write to response
-        workbook.xlsx.write(res).then(() => {
-          res.end();
-        }).catch(err => {
-          return res.status(500).json({ message: 'Error generating Excel file', error: err });
-        });
-        
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.xlsx');
+        workbook.xlsx.write(res).then(() => res.end());
       } catch (err) {
         return res.status(500).json({ message: 'Error generating Excel file', error: err });
       }
-    } else if (format === 'pdf') {
+    } else if (format === 'csv') {
+      try {
+        const { Parser } = require('json2csv');
+        const parser = new Parser({ fields: exportFields.map(f => ({ label: f.label, value: f.value })) });
+        const csv = parser.parse(exportRows);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.csv');
+        return res.send(csv);
+      } catch (err) {
+        return res.status(500).json({ message: 'Error generating CSV', error: err });
+      }
+    } else {
+      // fallback to default (PDF or other)
       try {
         const PDFDocument = require('pdfkit');
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory.pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=inventory_grouped.pdf');
         const doc = new PDFDocument();
         doc.pipe(res);
-        
-        doc.fontSize(18).text('Inventory Report', { align: 'center' });
+        doc.fontSize(18).text('Grouped Inventory Report', { align: 'center' });
         doc.moveDown();
         doc.fontSize(12).text(`Company: ${company_name}`, { align: 'center' });
         doc.fontSize(10).text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
         doc.moveDown();
-        
-        items.forEach((item, idx) => {
-          doc.fontSize(12).text(`Item #${idx + 1}`, { underline: true });
-          doc.fontSize(10).text(`ID: ${item.id || 'N/A'}`);
-          doc.fontSize(10).text(`QR Code: ${item.qr_code || 'N/A'}`);
-          doc.fontSize(10).text(`Property No: ${item.property_no || 'N/A'}`);
-          doc.fontSize(10).text(`Serial No: ${item.serial_no || 'N/A'}`);
-          doc.fontSize(10).text(`Category: ${item.category || 'N/A'}`);
-          doc.fontSize(10).text(`Article Type: ${item.article_type || 'N/A'}`);
-          doc.fontSize(10).text(`Brand: ${item.brand || 'N/A'}`);
-          doc.fontSize(10).text(`Specifications: ${item.specifications || 'N/A'}`);
-          doc.fontSize(10).text(`Date Acquired: ${item.date_acquired || 'N/A'}`);
-          doc.fontSize(10).text(`End User: ${item.end_user || 'N/A'}`);
-          doc.fontSize(10).text(`Location: ${item.location || 'N/A'}`);
-          doc.fontSize(10).text(`Quantity: ${item.quantity || 'N/A'}`);
-          doc.fontSize(10).text(`Item Status: ${item.item_status || 'N/A'}`);
-          doc.fontSize(10).text(`Remarks: ${item.remarks || 'N/A'}`);
-          doc.moveDown();
+        // Table header
+        doc.fontSize(10).text(exportFields.map(f => f.label).join(' | '));
+        doc.moveDown(0.5);
+        exportRows.forEach(row => {
+          doc.fontSize(9).text(exportFields.map(f => row[f.value] || '').join(' | '));
         });
-        
         doc.end();
       } catch (err) {
         return res.status(500).json({ message: 'Error generating PDF', error: err });
-      }
-    } else {
-      try {
-        const { Parser } = require('json2csv');
-        const fields = [
-          'id', 'qr_code', 'property_no', 'serial_no', 'category', 'article_type', 
-          'brand', 'specifications', 'date_acquired', 'end_user', 'location', 
-          'quantity', 'item_status', 'remarks'
-        ];
-        const parser = new Parser({ fields });
-        const csv = parser.parse(items);
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=inventory.csv');
-        return res.send(csv);
-      } catch (err) {
-        return res.status(500).json({ message: 'Error generating CSV', error: err });
       }
     }
   });

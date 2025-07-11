@@ -38,6 +38,7 @@ function AddItemPageContent() {
     remarks: "",
     item_description: "",
   });
+  const [userCompany, setUserCompany] = useState("");
  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -88,6 +89,13 @@ function AddItemPageContent() {
 
   useEffect(() => {
     setMounted(true);
+    // Fetch user profile to get company name
+    apiClient.get("/users/profile").then(res => {
+      if (res.data && res.data.company_name) {
+        setUserCompany(res.data.company_name);
+        setForm(prev => ({ ...prev, company_name: res.data.company_name }));
+      }
+    });
    
     // Cleanup function to delete uploaded image if component unmounts
     return () => {
@@ -616,6 +624,9 @@ function AddItemPageContent() {
                       <option value="Desktop Computer">Desktop Computer</option>
                       <option value="Laptop">Laptop</option>
                       <option value="Monitor">Monitor</option>
+                      <option value="Keyboard">Keyboard</option>
+                      <option value="Mouse">Mouse</option>
+                      <option value="UPS">UPS</option>
                       <option value="Printer">Printer</option>
                       <option value="Scanner">Scanner</option>
                       <option value="Network Equipment">Network Equipment</option>
@@ -706,8 +717,8 @@ function AddItemPageContent() {
                       type="text"
                       name="company_name"
                       className={`${styles.input} ${styles.inputNarrow}`}
-                      value={form.company_name || ''}
-                      onChange={handleChange}
+                      value={form.company_name || userCompany}
+                      readOnly
                     />
                   </div>
                 </div>
