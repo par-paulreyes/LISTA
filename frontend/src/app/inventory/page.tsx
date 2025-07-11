@@ -92,9 +92,16 @@ function InventoryPageContent() {
     }
     // Check for URL parameters to set initial filters
     const maintenanceParam = searchParams.get('maintenance');
+    const itemStatusParam = searchParams.get('item_status');
+    
     if (maintenanceParam) {
       setMaintenanceFilter(maintenanceParam);
     }
+    
+    if (itemStatusParam) {
+      setItemStatus(itemStatusParam);
+    }
+    
     fetchItems();
   }, [router, searchParams, mounted]);
 
@@ -298,6 +305,7 @@ function InventoryPageContent() {
           />
         </div>
       </div>
+      
       {/* Filter Modal */}
       {showFilterModal && (
         <div className="filter-modal-overlay">
@@ -423,11 +431,89 @@ function InventoryPageContent() {
           </button>
         </div>
       )}
+      
+      {/* Bad Condition Filter Display */}
+      {itemStatus === "Bad Condition" && (
+        <div style={{
+          backgroundColor: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: '0.5rem',
+          padding: '0.75rem',
+          marginBottom: '1rem',
+          color: '#b91c1c'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🚨</span>
+            <span style={{ fontWeight: '600' }}>Showing items that need action (Bad Condition)</span>
+          </div>
+          <div style={{ fontSize: '0.875rem', marginTop: '0.25rem', opacity: 0.8 }}>
+            These items require immediate attention and maintenance.
+          </div>
+          <button 
+            onClick={() => {
+              setItemStatus("");
+              router.push('/inventory');
+            }}
+            style={{
+              marginTop: '0.5rem',
+              color: '#b91c1c',
+              textDecoration: 'underline',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.875rem'
+            }}
+          >
+            Clear filter
+          </button>
+        </div>
+      )}
       {!mounted && <div className="text-center text-blue-600">Loading...</div>}
       {mounted && loading && <div className="text-center text-blue-600">Loading...</div>}
       {mounted && error && <div className="text-center text-red-500">{error}</div>}
       {mounted && !loading && !error && (
         <div>
+          {/* Results Count */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+            padding: '12px 16px',
+            background: '#f9fafb',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px'
+          }}>
+            <span style={{ fontSize: '14px', color: '#6b7280' }}>
+              Showing {filteredItems.length} of {items.length} items
+              {(category || articleType || itemStatus || maintenanceFilter) && ' (filtered)'}
+            </span>
+            {filteredItems.length > 0 && (
+              <button
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#6b7280',
+                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '12px'
+                }}
+              >
+                <FiRefreshCw
+                  size={12}
+                  style={{
+                    animation: refreshing ? 'spin 1s linear infinite' : undefined
+                  }}
+                />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+            )}
+          </div>
+          
           {filteredItems.length === 0 && (
             <div className="text-center text-gray-500 p-6">No items found.</div>
           )}
