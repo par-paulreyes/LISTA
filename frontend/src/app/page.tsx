@@ -981,9 +981,9 @@ export default function DashboardPage() {
                 <table>
                   <thead>
                     <tr>
-                      <th className={styles.recentItemHeader}>Type</th>
-                      <th className={styles.recentItemHeader}>QR Code</th>
-                      <th className={styles.recentItemHeader}>Date Added</th>
+                      <th className={`${styles.recentItemHeader} ${styles.typeCol}`}>Type</th>
+                      <th className={`${styles.recentItemHeader} ${styles.qrCol}`}>QR Code</th>
+                      <th className={`${styles.recentItemHeader} ${styles.dateCol}`}>Date Added</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -994,9 +994,9 @@ export default function DashboardPage() {
                         style={{ cursor: 'pointer' }}
                         onClick={() => router.push(`/inventory/${item.id}`)}
                       >
-                        <td>{item.article_type || 'Unnamed Item'}</td>
-                        <td>{item.qr_code}</td>
-                        <td>{new Date(item.created_at).toLocaleDateString()}</td>
+                        <td className={styles.typeCol}>{item.article_type || 'Unnamed Item'}</td>
+                        <td className={styles.qrCol}>{item.qr_code}</td>
+                        <td className={styles.dateCol}>{new Date(item.created_at).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
