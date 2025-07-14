@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap');
 
 * {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .top-card {
@@ -57,19 +57,27 @@ h3 {
 
 input {
   border-radius: 20px;
+  background: none !important;
   padding: 10px;
   margin-bottom: 10px;
-  border: none !important;
+  border: 1px solid #e5e7eb !important;
   width: 100%;
   background: #f9f9f9 !important;
 }
 
-input:enabled {
-  background: #f9f9f9 !important;
+input:focus, input:active, .editable-input:focus, .editable-input:active {
+  border: 1.5px solid #2563eb !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 input:disabled {
-  background: #f9f9f9 !important;
+  background: none !important;
+  color: #888;
+}
+
+input[type='password'] {
+  background: none !important;
 }
 
 .logout-btn, .admin-register-btn {
@@ -103,7 +111,7 @@ input:disabled {
   padding: 10px 32px;
   font-size: 10x;
   font-weight: 500;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: background 0.18s, color 0.18s, border 0.18s;
   outline: none;
@@ -126,7 +134,7 @@ input:disabled {
   padding: 10px 32px;
   font-size: 1rem;
   font-weight: 600;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: background 0.18s, color 0.18s, border 0.18s;
   outline: none;
@@ -191,7 +199,7 @@ input:disabled {
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   outline: none;
@@ -231,7 +239,7 @@ input:disabled {
   padding: 8px 16px;
   font-size: 14px;
   font-weight: 500;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   outline: none;
@@ -375,7 +383,7 @@ input:disabled {
   padding: 0.75rem 1rem;
   margin: 8px 0 8px 0;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 
@@ -415,7 +423,7 @@ input:disabled {
   padding: 10px 20px;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
@@ -493,15 +501,11 @@ input:disabled {
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .span-info.active {
   background: #e0e7ff;
-}
-
-input:focus, input:active, .editable-input:focus, .editable-input:active {
-  background: #e0e7ff !important;
 }
 
 .editable-input {
@@ -529,7 +533,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   border: 1px solid #ccc;
   outline: none;
   font-size: 1rem;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   color: #222;
   width: 100%;
   padding: 10px;
@@ -556,7 +560,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
@@ -580,7 +584,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
@@ -606,7 +610,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   padding: 10px 20px;
   font-size: 1rem;
   font-weight: 500;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
   outline: none;
@@ -629,7 +633,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1rem;
   display: flex;
@@ -654,7 +658,7 @@ input:focus, input:active, .editable-input:focus, .editable-input:active {
   padding: 0.75rem 1rem;
   margin: 8px 0 8px 0;
   font-size: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   font-weight: 600;
 }
 

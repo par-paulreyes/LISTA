@@ -564,7 +564,7 @@ export default function ProfilePage() {
               <input
                 type="text"
                 name="full_name"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent${isEditing ? ' editable-input' : ''}`}
+                className= "w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500"
                 value={form.full_name || ""}
                 onChange={handleChange}
                 required
@@ -578,8 +578,7 @@ export default function ProfilePage() {
               <input
                 type="email"
                 name="email"
-                className={`w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent${isEditing ? ' editable-input' : ''}`}
-                value={form.email || ""}
+                className= "w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 text-gray-500"                value={form.email || ""}
                 onChange={handleChange}
                 required
                 disabled={!isEditing}
@@ -614,7 +613,6 @@ export default function ProfilePage() {
             <div className="change-password-container">
               {isEditing && (
                 <>
-                  <h4 className="text-sm font-medium text-gray-700 mb-4">Change Password (Optional)</h4>
                   <div className="space-y-4">
                     <div className="rect">
                       <span className="label">
@@ -627,6 +625,7 @@ export default function ProfilePage() {
                         value={form.password || ""}
                         onChange={handleChange}
                         placeholder="Leave blank to keep current password"
+                        disabled={!isEditing}
                       />
                     </div>
                     <div className="rect">
