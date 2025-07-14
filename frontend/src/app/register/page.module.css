@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap');
 
 .container {
   max-width: 700px;
@@ -10,7 +10,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   min-height: calc(100vh - 120px);
 }
 
@@ -54,14 +54,14 @@
   border: 1px solid var(--border-light);
   padding: 20px;
   transition: all 0.2s ease;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .dashboardTitle {
   font-size: 2rem;
   font-weight: bold;
   margin: 0 0 24px 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   color: var(--text-primary);
 }
 
@@ -72,7 +72,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .loadingCard {
@@ -107,13 +107,13 @@
   font-weight: 600;
   color: #b91c1c;
   margin-bottom: 0.25rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .loadingText {
   font-size: 0.875rem;
   color: #182848;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .accessDeniedContainer {
@@ -123,7 +123,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .accessDeniedCard {
@@ -158,20 +158,20 @@
   font-weight: bold;
   margin-bottom: 0.5rem;
   color: #dc2626;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .accessDeniedText {
   font-size: 0.875rem;
   color: #6b7280;
   margin-bottom: 0.75rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .accessDeniedSubtext {
   font-size: 0.75rem;
   color: #9ca3af;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .header {
@@ -201,13 +201,13 @@
   font-weight: bold;
   color: #111827;
   margin-bottom: 0.25rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .subtitle {
   font-size: 0.875rem;
   color: #6b7280;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .form {
@@ -239,7 +239,7 @@
   color: #b91c1c;
   font-size: 0.75rem;
   font-weight: 500;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .formGrid {
@@ -292,7 +292,7 @@
   font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   margin: 0;
 }
 
@@ -315,7 +315,7 @@
   margin-top: 0;
   margin-bottom: 0;
   transition: background 0.2s;
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -351,14 +351,14 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin-bottom: 1rem;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 .footerCopyright {
   text-align: center;
   font-size: 0.75rem;
   color: #9ca3af;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 @keyframes spin {
@@ -554,7 +554,7 @@
   font-size: 12px;
   font-weight: 500;
   min-width: 80px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 @media (max-width: 600px) {
@@ -579,7 +579,7 @@
   color: #222;
   font-size: 15px;
   letter-spacing: 0.5px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   flex-shrink: 0;
 }
 
@@ -607,7 +607,7 @@
   color: #222;
   background: #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
   box-sizing: border-box;
 }
 
@@ -658,7 +658,7 @@
   font-weight: 500;
   margin-top: 4px;
   margin-left: 176px;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
 
 @media (max-width: 600px) {
@@ -675,5 +675,5 @@
   border: 1px solid var(--border-light);
   padding: 24px;
   transition: all 0.2s ease;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Host Grotesk', sans-serif;
 }
