@@ -1002,6 +1002,20 @@
 }
 
 
+.dashboardCardsTwoColumn {
+  display: flex;
+  gap: 24px;
+  flex-direction: row;
+}
+
+@media (max-width: 500px) {
+  .dashboardCardsTwoColumn {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+
 
 
 

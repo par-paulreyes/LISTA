@@ -638,14 +638,17 @@ export default function DashboardPage() {
                 title="Refresh"
                 disabled={refreshing}
               >
-                <FiRefreshCw
-                  size={16}
+                <span
                   style={{
                     color: 'var(--text-primary)',
                     verticalAlign: 'middle',
                     animation: refreshing ? 'spin 1s linear infinite' : undefined
                   }}
-                />
+                >
+                  <FiRefreshCw
+                    size={16}
+                  />
+                </span>
               </button>
             </div>
           </div>
@@ -746,7 +749,7 @@ export default function DashboardPage() {
       {mounted && !loading && (!error || hasCachedData) && (
         <>
           {/* Two-column layout for cards */}
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div className={styles.dashboardCardsTwoColumn}>
             {/* Column 1: Needs Action + Total Maintenance */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div className={styles.dashboardCardContainerNeedsAction}>
@@ -846,15 +849,15 @@ export default function DashboardPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
                         <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
                         <span style={{ color: '#374151' }}>Completed</span>
-            </div>
-          </div>
+                    </div>
+                  </div>
                     {/* Divider */}
                     <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
                     {/* Need Action Stat */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
                         <svg width="20" height="20" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-                </span>
+                      </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
                         <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
                         <span style={{ color: '#374151' }}>Pending</span>
