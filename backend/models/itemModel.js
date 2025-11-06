@@ -5,7 +5,7 @@ const Item = {
     db.query(`
       SELECT i.*, 
              ml.status AS status, 
-             d.system_status AS system_status,
+             i.item_status AS system_status,
              COALESCE(pending_count.count, 0) as pending_maintenance_count,
              CASE WHEN pending_count.count > 0 THEN 'pending' ELSE 'completed' END as maintenance_status
       FROM items i
@@ -15,12 +15,7 @@ const Item = {
         ORDER BY maintenance_date DESC, created_at DESC
         LIMIT 1
       )
-      LEFT JOIN diagnostics d ON d.id = (
-        SELECT id FROM diagnostics
-        WHERE item_id = i.id
-        ORDER BY diagnostics_date DESC, created_at DESC
-        LIMIT 1
-      )
+      
       LEFT JOIN (
         SELECT item_id, COUNT(*) as count
         FROM maintenance_logs
@@ -37,7 +32,7 @@ const Item = {
     db.query(`
       SELECT i.*, 
              ml.status AS status, 
-             d.system_status AS system_status,
+             i.item_status AS system_status,
              COALESCE(pending_count.count, 0) as pending_maintenance_count,
              CASE WHEN pending_count.count > 0 THEN 'pending' ELSE 'completed' END as maintenance_status
       FROM items i
@@ -47,12 +42,7 @@ const Item = {
         ORDER BY maintenance_date DESC, created_at DESC
         LIMIT 1
       )
-      LEFT JOIN diagnostics d ON d.id = (
-        SELECT id FROM diagnostics
-        WHERE item_id = i.id
-        ORDER BY diagnostics_date DESC, created_at DESC
-        LIMIT 1
-      )
+      
       LEFT JOIN (
         SELECT item_id, COUNT(*) as count
         FROM maintenance_logs
@@ -101,17 +91,13 @@ const Item = {
   },
   findItemsNeedingMaintenance: (company_name, callback) => {
     db.query(`
-      SELECT DISTINCT i.*, d.system_status AS system_status
+      SELECT DISTINCT 
+        i.*, 
+        i.item_status AS system_status
       FROM items i
-      LEFT JOIN diagnostics d ON d.id = (
-        SELECT id FROM diagnostics
-        WHERE item_id = i.id
-        ORDER BY diagnostics_date DESC, created_at DESC
-        LIMIT 1
-      )
       WHERE i.company_name = ? 
       AND (
-        d.system_status IN ('Poor', 'Fair', 'Critical', 'Needs Repair', 'Out of Order')
+        i.item_status IN ('Bad Condition')
         OR EXISTS (
           SELECT 1 FROM maintenance_logs ml 
           WHERE ml.item_id = i.id AND ml.status = 'pending'

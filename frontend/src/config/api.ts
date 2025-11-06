@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// API Configuration for local development and production
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+// API base URL: use env when provided; otherwise use relative base (works with Next rewrites)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
 // Create Axios instance with configuration for self-signed certificates
 export const apiClient = axios.create({
@@ -73,6 +73,6 @@ export const getImageUrl = async (imagePath: string) => {
     }
   }
   
-  // Fallback to backend server path
+  // Fallback to backend server path (relative when API_BASE_URL is empty)
   return `${API_BASE_URL}${imagePath}`;
 }; 

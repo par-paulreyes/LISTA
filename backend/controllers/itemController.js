@@ -1,6 +1,6 @@
 const Item = require('../models/itemModel');
 const MaintenanceLog = require('../models/maintenanceLogModel');
-const Diagnostic = require('../models/diagnosticModel');
+// Diagnostics removed; no longer used
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
@@ -116,40 +116,7 @@ exports.createItem = async (req, res) => {
       }
     }
 
-    // Create diagnostic record if provided
-    if (diagnostic) {
-      try {
-        const diagnosticData = JSON.parse(diagnostic);
-        const diagnosticRecord = {
-          item_id: itemId,
-          diagnostics_date: new Date().toISOString().split('T')[0],
-          system_status: diagnosticData.system_status,
-          findings: diagnosticData.findings || '',
-          recommendations: diagnosticData.recommendations || ''
-        };
-        
-        console.log('Creating diagnostic record:', diagnosticRecord);
-        
-        const diagnosticId = await new Promise((resolve, reject) => {
-          Diagnostic.create(diagnosticRecord, (err, id) => {
-            if (err) {
-              console.error('Error creating diagnostic:', err);
-              reject(err);
-            } else {
-              console.log('Diagnostic created with ID:', id);
-              resolve(id);
-            }
-          });
-        });
-        
-        diagnosticCreated = true;
-        console.log('Successfully created diagnostic record');
-        
-      } catch (parseErr) {
-        console.error('Error parsing or creating diagnostic data:', parseErr);
-        throw new Error('Failed to create diagnostic record: ' + parseErr.message);
-      }
-    }
+    // Diagnostics creation removed (table no longer exists)
 
     // Send success response
     const response = {
@@ -193,23 +160,27 @@ exports.deleteItem = async (req, res) => {
       if (err) return res.status(500).json({ message: 'Error finding item', error: err });
       if (!item) return res.status(404).json({ message: 'Item not found' });
 
-      // If item has an image_url, delete the image from Supabase
-      if (item.image_url) {
+      // If item has an image_url, delete the image from Supabase (bucket aligned with frontend: 'dtc-ims')
+      if (item.image_url && supabase && supabase.storage) {
         let filePath;
         try {
-          // Try to parse as URL
+          // Parse potential public URL to extract storage path
           const url = new URL(item.image_url);
-          const pathParts = url.pathname.split('/object/public/');
-          filePath = pathParts[1];
+          const parts = url.pathname.split('/object/public/');
+          filePath = parts.length > 1 ? parts[1] : undefined;
         } catch {
-          // If it's not a valid URL, treat as direct path
+          // Not a URL; assume it's already the storage path
           filePath = item.image_url;
         }
-        if (filePath) {
-          const { error: deleteError } = await supabase.storage.from('item-images').remove([filePath]);
-          if (deleteError) {
-            console.error('Error deleting image from Supabase:', deleteError);
-            // Continue with item deletion even if image deletion fails
+        if (filePath && typeof filePath === 'string') {
+          try {
+            const { error: deleteError } = await supabase.storage.from('dtc-ims').remove([filePath]);
+            if (deleteError) {
+              console.error('Error deleting image from Supabase:', deleteError);
+              // Continue even if image deletion fails
+            }
+          } catch (e) {
+            console.error('Supabase deletion exception:', e);
           }
         }
       }

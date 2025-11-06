@@ -153,6 +153,12 @@ export default function ProfilePage() {
         // Debug logging
         console.log('Uploading to Supabase:', { fileToUpload, filePath });
         // Upload with correct contentType
+        if (!supabase) {
+          setError('Storage is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+          setUploading(false);
+          setSaving(false);
+          return;
+        }
         const { error: uploadError } = await supabase.storage
           .from('dtc-ims')
           .upload(filePath, fileToUpload, {
@@ -316,6 +322,7 @@ export default function ProfilePage() {
       return filePath; // Already a URL
     }
     try {
+      if (!supabase) return '';
       const { data, error } = await supabase.storage
         .from('dtc-ims')
         .createSignedUrl(filePath, 3600); // 1 hour expiry

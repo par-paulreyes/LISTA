@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.28.0",
+    "@google/generative-ai": "^0.21.0",
     "@supabase/supabase-js": "^2.50.2",
     "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
@@ -25,7 +27,8 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.14.1",
     "package.json": "^0.0.0",
-    "pdfkit": "^0.17.1"
+    "pdfkit": "^0.17.1",
+    "simple-statistics": "^7.8.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

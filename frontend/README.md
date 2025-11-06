@@ -31,6 +31,41 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - **User Authentication**: Secure login and user management
 - **Responsive Design**: Works on desktop and mobile devices
 
+## Chatbot (IVY) Capabilities
+
+The in-app assistant (IVY) helps you perform inventory and maintenance tasks directly from chat:
+
+- Find and list items
+  - Examples: "find monitors", "search Dell laptops", "lookup ICTCE-PC-003"
+  - Searches across `article_type`, `category`, `brand`, and `qr_code`
+- Count availability
+  - Example: "how many printers are available?"
+- Items needing maintenance
+  - Example: "which computers need servicing?"
+- Show insights and summaries
+  - Examples: "insights", "summarize inventory status"
+- Reports and exports
+  - Examples: "export inventory to excel", "report"
+- Maintenance logs
+  - Examples: "logs", "recent logs"
+- Forecasts and trends
+  - Examples: "forecast", "predict maintenance tasks next month"
+- Statistical queries
+  - Examples: "average number of items per location", "average per category"
+- Item CRUD (with confirmation for risky actions)
+  - Add: `add { "qr_code": "NEW-QR-001", "article_type": "Laptop", "brand": "Dell", "item_status": "Available", "location": "HQ" }`
+  - Update: `update { "id": 123, "update": { "item_status": "In Use" } }`
+  - Delete: `delete { "id": 123 }`
+- Natural-language updates (auto-resolve ID via QR and infer fields)
+  - Examples: "move DTC-MON-00268 to DTC", "set status of ICTCE-PC-003 to In Use"
+  - On confirm, IVY updates `location`/`item_status` automatically
+- Conversational continuity
+  - Follow-ups like "do the same for monitors" use recent chat history
+
+Notes
+- Risky actions (add/update/delete) require confirmation.
+- When Gemini is configured, responses are grounded with live aggregates and relevant items/logs.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

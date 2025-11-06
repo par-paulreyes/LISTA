@@ -11,6 +11,7 @@ const itemRoutes = require('./routes/itemRoutes');
 const maintenanceLogRoutes = require('./routes/maintenanceLogRoutes');
 const diagnosticRoutes = require('./routes/diagnosticRoutes');
 const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -50,6 +51,7 @@ app.use('/api/items', itemRoutes);
 app.use('/api/logs', maintenanceLogRoutes);
 app.use('/api/diagnostics', diagnosticRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Add a test endpoint for Supabase image upload
 app.post('/test-supabase-upload', (req, res) => {
@@ -70,4 +72,7 @@ const PORT = process.env.PORT || 5000;
 // Listen on all interfaces for Render compatibility
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn('Gemini disabled: set GEMINI_API_KEY to enable AI guidance.');
+  }
 }); 
