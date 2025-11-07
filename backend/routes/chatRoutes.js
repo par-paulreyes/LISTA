@@ -7,14 +7,18 @@ router.post('/', verifyToken, chatController.chat);
 // Optional: direct Gemini summarization for a provided prompt
 router.post('/gemini', verifyToken, async (req, res) => {
   const { prompt } = req.body || {};
-  if (!process.env.GEMINI_API_KEY) return res.status(400).json({ message: 'Gemini not configured' });
-  if (!prompt) return res.status(400).json({ message: 'Missing prompt' });
+  if (!process.env.GEMINI_API_KEY) return res.status(400).json({ text: 'Gemini not configured' });
+  if (!prompt) return res.status(400).json({ text: 'Missing prompt' });
   try {
     const { generateGuidedResponse } = require('../services/gemini');
-    const text = await generateGuidedResponse(String(prompt));
+    const text = await generateGuidedResponse(String(prompt), { 
+      timeoutMs: 10000,
+      maxOutputTokens: 512 
+    });
     res.json({ text });
   } catch (e) {
-    res.status(500).json({ message: 'Gemini request failed' });
+    console.error('Gemini direct call error:', e);
+    res.status(500).json({ text: 'Unable to process request right now. Please try again.' });
   }
 });
 

@@ -25,9 +25,19 @@ exports.getAllItems = (req, res) => {
 };
 
 exports.getItemById = (req, res) => {
+  const company_name = req.user.company_name;
   Item.findById(req.params.id, (err, item) => {
-    if (err) return res.status(500).json({ message: 'Error fetching item', error: err });
-    if (!item) return res.status(404).json({ message: 'Item not found' });
+    if (err) {
+      console.error('Error fetching item:', err);
+      return res.status(500).json({ message: 'Error fetching item', error: err.message });
+    }
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+    // Verify the item belongs to the user's company
+    if (item.company_name !== company_name) {
+      return res.status(403).json({ message: 'Access denied: Item does not belong to your company' });
+    }
     res.json(item);
   });
 };
