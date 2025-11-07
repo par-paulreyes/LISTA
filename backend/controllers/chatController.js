@@ -94,43 +94,43 @@ function parseIntent(messageRaw) {
 	const message = (messageRaw || '').trim().toLowerCase();
 	if (!message) return { type: 'clarify', purpose: 'empty' };
 
-	// Action intents
-	if (/^add\b/.test(message)) return { type: 'action', action: 'add' };
-	if (/^update\b/.test(message)) return { type: 'action', action: 'update' };
-	if (/^delete\b|^remove\b/.test(message)) return { type: 'action', action: 'delete' };
+	// Action intents - improved patterns
+	if (/^(add|create|new|insert)\b/.test(message)) return { type: 'action', action: 'add' };
+	if (/^(update|change|modify|edit|set)\b/.test(message)) return { type: 'action', action: 'update' };
+	if (/^(delete|remove|drop|erase)\b/.test(message)) return { type: 'action', action: 'delete' };
 
-	// Counts, availability
-	if (/how many|count|available/.test(message)) {
+	// Counts, availability - improved patterns
+	if (/how many|count|available|total|quantity|how much/.test(message)) {
 		// Extract a simple noun (e.g., printers, laptops, mouse)
-		const match = message.match(/how many\s+([^?\.\n]+)|count\s+([^?\.\n]+)|available\s+([^?\.\n]+)/);
-		const rawTarget = (match && (match[1] || match[2] || match[3])) ? (match[1] || match[2] || match[3]) : '';
-		const target = rawTarget.replace(/(are|is|do we have|in stock)/g, '').trim();
+		const match = message.match(/how many\s+([^?\.\n]+)|count\s+([^?\.\n]+)|available\s+([^?\.\n]+)|total\s+([^?\.\n]+)|quantity\s+of\s+([^?\.\n]+)/);
+		const rawTarget = (match && (match[1] || match[2] || match[3] || match[4] || match[5])) ? (match[1] || match[2] || match[3] || match[4] || match[5]) : '';
+		const target = rawTarget.replace(/(are|is|do we have|in stock|items?|devices?)/g, '').trim();
 		return { type: 'query_count_available', target };
 	}
 
-	// General item type queries (show/list/find laptops, printers, etc.)
-	const itemTypeKeywords = ['laptop', 'laptops', 'printer', 'printers', 'computer', 'computers', 'desktop', 'monitor', 'monitors', 'mouse', 'keyboard', 'keyboards', 'ups', 'avr', 'tablet', 'tablets'];
+	// General item type queries (show/list/find laptops, printers, etc.) - improved
+	const itemTypeKeywords = ['laptop', 'laptops', 'printer', 'printers', 'computer', 'computers', 'desktop', 'monitor', 'monitors', 'mouse', 'keyboard', 'keyboards', 'ups', 'avr', 'tablet', 'tablets', 'tool', 'tools', 'supply', 'supplies', 'utility', 'utilities'];
 	const hasItemType = itemTypeKeywords.some(keyword => {
 		const regex = new RegExp(`\\b${keyword}\\b`, 'i');
 		return regex.test(message);
 	});
 	if (hasItemType) {
-		if (/\b(show|list|find|search|get|display|see|view)\b/.test(message)) {
+		if (/\b(show|list|find|search|get|display|see|view|what|which|where)\b/.test(message)) {
 			// Extract the item type from the message
-			const typeMatch = message.match(/\b(show|list|find|search|get|display|see|view)\s+([^?\.\n]+)/i);
-			const rawTarget = typeMatch && typeMatch[2] ? typeMatch[2] : message.replace(/\b(show|list|find|search|get|display|see|view|all|my|the)\b/gi, '').trim();
+			const typeMatch = message.match(/\b(show|list|find|search|get|display|see|view|what|which|where)\s+([^?\.\n]+)/i);
+			const rawTarget = typeMatch && typeMatch[2] ? typeMatch[2] : message.replace(/\b(show|list|find|search|get|display|see|view|all|my|the|what|which|where|are|is)\b/gi, '').trim();
 			return { type: 'query_find_items', target: rawTarget };
-		} else if (message.split(/\s+/).length <= 3) {
+		} else if (message.split(/\s+/).length <= 4) {
 			// Simple queries like "laptops" or "show laptops" - treat as find query
-			const cleaned = message.replace(/\b(show|list|find|search|get|display|see|view|all|my|the|me)\b/gi, '').trim();
+			const cleaned = message.replace(/\b(show|list|find|search|get|display|see|view|all|my|the|me|are|is)\b/gi, '').trim();
 			if (cleaned.length > 0) {
 				return { type: 'query_find_items', target: cleaned };
 			}
 		}
 	}
 
-	// Maintenance
-	if (/need(s)? servicing|need(s)? maintenance|over\s*6\s*months|due for maintenance|pending maintenance/.test(message)) {
+	// Maintenance - improved patterns
+	if (/need(s)?\s+(servicing|maintenance|repair)|over\s*6\s*months|due\s+for\s+maintenance|pending\s+maintenance|maintenance\s+due|needs\s+attention|broken|faulty|not\s+working/.test(message)) {
 		return { type: 'query_maintenance', scope: 'devices' };
 	}
 
@@ -176,6 +176,17 @@ const MaintenanceLog = require('../models/maintenanceLogModel');
 const { getKnowledgeSnapshot, getRichContext, getForecast } = require('../services/knowledge');
 const { getRelevantContext, getAdvancedContext } = require('../services/semantic');
 
+/**
+ * Chat Controller - Enhanced with Gemini AI integration and improved intent handling
+ * 
+ * Features:
+ * - Input validation and sanitization
+ * - Multiple intent types: query_summary, query_find_items, query_count_available, query_maintenance, action
+ * - Gemini AI integration for unclear queries (reduces "I'm not sure" responses)
+ * - Better error handling with specific error messages
+ * - Helpful fallback suggestions instead of generic messages
+ * - Company-scoped queries for security
+ */
 exports.chat = async (req, res) => {
 	const companyName = req.user?.company_name;
 	let message = req.body?.message;
@@ -402,6 +413,88 @@ exports.chat = async (req, res) => {
 			});
 		}
 
+	// Helper function to try Gemini first for all queries
+	async function tryGeminiFirst(queryType, customPrompt = null) {
+		if (!process.env.GEMINI_API_KEY || req.body?.useGemini === false) {
+			return null; // Gemini not available or disabled
+		}
+
+		try {
+			// Get rich context for all queries
+			let dataContext = await getRichContext(companyName);
+			
+			// Include recent items for better context
+			const sql = `SELECT id, qr_code, article_type, item_status, location, brand, created_at FROM items WHERE company_name = ? ORDER BY id DESC LIMIT 50`;
+			await new Promise((resolve) => {
+				db.query(sql, [companyName], (err, rows) => {
+					if (!err && Array.isArray(rows)) {
+						dataContext = { ...dataContext, recentItems: rows };
+					}
+					resolve();
+				});
+			});
+
+			// Create prompt based on query type or use custom prompt
+			let prompt = customPrompt;
+			if (!prompt) {
+				switch (queryType) {
+					case 'query_find_items':
+						prompt = `${historyText}User: ${message}
+
+Please help find items in the inventory based on the user's query. Use the data context to search for relevant items. If items are found, list them in a clear format with QR code, type, status, and location. If no items match, suggest alternative search terms or broader categories.
+
+Data Context:
+${JSON.stringify(dataContext, null, 2)}`;
+						break;
+					case 'query_count_available':
+						prompt = `${historyText}User: ${message}
+
+Please count the available items based on the user's query. Use the data context to provide an accurate count. Be specific about what you're counting and provide the exact number from the data.
+
+Data Context:
+${JSON.stringify(dataContext, null, 2)}`;
+						break;
+					case 'query_maintenance':
+						prompt = `${historyText}User: ${message}
+
+Please provide information about items needing maintenance. Use the data context to identify devices that need attention, are due for maintenance, or have pending maintenance tasks. List them clearly with their status and any relevant details.
+
+Data Context:
+${JSON.stringify(dataContext, null, 2)}`;
+						break;
+					default:
+						prompt = `${historyText}User: ${message}
+
+You are an inventory management assistant. Please respond to the user's query using the provided data context. Be helpful, specific, and use actual numbers from the data. Format your response clearly and provide actionable information.
+
+Data Context:
+${JSON.stringify(dataContext, null, 2)}`;
+				}
+			}
+
+			const geminiResponse = await generateGuidedResponse(
+				prompt,
+				{ 
+					userRole: req.user?.role, 
+					dataContext, 
+					enforceNumbersFromContext: true,
+					temperature: 0.3,
+					maxOutputTokens: 1024,
+					timeoutMs: 15000
+				}
+			);
+
+			// Validate response - must be substantial and not an error
+			if (geminiResponse && geminiResponse.length > 30 && !geminiResponse.toLowerCase().includes('error')) {
+				return geminiResponse;
+			}
+		} catch (geminiErr) {
+			console.error('Gemini query error:', geminiErr);
+		}
+
+		return null; // Fall back to regular logic
+	}
+
 	try {
 		// Debug: log intent for troubleshooting
 		if (process.env.NODE_ENV !== 'production') {
@@ -410,23 +503,23 @@ exports.chat = async (req, res) => {
 		
 		switch (intent.type) {
 			case 'query_summary': {
-				// Handle summary requests
+				// Handle summary requests - Use Gemini first for better responses
 				try {
 					const isAdmin = (req.user?.role || '').toLowerCase() === 'admin';
 					let dataContext = await getRichContext(companyName);
-					if (isAdmin && !(req.body?.rich)) {
-						// Include a small recent items snapshot for admins
-						const sql = `SELECT id, qr_code, article_type, item_status, location, created_at FROM items WHERE company_name = ? ORDER BY id DESC LIMIT 30`;
-						await new Promise((resolve) => {
-							db.query(sql, [companyName], (err, rows) => {
-								if (!err && Array.isArray(rows)) {
-									dataContext = { ...dataContext, recentItems: rows };
-								}
-								resolve();
-							});
+					
+					// Always include recent items for better context
+					const sql = `SELECT id, qr_code, article_type, item_status, location, brand, created_at FROM items WHERE company_name = ? ORDER BY id DESC LIMIT 50`;
+					await new Promise((resolve) => {
+						db.query(sql, [companyName], (err, rows) => {
+							if (!err && Array.isArray(rows)) {
+								dataContext = { ...dataContext, recentItems: rows };
+							}
+							resolve();
 						});
-					}
-					// Helper to build a server-side concise summary
+					});
+					
+					// Helper to build a server-side concise summary (fallback only)
 					const buildServerSummary = () => {
 						const totalByCategory = (dataContext.categories || []).map(c => `${c.category || 'Unspecified'}: ${c.count}`).slice(0, 5).join(', ');
 						const topTypes = (dataContext.articleTypes || []).map(t => `${t.article_type || 'Unspecified'}: ${t.count}`).slice(0, 5).join(', ');
@@ -442,36 +535,77 @@ exports.chat = async (req, res) => {
 						].join('\n');
 					};
 
-					// If Gemini is not configured, return server summary
-					if (!process.env.GEMINI_API_KEY) {
-						return res.json({ type: 'answer', message: buildServerSummary() });
-					}
+					// Always try Gemini first if available
+					if (process.env.GEMINI_API_KEY && req.body?.useGemini !== false) {
+						try {
+							// Create a detailed prompt for Gemini with all context
+							const summaryPrompt = `${historyText}User: ${message}
 
-					// Try Gemini; on failure, fall back to server summary
-					try {
-						const tip = await generateGuidedResponse(
-							`${historyText}Summarize the current inventory and maintenance status for this company. Be concise and actionable.`,
-							{ userRole: req.user?.role, dataContext, enforceNumbersFromContext: true }
-						);
-						return res.json({ type: 'answer', message: tip });
-					} catch (_gemErr) {
+Please provide a comprehensive inventory summary for this company. Use the provided data context to create an insightful, well-organized summary that includes:
+
+1. **Overview**: Total items and key statistics
+2. **Breakdown by Category**: Top categories and their counts
+3. **Item Types**: Most common article types
+4. **Status Distribution**: Current status of items (Available, In Use, etc.)
+5. **Maintenance Status**: Items due for maintenance and pending tasks
+6. **Recent Activity**: Notable recent additions or changes (if available)
+7. **Insights**: Any patterns, concerns, or recommendations based on the data
+
+Format the response in a clear, readable way with sections. Be specific with numbers from the data context. If certain information isn't available, mention it briefly but focus on what is available.
+
+Data Context:
+${JSON.stringify(dataContext, null, 2)}`;
+
+							const geminiSummary = await generateGuidedResponse(
+								summaryPrompt,
+								{ 
+									userRole: req.user?.role, 
+									dataContext, 
+									enforceNumbersFromContext: true,
+									temperature: 0.3,
+									maxOutputTokens: 1024,
+									timeoutMs: 15000
+								}
+							);
+							
+							// Validate Gemini response - if it's too short or seems like an error, use fallback
+							if (geminiSummary && geminiSummary.length > 50 && !geminiSummary.toLowerCase().includes('error')) {
+								return res.json({ type: 'answer', message: geminiSummary });
+							} else {
+								console.warn('Gemini summary response too short or invalid, using fallback');
+								return res.json({ type: 'answer', message: buildServerSummary() });
+							}
+						} catch (geminiErr) {
+							console.error('Gemini summary error:', geminiErr);
+							// Fall back to server summary on error
+							return res.json({ type: 'answer', message: buildServerSummary() });
+						}
+					} else {
+						// Gemini not configured, return server summary
 						return res.json({ type: 'answer', message: buildServerSummary() });
 					}
 				} catch (_e) {
+					console.error('Summary error:', _e);
 					// Last-resort fallback
 					return res.json({ type: 'answer', message: 'Summary not available right now. Try again shortly.' });
 				}
 			}
 			case 'query_find_items': {
-				// Find items by type (e.g., "show laptops", "list printers")
+				// Try Gemini first for better natural language understanding
+				const geminiResult = await tryGeminiFirst('query_find_items');
+				if (geminiResult) {
+					return res.json({ type: 'answer', message: geminiResult });
+				}
+
+				// Fall back to database search
 				const patterns = normalizeTargetToPatterns(intent.target);
 				if (patterns.length === 0) {
-					return res.json({ type: 'clarify', message: 'Which item type should I find?' });
+					return res.json({ type: 'clarify', message: 'Which item type should I find? For example: "show laptops", "find printers", or "list monitors".' });
 				}
-				// Search in article_type, category, and also check for common variations
-				const likeClauses = patterns.map(() => "(LOWER(article_type) LIKE ? OR LOWER(category) LIKE ? OR LOWER(brand) LIKE ?)").join(' OR ');
-				const likeParams = patterns.flatMap(p => [`%${p}%`, `%${p}%`, `%${p}%`]);
-				const sql = `SELECT id, qr_code, article_type, category, item_status, location, brand FROM items WHERE company_name = ? AND (${likeClauses}) ORDER BY id DESC LIMIT 50`;
+				// Search in article_type, category, brand, qr_code, and property_no for better results
+				const likeClauses = patterns.map(() => "(LOWER(article_type) LIKE ? OR LOWER(category) LIKE ? OR LOWER(brand) LIKE ? OR LOWER(qr_code) LIKE ? OR LOWER(property_no) LIKE ?)").join(' OR ');
+				const likeParams = patterns.flatMap(p => [`%${p}%`, `%${p}%`, `%${p}%`, `%${p}%`, `%${p}%`]);
+				const sql = `SELECT id, qr_code, property_no, article_type, category, item_status, location, brand, serial_no FROM items WHERE company_name = ? AND (${likeClauses}) ORDER BY id DESC LIMIT 50`;
 				const params = [companyName, ...likeParams];
 				await new Promise((resolve, reject) => {
 					db.query(sql, params, (err, rows) => {
@@ -481,30 +615,63 @@ exports.chat = async (req, res) => {
 						}
 						const data = Array.isArray(rows) ? rows.map(r => ({ 
 							id: r.id, 
-							qr_code: r.qr_code, 
+							qr_code: r.qr_code || '-', 
+							property_no: r.property_no || '-',
 							article_type: r.article_type || '-', 
 							category: r.category || '-',
 							brand: r.brand || '-',
+							serial_no: r.serial_no || '-',
 							last_status: r.item_status || '-', 
 							location: r.location || '-' 
 						})) : [];
 						if (data.length === 0) {
-							return res.json({ type: 'answer', message: `No items found matching "${intent.target}". Try checking the spelling or use a different search term.` });
+							const suggestions = [
+								`No items found matching "${intent.target}".`,
+								'',
+								'💡 Suggestions:',
+								'• Check spelling or try a broader term (e.g., "computer" instead of "laptop")',
+								'• Try: "show all items" to see everything',
+								'• Use QR code: "find ICTCE-PC-001"',
+								'• Search by location: "items at HQ"'
+							].join('\n');
+							return res.json({ type: 'answer', message: suggestions });
 						}
-						return res.json({ type: 'answer', message: `Found ${data.length} item(s) matching "${intent.target}":`, data });
+						const message = data.length === 50 
+							? `Found ${data.length}+ items matching "${intent.target}". Showing first 50:`
+							: `Found ${data.length} item(s) matching "${intent.target}":`;
+						return res.json({ type: 'answer', message, data });
 					});
 				});
 				return; // response sent inside query
 			}
 			case 'query_count_available': {
+				// Try Gemini first for better natural language understanding
+				const geminiResult = await tryGeminiFirst('query_count_available');
+				if (geminiResult) {
+					return res.json({ type: 'answer', message: geminiResult });
+				}
+
+				// Fall back to database count
 				const patterns = normalizeTargetToPatterns(intent.target);
 				if (patterns.length === 0) {
-					return res.json({ type: 'clarify', message: 'Which item type should I count?' });
+					// If no specific target, count all available items
+					await new Promise((resolve, reject) => {
+						const sql = `SELECT COUNT(*) AS count FROM items WHERE company_name = ? AND (LOWER(TRIM(item_status)) = 'available')`;
+						db.query(sql, [companyName], (err, rows) => {
+							if (err) {
+								console.error('Error counting items:', err);
+								return reject(err);
+							}
+							const count = rows?.[0]?.count || 0;
+							return res.json({ type: 'answer', message: `You have ${count} available item(s) in total.` });
+						});
+					});
+					return;
 				}
 				// Count items by article_type or category containing any pattern and item_status Available
 				// Use LOWER() for case-insensitive comparison
-				const likeClauses = patterns.map(() => "(LOWER(article_type) LIKE ? OR LOWER(category) LIKE ?)").join(' OR ');
-				const likeParams = patterns.flatMap(p => [`%${p}%`, `%${p}%`]);
+				const likeClauses = patterns.map(() => "(LOWER(article_type) LIKE ? OR LOWER(category) LIKE ? OR LOWER(brand) LIKE ?)").join(' OR ');
+				const likeParams = patterns.flatMap(p => [`%${p}%`, `%${p}%`, `%${p}%`]);
 				const sql = `SELECT COUNT(*) AS count FROM items WHERE company_name = ? AND (${likeClauses}) AND (LOWER(TRIM(item_status)) = 'available')`;
 				const params = [companyName, ...likeParams];
 				await new Promise((resolve, reject) => {
@@ -514,13 +681,21 @@ exports.chat = async (req, res) => {
 							return reject(err);
 						}
 						const count = rows?.[0]?.count || 0;
-						return res.json({ type: 'answer', message: `You have ${count} ${intent.target || 'items'} available.` });
+						const targetText = intent.target || 'items';
+						const itemWord = count === 1 ? 'item' : 'items';
+						return res.json({ type: 'answer', message: `You have ${count} ${targetText} ${itemWord} available.` });
 					});
 				});
 				return; // response sent inside query
 			}
 			case 'query_maintenance': {
-				// Use existing helper to fetch items needing maintenance
+				// Try Gemini first for better natural language understanding
+				const geminiResult = await tryGeminiFirst('query_maintenance');
+				if (geminiResult) {
+					return res.json({ type: 'answer', message: geminiResult });
+				}
+
+				// Fall back to database query
 				Item.findItemsNeedingMaintenance(companyName, (err, items) => {
 					if (err) return res.status(500).json({ type: 'error', message: 'Failed to fetch maintenance data.' });
 					if (!items || items.length === 0) return res.json({ type: 'answer', message: 'No devices currently flagged for maintenance.' });
@@ -606,6 +781,12 @@ exports.chat = async (req, res) => {
                 return res.json({ type: 'clarify', message: 'Do you want to add, update, or delete an item?' });
 			}
             case 'clarify': {
+                // Try Gemini first for all clarify cases
+                const geminiResult = await tryGeminiFirst('clarify');
+                if (geminiResult) {
+                    return res.json({ type: 'answer', message: geminiResult });
+                }
+
                 if (intent.purpose === 'find') {
                     // Try to extract a target after keywords; otherwise default to latest items
                     const match = (message || '').match(/\b(find|search|lookup|check)\s+([^\n\r\t]+)$/i);
@@ -833,7 +1014,36 @@ exports.chat = async (req, res) => {
                         // Fall through to generic message
                     }
                 }
-                return res.json({ type: 'answer', message: 'I can help you with:\n• Finding items: "show laptops", "find printers"\n• Inventory status: "summary", "how many items"\n• Maintenance: "items due for maintenance"\n• Adding/updating items\n• Exporting reports\n\nWhat would you like to do?' });
+                const helpMessage = [
+					'🤖 I can help you with:',
+					'',
+					'📋 **Finding Items:**',
+					'  • "show laptops" or "list printers"',
+					'  • "find item by QR ABC123"',
+					'  • "items at HQ-3F"',
+					'',
+					'📊 **Inventory Status:**',
+					'  • "summary" or "inventory insights"',
+					'  • "how many laptops are available?"',
+					'  • "total items"',
+					'',
+					'🔧 **Maintenance:**',
+					'  • "items due for maintenance"',
+					'  • "show maintenance logs"',
+					'  • "devices needing attention"',
+					'',
+					'➕ **Managing Items:**',
+					'  • "add new laptop"',
+					'  • "update item 123 location to HQ-3F"',
+					'  • "change status of item 456 to In Use"',
+					'',
+					'📤 **Reports:**',
+					'  • "export inventory"',
+					'  • "show forecast" or "predictions"',
+					'',
+					'What would you like to do?'
+				].join('\n');
+                return res.json({ type: 'answer', message: helpMessage });
             }
             default: {
                 // Always try Gemini first for general/unclear requests
@@ -861,13 +1071,31 @@ exports.chat = async (req, res) => {
                 } catch (_) {}
                 // Last resort: provide helpful suggestions instead of "I'm not sure"
                 const suggestions = [
-                    'I can help you with:',
-                    '• Finding items: "show laptops", "find printers", "list monitors"',
-                    '• Inventory status: "summary", "how many items", "inventory insights"',
-                    '• Maintenance: "items due for maintenance", "pending maintenance"',
-                    '• Adding items: "add laptop" or provide item details',
-                    '• Updates: "update item 123 location to HQ-3F"',
-                    '• Reports: "export inventory", "show logs"',
+                    '🤖 I can help you with:',
+                    '',
+                    '📋 **Finding Items:**',
+                    '  • "show laptops" or "list printers"',
+                    '  • "find item by QR ABC123"',
+                    '  • "items at HQ-3F"',
+                    '',
+                    '📊 **Inventory Status:**',
+                    '  • "summary" or "inventory insights"',
+                    '  • "how many laptops are available?"',
+                    '  • "total items"',
+                    '',
+                    '🔧 **Maintenance:**',
+                    '  • "items due for maintenance"',
+                    '  • "show maintenance logs"',
+                    '  • "devices needing attention"',
+                    '',
+                    '➕ **Managing Items:**',
+                    '  • "add new laptop"',
+                    '  • "update item 123 location to HQ-3F"',
+                    '  • "change status of item 456 to In Use"',
+                    '',
+                    '📤 **Reports:**',
+                    '  • "export inventory"',
+                    '  • "show forecast" or "predictions"',
                     '',
                     'What would you like to do?'
                 ].join('\n');
@@ -876,16 +1104,27 @@ exports.chat = async (req, res) => {
 		}
 	} catch (e) {
 		console.error('Chat error:', e);
-		// Provide more specific error messages
+		// Provide more specific error messages with helpful suggestions
 		let errorMessage = 'Something went wrong processing your request.';
+		let suggestions = '';
+		
 		if (e.message && e.message.includes('timeout')) {
 			errorMessage = 'Request timed out. Please try again with a simpler query.';
+			suggestions = '\n\n💡 Try:\n• Breaking down your question into smaller parts\n• Using simpler queries like "show laptops" or "summary"';
 		} else if (e.message && e.message.includes('GEMINI')) {
 			errorMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+			suggestions = '\n\n💡 You can still:\n• Search for items: "show laptops"\n• Check counts: "how many items"\n• View maintenance: "items due for maintenance"';
+		} else if (e.message && e.message.includes('database') || e.message && e.message.includes('SQL')) {
+			errorMessage = 'Database error occurred. Please try again.';
+			suggestions = '\n\n💡 If this persists, contact support.';
 		} else if (e.message) {
 			errorMessage = `Error: ${e.message}`;
 		}
-		return res.status(500).json({ type: 'error', message: errorMessage });
+		
+		return res.status(500).json({ 
+			type: 'error', 
+			message: errorMessage + suggestions 
+		});
 	}
 };
 

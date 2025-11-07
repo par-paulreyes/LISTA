@@ -15,7 +15,10 @@ export default function Chatbot() {
 	const [typing, setTyping] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([
-		{ role: 'assistant', text: 'Hi! I\'m IVY, your inventory assistant. I can help you find, check, update, or add items. Try asking "Summarize inventory status" or "How many laptops are available?"' }
+		{ 
+			role: 'assistant', 
+			text: 'Hi! I\'m IVY, your inventory assistant. 👋\n\nI can help you with:\n• Finding items ("show laptops", "find printers")\n• Checking status ("summary", "how many items")\n• Maintenance tasks ("items due for maintenance")\n• Managing items (add, update, delete)\n• Reports and insights\n\nTry asking: "Summarize inventory status" or "How many laptops are available?"' 
+		}
 	]);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -131,22 +134,13 @@ export default function Chatbot() {
 				if (payload.plan) setPendingPlan({ originalMessage: text, plan: payload.plan });
 			} else if (payload.type === 'error') {
 				setMessages(prev => [...prev, { role: 'assistant', text: `❌ ${payload.message || 'Request failed. Please try again.'}` }]);
-			} else {
-				// If we get an unclear response, try asking Gemini directly
-				try {
-					const geminiRes = await apiClient.post('/chat/gemini', { 
-						prompt: `You are an inventory management assistant. The user asked: "${text}". Provide a helpful response about what you can help with regarding inventory, maintenance, or items. Be friendly and suggest specific things they can ask.`
-					});
-					if (geminiRes.data?.text) {
-						setMessages(prev => [...prev, { role: 'assistant', text: geminiRes.data.text }]);
 					} else {
-						setMessages(prev => [...prev, { role: 'assistant', text: 'I can help you with:\n• Finding items (e.g., "show laptops", "find printers")\n• Checking inventory status ("summary", "how many items")\n• Maintenance tasks ("items due for maintenance")\n• Adding/updating items\n• Exporting reports\n\nWhat would you like to do?' }]);
+						// If we get an unclear response, provide helpful guidance
+						setMessages(prev => [...prev, { 
+							role: 'assistant', 
+							text: 'I can help you with:\n\n📋 Finding items: "show laptops", "find printers"\n📊 Status: "summary", "how many items"\n🔧 Maintenance: "items due for maintenance"\n➕ Managing: "add item", "update item 123"\n📤 Reports: "export inventory"\n\nWhat would you like to do?' 
+						}]);
 					}
-				} catch (geminiErr) {
-					// Fallback to helpful suggestions
-					setMessages(prev => [...prev, { role: 'assistant', text: 'I can help you with:\n• Finding items (e.g., "show laptops", "find printers")\n• Checking inventory status ("summary", "how many items")\n• Maintenance tasks ("items due for maintenance")\n• Adding/updating items\n• Exporting reports\n\nWhat would you like to do?' }]);
-				}
-			}
 		} catch (err: any) {
 			let errorMsg = 'Unable to process that right now. Please try again.';
 			if (err?.response?.status === 401) {
@@ -219,12 +213,12 @@ export default function Chatbot() {
 		'Show inventory insights',
 		'How many laptops are available?',
 		'Items due for maintenance',
-		'Find item by QR ABC123',
-		'Add new item',
-		'Update item 123 status to In Use',
-		'Update item 123 location to HQ-3F',
-		'Export inventory to Excel',
-		'Show latest maintenance logs'
+		'Show all printers',
+		'Find item by QR code',
+		'Total items count',
+		'Show maintenance logs',
+		'Items at HQ',
+		'Export inventory'
 	], []);
 
 	return (
