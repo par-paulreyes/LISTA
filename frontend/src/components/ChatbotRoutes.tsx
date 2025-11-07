@@ -5,7 +5,10 @@ import Chatbot from './Chatbot';
 
 export default function ChatbotRoutes() {
   const pathname = usePathname() || '/';
-  const show = pathname === '/' || pathname.startsWith('/inventory') || pathname.startsWith('/logs');
+  // Don't show chatbot on dashboard (/) since it's embedded in the AI Assistant card
+  // Show on other pages like /inventory, /logs, etc.
+  if (pathname === '/') return null;
+  const show = pathname.startsWith('/inventory') || pathname.startsWith('/logs') || pathname.startsWith('/assistant');
   if (!show) return null;
   return <Chatbot />;
 }

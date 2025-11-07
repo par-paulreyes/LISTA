@@ -618,39 +618,297 @@ export default function DashboardPage() {
 
 
 
+  // Small Calendar component
+  function CalendarCard() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const start = new Date(year, month, 1);
+    const end = new Date(year, month + 1, 0);
+    const startDay = start.getDay(); // 0-6
+    const daysInMonth = end.getDate();
+    const weeks: (number | null)[] = [];
+    for (let i = 0; i < startDay; i++) weeks.push(null);
+    for (let d = 1; d <= daysInMonth; d++) weeks.push(d);
+    while (weeks.length % 7 !== 0) weeks.push(null);
+    const monthName = today.toLocaleString('default', { month: 'long' });
+
+    return (
+      <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.calendarCardSoft}`}>
+        <div className={styles.calendarHeader}>
+          <div className={styles.cardTitleSm}>Calendar</div>
+          <div className={styles.calendarMonth}>{monthName} {year}</div>
+        </div>
+        <div className={styles.calendarWeekdays}>
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+            <div key={d} className={styles.calendarWeekday}>{d}</div>
+          ))}
+        </div>
+        <div className={styles.calendarGrid}>
+          {weeks.map((d, i) => {
+            const isToday = d === today.getDate();
+            return (
+              <div key={i} className={`${styles.calendarDay} ${isToday ? styles.calendarDayToday : ''}`}>{d ?? ''}</div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Embedded IVY Chat component
+  function EmbeddedIVYChat() {
+    const [chatOpen, setChatOpen] = React.useState(false);
+    const [input, setInput] = React.useState("");
+    const [busy, setBusy] = React.useState(false);
+    const [messages, setMessages] = React.useState<Array<{role: 'user' | 'assistant', text: string, data?: any}>>([
+      { role: 'assistant', text: 'I can help you find, check, update, or add items.' }
+    ]);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    const [pendingPlan, setPendingPlan] = React.useState<{ originalMessage: string; plan: any } | null>(null);
+
+    const send = React.useCallback(async () => {
+      const text = input.trim();
+      if (!text || busy) return;
+      setInput("");
+      setMessages(prev => [...prev, { role: 'user', text }]);
+      setBusy(true);
+      setPendingPlan(null);
+      try {
+        const res = await apiClient.post('/chat', { 
+          message: text,
+          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text }))
+        });
+        const payload = res.data || {};
+        if (payload.type === 'answer' && payload.message) {
+          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.data }]);
+        } else if (payload.type === 'action' && payload.message) {
+          setMessages(prev => [...prev, { role: 'assistant', text: `${payload.message}\n\nExample: ${JSON.stringify(payload.example_request)}`, data: payload.data }]);
+        } else if (payload.type === 'clarify' && payload.message) {
+          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.data }]);
+        } else if (payload.type === 'plan' && payload.message) {
+          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.plan }]);
+          if (payload.plan) setPendingPlan({ originalMessage: text, plan: payload.plan });
+        } else if (payload.type === 'error') {
+          setMessages(prev => [...prev, { role: 'assistant', text: payload.message || 'Request failed.' }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'assistant', text: 'Unable to process that right now. Please try again.' }]);
+        }
+      } catch (err: any) {
+        const serverMsg = err?.response?.data?.message || err?.message || 'Unable to process that right now. Please try again.';
+        setMessages(prev => [...prev, { role: 'assistant', text: serverMsg }]);
+      } finally {
+        setBusy(false);
+      }
+    }, [input, busy]);
+
+    const confirmPlan = React.useCallback(async () => {
+      if (!pendingPlan || busy) return;
+      setBusy(true);
+      try {
+        const res = await apiClient.post('/chat', { 
+          message: pendingPlan.originalMessage, 
+          confirm: true,
+          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text }))
+        });
+        const payload = res.data || {};
+        let reply = '';
+        if (payload.type === 'answer' && payload.message) reply = payload.message;
+        else if (payload.type === 'error') reply = payload.message || 'Request failed.';
+        else if (payload.message) reply = payload.message;
+        else reply = 'Completed.';
+        setMessages(prev => [...prev, { role: 'assistant', text: reply, data: payload.data }]);
+        setPendingPlan(null);
+      } catch (_e) {
+        setMessages(prev => [...prev, { role: 'assistant', text: 'Action failed. Please try again.' }]);
+      } finally {
+        setBusy(false);
+      }
+    }, [pendingPlan, busy]);
+
+    const cancelPlan = React.useCallback(() => {
+      setPendingPlan(null);
+      setMessages(prev => [...prev, { role: 'assistant', text: 'Okay. I won\'t proceed. What would you like to do next?' }]);
+    }, []);
+
+    React.useEffect(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    }, [messages, chatOpen]);
+
+    const quickTips = React.useMemo(() => [
+      'Summarize inventory status',
+      'Show inventory insights',
+      'How many laptops are available?',
+      'Items due for maintenance',
+      'Find item by QR ABC123',
+      'Add new item',
+      'Update item 123 status to In Use',
+      'Update item 123 location to HQ-3F',
+      'Export inventory to Excel',
+      'Show latest maintenance logs'
+    ], []);
+
+    return (
+      <div className={styles.assistantCardInner}>
+        <div className={styles.assistantBackdrop}></div>
+        {/* Ripple effects around orb */}
+        <div 
+          className={styles.assistantRipple1}
+          style={{ opacity: chatOpen ? 0.2 : 0.4 }}
+        ></div>
+        <div 
+          className={styles.assistantRipple2}
+          style={{ opacity: chatOpen ? 0.15 : 0.3 }}
+        ></div>
+        <div 
+          className={styles.assistantCenterOrb} 
+          onClick={() => setChatOpen(!chatOpen)}
+          style={{ 
+            cursor: 'pointer', 
+            zIndex: chatOpen ? 1 : 10,
+            width: chatOpen ? '76px' : '100px',
+            height: chatOpen ? '76px' : '100px',
+            top: chatOpen ? '15%' : '50%',
+            opacity: chatOpen ? 0.4 : 1
+          }}
+        >
+          {/* Stylized human head icon (IVY) */}
+          <svg 
+            className={styles.assistantCenterIcon} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5"
+            style={{ width: chatOpen ? '32px' : '42px', height: chatOpen ? '32px' : '42px' }}
+          >
+            {/* Head shape */}
+            <circle cx="12" cy="9" r="4.5" fill="#ffffff" stroke="none"/>
+            {/* Body/shoulder */}
+            <path d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" fill="#ffffff" stroke="none"/>
+            {/* Single eye dot */}
+            <circle cx="12" cy="9" r="1.2" fill="rgba(139, 92, 246, 0.7)" stroke="none"/>
+            {/* Curved mouth */}
+            <path d="M9 12.5c0.5 0.5 1.5 0.5 2 0" stroke="rgba(139, 92, 246, 0.5)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+          </svg>
+        </div>
+        
+        {/* Chat Interface - only show when chatOpen is true */}
+        {chatOpen && (
+        <div className={styles.embeddedChatContainer} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20 }}>
+          <div className={styles.embeddedChatHeader}>
+            <div className={styles.embeddedChatTitle}>IVY</div>
+            <button 
+              onClick={() => setChatOpen(false)} 
+              className={styles.embeddedChatCloseBtn}
+              aria-label="Close chat"
+              title="Close"
+            >
+              ×
+            </button>
+          </div>
+          <div ref={scrollRef} className={styles.embeddedChatMessages} style={{ flex: 1, overflowY: 'auto' }}>
+            {messages.map((m, idx) => (
+              <div key={idx} className={styles.embeddedChatMessage} style={{ justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                <div className={`${styles.embeddedChatBubble} ${m.role === 'user' ? styles.embeddedChatBubbleUser : styles.embeddedChatBubbleAssistant}`}>
+                  <div className={styles.embeddedChatText}>{m.text}</div>
+                  {m.role === 'assistant' && Array.isArray(m.data) && m.data.length > 0 && (
+                    <div className={styles.embeddedChatData}>
+                      {(() => {
+                        const first = m.data[0] || {};
+                        const columns: string[] = Object.keys(first).slice(0, 6);
+                        const header = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                        return (
+                          <table className={styles.embeddedChatTable}>
+                            <thead>
+                              <tr>
+                                {columns.map((col) => (
+                                  <th key={col}>{header(col)}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {m.data.map((row: any, i: number) => (
+                                <tr key={i}>
+                                  {columns.map((col) => (
+                                    <td key={col}>{String(row[col] ?? '-')}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        );
+                      })()}
+                    </div>
+                  )}
+                  {m.role === 'assistant' && pendingPlan && m.text && m.text.includes('I can perform this action') && (
+                    <div className={styles.embeddedChatActions}>
+                      <button onClick={confirmPlan} disabled={busy} className={styles.embeddedChatConfirmBtn}>{busy ? '...' : 'Confirm'}</button>
+                      <button onClick={cancelPlan} disabled={busy} className={styles.embeddedChatCancelBtn}>Cancel</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {messages.length <= 2 && (
+              <div className={styles.embeddedChatQuickTips}>
+                {quickTips.map(t => (
+                  <button key={t} onClick={() => { setInput(t); inputRef.current?.focus(); }} className={styles.embeddedChatQuickTipBtn}>{t}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className={styles.embeddedChatForm} style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={busy ? 'Working...' : 'Ask about inventory or maintenance'}
+              disabled={busy}
+              ref={inputRef}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+              className={styles.embeddedChatInput}
+              style={{ flex: 1, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '10px', background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 500, outline: 'none' }}
+            />
+            <button type="submit" disabled={busy || !input.trim()} className={styles.embeddedChatSendBtn} style={{ padding: '10px 20px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #8B5CF6 0%, #6B46C1 100%)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, cursor: busy || !input.trim() ? 'not-allowed' : 'pointer', minWidth: '80px', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)', opacity: busy || !input.trim() ? 0.5 : 1 }}>
+              {busy ? '...' : 'Send'}
+            </button>
+          </form>
+        </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={styles['main-container']}>
-      {/* Blue box at the top */}
-      <div className={styles.dashboardCard} style={{ background: 'var(--neutral-gray-200', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          {/* Left: Dashboard title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className={styles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Dashboard</div>
+      {/* Top actions bar */}
+      <div className={styles.topActions}>
+        <button className={styles.topBtn}>Add Metrics</button>
+        <button className={styles.topBtn}>Select dates</button>
+        <button className={styles.topBtn}>Filters</button>
+      </div>
+
+      {/* Welcome banner */}
+      <div className={`${styles.dashboardCard} ${styles.welcomeCard}`}>
+        <div className={styles.welcomeInner}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className={styles.welcomeTitle}>Welcome back, <span style={{ color: '#003D82' }}>Admin!</span></div>
+            <div className={styles.welcomeSub}>Have a quick view on the inventory this month</div>
           </div>
-          {/* Right: Inventory System and time updated */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Inventory System</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', opacity: 0.85 }}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
-              <button
-                onClick={handleManualRefresh}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginLeft: 4 }}
-                title="Refresh"
-                disabled={refreshing}
-              >
-                <span
-                  style={{
-                    color: 'var(--text-primary)',
-                    verticalAlign: 'middle',
-                    animation: refreshing ? 'spin 1s linear infinite' : undefined
-                  }}
-                >
-                  <FiRefreshCw
-                    size={16}
-                  />
-                </span>
-              </button>
-            </div>
+          <div className={styles.welcomeMeta}>
+            <div className={styles.welcomeSub}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+            <button
+              onClick={handleManualRefresh}
+              className={styles.refreshBtn}
+              title="Refresh"
+              disabled={refreshing}
+            >
+              <span style={{ color: '#111827', animation: refreshing ? 'spin 1s linear infinite' : undefined }}>
+                <FiRefreshCw size={16} />
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -748,220 +1006,169 @@ export default function DashboardPage() {
       )}
       {mounted && !loading && (!error || hasCachedData) && (
         <>
-          {/* Two-column layout for cards */}
-          <div className={styles.dashboardCardsTwoColumn}>
-            {/* Column 1: Needs Action + Total Maintenance */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div className={styles.dashboardCardContainerNeedsAction}>
-                <div
-                  className={`${styles.infoCard} maintenanceCard`}
-                  onClick={() => router.push('/inventory?item_status=Bad%20Condition')}
-                  style={{ cursor: 'pointer', minHeight: 179 }}
-                  title="Click to view all items with Bad Condition status"
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>
-                    <span style={{ color: '#374151', fontWeight: 700, fontSize: '1.25rem' }}>Needs Action</span>
-                  </div>
-                  <div style={{ color: badConditionCount > 0 ? '#ef4444' : '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 12 }}>
-                    {badConditionCount > 0 ? 'item needs action' : 'All items in good condition'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 16 }}>
-                    {/* Good Condition Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(goodConditionCount) ? 0 : goodConditionCount} /></span>
-                      </span>
-                      <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Good Condition</span>
+          {/* Grid layout matching the provided design */}
+          <div className={styles.gridThree}>
+            {/* Items' Conditions (formerly Needs Action) */}
+            <div style={{ gridColumn: '1 / 2' }}>
+              <div className={`${styles.dashboardCard} ${styles.gradientDarkBlue} ${styles.conditionsCard}`} style={{ minHeight: 190 }} onClick={() => router.push('/inventory?item_status=Bad%20Condition')} title="Click to view all items with Bad Condition status">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div className={styles.itemsCardTitle}>Items Conditions</div>
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>⋯</span>
                 </div>
-                    {/* Divider */}
-                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
-                    {/* Need Action Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ color: '#ef4444', fontWeight: 700, fontSize: '1.2rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(badConditionCount) ? 0 : badConditionCount} /></span>
-                      </span>
-                      <span style={{ color: '#374151', fontSize: '12px', marginTop: 20 }}>Need Action</span>
-                    </div>
-                  </div>
+                <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem', fontWeight: 500, marginBottom: 8 }}>
+                  {badConditionCount > 0 ? 'item needs action' : 'All items in good condition'}
                 </div>
-              </div>
-              <div className={styles.dashboardCardContainerMaintenance}>
-                <div
-                  className={`${styles.infoCard} totalCard`}
-                  onClick={() => handleCardClick('total-maintenance')}
-                  style={{ cursor: 'pointer', minHeight: 260 }}
-                  title="Click to view items with pending maintenance"
-                >
-                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Total Maintenance</div>
-                  <div style={{ color: pendingMaintenance > 0 ? '#ef4444' : '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 30 }}>
-                    {pendingMaintenance > 0 ? `${pendingMaintenance} Pending` : `${completedMaintenance} Completed`}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 10 }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.1rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(goodConditionCount) ? 0 : goodConditionCount} /></span>
+                    </span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', marginTop: 12 }}>Good Condition</span>
                   </div>
-                  {/* Progress Bar below card change */}
-                  <div style={{ width: '100%', height: 10, background: 'var(--bg-gray-100)', borderRadius: 5, margin: '24px 0 45px 0', overflow: 'hidden', position: 'relative' }}>
-                    {/* Completed maintenance (green bar) */}
-                    <div
-                      className={styles.dashboardProgressBarCompleted}
-                      style={{ 
-                        width: `${animatedWidth}%`,
-                        zIndex: 2
-                      }}
-                    />
-                    {/* Divider between completed and pending */}
-                    {pendingMaintenance > 0 && animatedWidth > 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: `${animatedWidth}%`,
-                          top: 0,
-                          height: '100%',
-                          width: '2px',
-                          background: 'rgba(255, 255, 255, 0.8)',
-                          zIndex: 3,
-                          boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)'
-                        }}
-                    />
-                    )}
-                    {/* Pending maintenance (red bar) - positioned after green bar */}
-                    {pendingMaintenance > 0 && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: `${animatedWidth}%`,
-                          top: 0,
-                          height: '100%',
-                          width: `${animatedPendingWidth}%`,
-                          background: 'linear-gradient(90deg, #fca5a5 0%, #ef4444 100%)',
-                          borderRadius: '5px',
-                          zIndex: 1,
-                          animation: 'pending-pulse 2s ease-in-out infinite',
-                          boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)'
-                        }}
-                      />
-                    )}
+                  <div style={{ width: 1, background: 'rgba(255,255,255,0.25)', height: 48, margin: '0 16px' }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.1rem', textAlign: 'center', width: '100%' }}><CountUp end={isNaN(badConditionCount) ? 0 : badConditionCount} /></span>
+                    </span>
+                    <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', marginTop: 12 }}>Need Action</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                    {/* Good Condition Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: '#e6f9ed', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Green checkmark icon */}
-                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6,13 11,18 18,7" stroke="#10b981" strokeWidth="2" fill="none"/></svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
-                        <span style={{ color: '#374151' }}>Completed</span>
-                    </div>
-                  </div>
-                    {/* Divider */}
-                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
-                    {/* Need Action Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        <svg width="20" height="20" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
-                        <span style={{ color: '#374151' }}>Pending</span>
-                      </div>
-              </div>
-                </div>
                 </div>
               </div>
             </div>
-            {/* Column 2: Total Articles + Recently Added */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div className={styles.dashboardCardContainerArticles}>
-            <div
-                  className={`${styles.infoCard} articlesCard`}
-              onClick={() => router.push('/inventory')}
-                  style={{ cursor: 'pointer', minHeight: 260 }}
-              title="Click to view all inventory items"
-            >
-                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Total Articles</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 0, marginTop: 24 }}>
-                    {/* Electronics */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
-                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Device icon */}
-                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="8" y1="19" x2="16" y2="19"/></svg>
-                </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Electronic']) ? 0 : categoryCounts['Electronic']} /></span>
-                        <span style={{ color: '#374151' }}>Electronics</span>
-              </div>
+
+            {/* Recently Added (small) */}
+            <div style={{ gridColumn: '2 / 3' }}>
+              <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.softBlueCard} ${styles.clickable}`} onClick={() => handleCardClick('recently-added')} title="Click to view all inventory items">
+                <div className={styles.recentlyAddedHeader}>
+                  <div className={styles.cardTitleSm}>Recently Added</div>
+                  <span className={styles.ellipsis}>⋯</span>
                 </div>
-               
-                    {/* Utilities */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
-                      <span style={{ background: '#ede9fe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Plug icon */}
-                        <svg width="20" height="20" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="8" rx="2"/><line x1="12" y1="10" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Utility']) ? 0 : categoryCounts['Utility']} /></span>
-                        <span style={{ color: '#374151' }}>Utilities</span>
-                </div>
-                </div>
-                    {/* Tools */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
-                      <span style={{ background: '#e0f2fe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Bag icon */}
-                        <svg width="20" height="20" fill="none" stroke="#38bdf8" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Tool']) ? 0 : categoryCounts['Tool']} /></span>
-                        <span style={{ color: '#374151' }}>Tools</span>
-                </div>
-              </div>
-                    {/* Supplies */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 8 }}>
-                      <span style={{ background: '#fef9c3', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Bar chart icon */}
-                        <svg width="20" height="20" fill="none" stroke="#f59e42" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="5" width="4" height="15" rx="1"/></svg>
-                </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(categoryCounts['Supply']) ? 0 : categoryCounts['Supply']} /></span>
-                        <span style={{ color: '#374151' }}>Supplies</span>
-              </div>
-              </div>
-                </div>
-                </div>
-              </div>
-              <div className={styles.dashboardCardContainerRecent}>
-            <div
-                  className={`${styles.infoCard} recentCard`}
-              onClick={() => handleCardClick('recently-added')}
-                  style={{ cursor: 'pointer', minHeight: 189.5 }}
-              title="Click to view all inventory items"
-            >
-                  <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#374151', marginBottom: 2 }}>Recently Added</div>
-                  <div style={{ color: '#10b981', fontSize: '1rem', fontWeight: 500, marginBottom: 12 }}>+{recentlyAdded} this week</div>
-                  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
-                    {/* Today Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: 'rgba(16,185,129,0.06)', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Calendar icon */}
-                        <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="4"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(todayAdded) ? 0 : todayAdded} /></span>
-                        <span style={{ color: '#374151' }}>Today</span>
-                      </div>
+                <div className={styles.cardSubtext}>+{recentlyAdded} this week</div>
+                <div className={styles.twoColStats}>
+                  <div className={styles.statBlock}>
+                    <span className={`${styles.iconPill} ${styles.iconUniform}`}>
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="4"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(todayAdded) ? 0 : todayAdded} /></span>
+                      <span className={styles.smallLabel}>Today</span>
                     </div>
-                    {/* Divider */}
-                    <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
-                    {/* Yesterday Stat */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ background: '#dbeafe', borderRadius: 8, padding: 8, marginBottom: 4, display: 'inline-flex', minWidth: 36, minHeight: 36, alignItems: 'center', justifyContent: 'center' }}>
-                        {/* Clock icon */}
-                        <svg width="20" height="20" fill="none" stroke="#3b82f6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
-                </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(yesterdayAdded) ? 0 : yesterdayAdded} /></span>
-                        <span style={{ color: '#374151' }}>Yesterday</span>
-                      </div>
+                  </div>
+                  <div className={styles.divider} />
+                  <div className={styles.statBlock}>
+                    <span className={`${styles.iconPill} ${styles.iconUniform}`}>
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(yesterdayAdded) ? 0 : yesterdayAdded} /></span>
+                      <span className={styles.smallLabel}>Yesterday</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Total Maintenance moved to right column (same height as calendar) */}
+            <div style={{ gridColumn: '3 / 4' }}>
+              <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.softBlueCard}`} style={{ position: 'relative', overflow: 'hidden' }} onClick={() => handleCardClick('total-maintenance')} title="Click to view items with pending maintenance">
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitleSm}>Total Maintenance</div>
+                  <span className={styles.ellipsis}>⋯</span>
                 </div>
+                <div className={`${styles.maintenanceMeta} ${pendingMaintenance > 0 ? styles.maintenanceMetaPending : styles.maintenanceMetaOk}`}>
+                  {pendingMaintenance > 0 ? `${pendingMaintenance} Pending` : `${completedMaintenance} Completed`}
                 </div>
+                <div className={styles.progressBar}>
+                  <div className={styles.dashboardProgressBarCompleted} style={{ width: `${animatedWidth}%`, zIndex: 2 }} />
+                  {pendingMaintenance > 0 && animatedWidth > 0 && (
+                    <div style={{ position: 'absolute', left: `${animatedWidth}%`, top: 0, height: '100%', width: '2px', background: 'rgba(255, 255, 255, 0.8)', zIndex: 3, boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }} />
+                  )}
+                  {pendingMaintenance > 0 && (
+                    <div style={{ position: 'absolute', left: `${animatedWidth}%`, top: 0, height: '100%', width: `${animatedPendingWidth}%`, background: 'linear-gradient(90deg, #C4B5FD 0%, #8B5CF6 100%)', borderRadius: '5px', zIndex: 1, animation: 'pending-pulse 2s ease-in-out infinite', boxShadow: '0 0 8px rgba(139, 92, 246, 0.3)' }} />
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span className={`${styles.iconPill} ${styles.iconUniform}`}>
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6,13 11,18 18,7"/></svg>
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                      <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
+                      <span style={{ color: '#374151' }}>Completed</span>
+                    </div>
+                  </div>
+                  <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <span className={`${styles.iconPill} ${styles.iconUniform}`}>
+                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
+                      <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
+                      <span style={{ color: '#374151' }}>Pending</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2 left: Calendar */}
+            <div style={{ gridColumn: '1 / 2' }}>
+              <CalendarCard />
+            </div>
+
+            {/* Row 2 middle: Total Articles */}
+            <div style={{ gridColumn: '2 / 3' }}>
+              <div className={`${styles.dashboardCard} ${styles.minH284} ${styles.softBlueCard} ${styles.clickable}`} onClick={() => router.push('/inventory')} title="Click to view all inventory items">
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitleSm}>Total Articles</div>
+                  <span className={styles.ellipsis}>⋯</span>
+                </div>
+                <div className={styles.cardSubtext}>Items for each category</div>
+                <div className={styles.articlesGrid}>
+                  <div className={styles.articleCell}>
+                    <span className={`${styles.articlePill} ${styles.iconUniform}`}>
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="8" y1="19" x2="16" y2="19"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(categoryCounts['Electronic']) ? 0 : categoryCounts['Electronic']} /></span>
+                      <span className={styles.smallLabel}>Electronics</span>
+                    </div>
+                  </div>
+                  <div className={styles.articleCell}>
+                    <span className={`${styles.articlePill} ${styles.iconUniform}`}>
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="8" rx="2"/><line x1="12" y1="10" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(categoryCounts['Utility']) ? 0 : categoryCounts['Utility']} /></span>
+                      <span className={styles.smallLabel}>Utilities</span>
+                    </div>
+                  </div>
+                  <div className={styles.articleCell}>
+                    <span className={`${styles.articlePill} ${styles.iconUniform}`}>
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(categoryCounts['Tool']) ? 0 : categoryCounts['Tool']} /></span>
+                      <span className={styles.smallLabel}>Tools</span>
+                    </div>
+                  </div>
+                  <div className={styles.articleCell}>
+                    <span className={`${styles.articlePill} ${styles.iconUniform}`}>
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="13" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="11" rx="1"/><rect x="16" y="5" width="4" height="15" rx="1"/></svg>
+                    </span>
+                    <div className={styles.statRow}>
+                      <span className={styles.statNumber}><CountUp end={isNaN(categoryCounts['Supply']) ? 0 : categoryCounts['Supply']} /></span>
+                      <span className={styles.smallLabel}>Supplies</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2 right: AI Assistant */}
+            <div style={{ gridColumn: '3 / 4' }}>
+              <div className={`${styles.dashboardCard} ${styles.minH284} ${styles.gradientDarkBlue} ${styles.aiAssistantCard}`}>
+                <EmbeddedIVYChat />
               </div>
             </div>
           </div>
@@ -1019,6 +1226,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 
 
