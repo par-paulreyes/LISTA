@@ -1,6 +1,6 @@
 "use client";
 import { usePathname } from "next/navigation";
-import BottomNavbar from "./BottomNavbar";
+import NewBottomNavbar from "./BottomNavbar"; //./BottomNavbar.tsx
 import { useEffect, useState } from "react";
 
 export default function NavbarWrapper() {
@@ -23,5 +23,5 @@ export default function NavbarWrapper() {
     return null;
   }
 
-  return <BottomNavbar />;
+  return <NewBottomNavbar />; //<BottomNavbar />
 } 
