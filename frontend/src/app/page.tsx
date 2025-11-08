@@ -14,9 +14,12 @@ import {
 	setInput,
 	setBusy,
 	setTyping,
-	setError,
 	setPendingPlan,
 } from "../features/chatbot/chatbotSlice";
+
+
+
+
 
 
 
@@ -47,6 +50,10 @@ interface Item {
 
 
 
+
+
+
+
 export default function DashboardPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [neededMaintenance, setNeededMaintenance] = useState(0);
@@ -61,6 +68,8 @@ export default function DashboardPage() {
   const [connectionError, setConnectionError] = useState(false);
   const [hasCachedData, setHasCachedData] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+
 
 
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -85,6 +94,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   // Function to fetch dashboard data
   const fetchDashboardData = useCallback(async (showLoading = true) => {
     if (showLoading) {
@@ -100,6 +113,7 @@ export default function DashboardPage() {
         apiClient.get("/items/maintenance/needed"),
         apiClient.get("/logs"),
       ]);
+
 
       const items = itemsRes.data;
       const neededMaintenance = neededMaintenanceRes.data;
@@ -145,11 +159,13 @@ export default function DashboardPage() {
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
+
       const todayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
         const itemDate = new Date(item.created_at);
         return itemDate.toDateString() === today.toDateString();
       }).length;
+
 
       const yesterdayAddedCount = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -157,11 +173,13 @@ export default function DashboardPage() {
         return itemDate.toDateString() === yesterday.toDateString();
       }).length;
 
+
       // Get recently added items (last 5 items)
       const recentItemsList = items
         .filter((item: Item) => item && item.created_at) // Filter out items without creation date
         .sort((a: Item, b: Item) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5);
+        .slice(0, 3);
+
 
       // Calculate recently added count (items added in last 7 days)
       const sevenDaysAgo = new Date();
@@ -172,6 +190,7 @@ export default function DashboardPage() {
         return itemDate >= sevenDaysAgo;
       }).length;
 
+
       // Calculate recently added articles this week
       const recentlyAddedArticles = items.filter((item: Item) => {
         if (!item || !item.created_at) return false;
@@ -180,6 +199,7 @@ export default function DashboardPage() {
       });
       const recentlyAddedArticlesCount = recentlyAddedArticles.length;
 
+
       // Calculate 'other' articles (not Desktop or Printer) added this week
       const recentlyAddedOthers = recentlyAddedArticles.filter((item: Item) => {
         const type = (item.article_type || '').toLowerCase();
@@ -187,12 +207,14 @@ export default function DashboardPage() {
       });
       const recentlyAddedOthersCount = recentlyAddedOthers.length;
 
+
       // Find the most recently added article type this week (excluding Desktop and Printer)
       let mostRecentOtherArticle = '';
       if (recentlyAddedOthers.length > 0) {
         mostRecentOtherArticle = recentlyAddedOthers[0].article_type || '';
       }
       setMostRecentOtherArticle(mostRecentOtherArticle);
+
 
       // Calculate item_status counts
       const goodCondition = items.filter((item: Item) => item.item_status === 'Available').length;
@@ -229,11 +251,11 @@ export default function DashboardPage() {
       setOthersAddedThisWeek(recentlyAddedOthersCount);
      
       setLastUpdated(new Date());
-      
+     
       // Clear connection error state on successful fetch
       setConnectionError(false);
       localStorage.removeItem('dashboard_connection_error');
-      
+     
       // Cache the successful data
       const cacheData = {
         totalItems,
@@ -268,21 +290,21 @@ export default function DashboardPage() {
      
     } catch (err: any) {
       console.error("Error loading dashboard stats:", err);
-      
+     
       // Check for cached data first
       const hasCached = checkCachedData();
-      
+     
       // Load cached data if available
       if (hasCached) {
         loadCachedData();
       }
-      
+     
       // Determine the type of error and set appropriate message
       let errorMessage = "Error loading dashboard stats";
       let isConnectionError = false;
-      
+     
       if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK' || err.code === 'ERR_INTERNET_DISCONNECTED') {
-        errorMessage = hasCached 
+        errorMessage = hasCached
           ? "Cannot connect to server. Showing cached data from last successful connection."
           : "Cannot connect to server. Please check your internet connection and try again.";
         isConnectionError = true;
@@ -309,10 +331,10 @@ export default function DashboardPage() {
           : "Network error. Please check your connection and try again.";
         isConnectionError = true;
       }
-      
+     
       setError(errorMessage);
       setConnectionError(isConnectionError);
-      
+     
       // Store connection error state for UI
       if (isConnectionError) {
         localStorage.setItem('dashboard_connection_error', 'true');
@@ -328,10 +350,15 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   // Manual refresh function
   const handleManualRefresh = () => {
     fetchDashboardData(false);
   };
+
 
   // Check if we have cached dashboard data
   const checkCachedData = () => {
@@ -353,6 +380,7 @@ export default function DashboardPage() {
     setHasCachedData(false);
     return false;
   };
+
 
   // Load cached dashboard data
   const loadCachedData = () => {
@@ -383,12 +411,20 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   useEffect(() => {
     setMounted(true);
     // Clear any previous connection error state
     setConnectionError(false);
     localStorage.removeItem('dashboard_connection_error');
   }, []);
+
+
+
+
 
 
 
@@ -426,6 +462,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   useEffect(() => {
     if (!mounted) return;
    
@@ -438,8 +478,16 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
     // Initial data fetch
     fetchDashboardData();
+
+
+
+
 
 
 
@@ -452,10 +500,18 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
     // Set up focus refresh (refresh when user returns to tab)
     const handleFocus = () => {
       fetchDashboardData(false);
     };
+
+
+
+
 
 
 
@@ -470,6 +526,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
     // Set up route change refresh (refresh when user navigates back to dashboard)
     const handleRouteChange = () => {
       // Check if we're on the dashboard page
@@ -477,6 +537,10 @@ export default function DashboardPage() {
         fetchDashboardData(false);
       }
     };
+
+
+
+
 
 
 
@@ -494,6 +558,10 @@ export default function DashboardPage() {
         }
       }
     };
+
+
+
+
 
 
 
@@ -517,6 +585,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
     // Cleanup
     return () => {
       clearInterval(refreshInterval);
@@ -531,6 +603,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   const handleDiagnostic = async (id: string) => {
     try {
       await apiClient.get(`/diagnostics/item/${id}`);
@@ -539,6 +615,10 @@ export default function DashboardPage() {
       console.error("Error running diagnostic:", err);
     }
   };
+
+
+
+
 
 
 
@@ -565,14 +645,20 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   // Lightweight CountUp component
   function CountUp({ end, duration = 1, ...props }: { end: number, duration?: number }) {
     const [value, setValue] = React.useState(0);
+
 
     React.useEffect(() => {
       setValue(0); // Always start from 0
       let startTime: number | null = null;
       let rafId: number | undefined;
+
 
       function animate(now: number) {
         if (!startTime) startTime = now;
@@ -585,14 +671,20 @@ export default function DashboardPage() {
         }
       }
 
+
       rafId = requestAnimationFrame(animate);
       return () => {
         if (rafId !== undefined) cancelAnimationFrame(rafId);
       };
     }, [end, duration]);
 
+
     return <span {...props}>{value}</span>;
   }
+
+
+
+
 
 
 
@@ -624,6 +716,7 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progressPercent]);
 
+
   // Animate pending maintenance width
   useEffect(() => {
     let frame: number;
@@ -650,6 +743,10 @@ export default function DashboardPage() {
 
 
 
+
+
+
+
   // Small Calendar component
   function CalendarCard() {
     const today = new Date();
@@ -665,6 +762,22 @@ export default function DashboardPage() {
     while (weeks.length % 7 !== 0) weeks.push(null);
     const monthName = today.toLocaleString('default', { month: 'long' });
 
+
+    // Calculate the last Friday of the month
+    const getLastFriday = () => {
+      let lastFriday = 0;
+      for (let day = daysInMonth; day >= 1; day--) {
+        const date = new Date(year, month, day);
+        if (date.getDay() === 5) { // 5 = Friday
+          lastFriday = day;
+          break;
+        }
+      }
+      return lastFriday;
+    };
+    const maintenanceDay = getLastFriday();
+
+
     return (
       <div className={styles.calendarCardSoft} style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div className={styles.calendarHeader} style={{ marginBottom: '10px' }}>
@@ -679,14 +792,22 @@ export default function DashboardPage() {
         <div className={styles.calendarGrid} style={{ flex: 1 }}>
           {weeks.map((d, i) => {
             const isToday = d === today.getDate();
+            const isMaintenanceDay = d === maintenanceDay;
             return (
-              <div key={i} className={`${styles.calendarDay} ${isToday ? styles.calendarDayToday : ''}`}>{d ?? ''}</div>
+              <div
+                key={i}
+                className={`${styles.calendarDay} ${isToday ? styles.calendarDayToday : ''} ${isMaintenanceDay ? styles.calendarDayMaintenance : ''}`}
+                title={isToday ? 'Date today' : isMaintenanceDay ? 'Maintenance Day' : ''}
+              >
+                {d ?? ''}
+              </div>
             );
           })}
         </div>
       </div>
     );
   }
+
 
   // Embedded IVY Chat component
   function EmbeddedIVYChat() {
@@ -704,6 +825,7 @@ export default function DashboardPage() {
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
 
+
     const send = React.useCallback(async () => {
       const text = (input || '').trim();
       if (!text || busy) return;
@@ -713,7 +835,7 @@ export default function DashboardPage() {
       dispatch(setTyping(true));
       dispatch(setPendingPlan(null));
       try {
-        const res = await apiClient.post('/chat', { 
+        const res = await apiClient.post('/chat', {
           message: text,
           history: (messages || []).slice(-10).map(m => ({ role: m.role, text: m.text || '' }))
         });
@@ -752,14 +874,14 @@ export default function DashboardPage() {
       }
     }, [input, busy, messages, dispatch]);
 
+
     const confirmPlan = React.useCallback(async () => {
       if (!pendingPlan || busy) return;
       dispatch(setBusy(true));
       dispatch(setTyping(true));
-      dispatch(setError(null));
       try {
-        const res = await apiClient.post('/chat', { 
-          message: pendingPlan.originalMessage, 
+        const res = await apiClient.post('/chat', {
+          message: pendingPlan.originalMessage,
           confirm: true,
           history: (messages || []).slice(-10).map(m => ({ role: m.role, text: m.text || '' }))
         });
@@ -780,10 +902,12 @@ export default function DashboardPage() {
       }
     }, [pendingPlan, busy, messages, dispatch]);
 
+
     const cancelPlan = React.useCallback(() => {
       dispatch(setPendingPlan(null));
       dispatch(addMessageAction({ role: 'assistant', text: 'Okay. I won\'t proceed. What would you like to do next?', timestamp: Date.now() }));
     }, [dispatch]);
+
 
     React.useEffect(() => {
       if (scrollRef.current) {
@@ -794,6 +918,7 @@ export default function DashboardPage() {
         }, 50);
       }
     }, [messages, chatOpen, typing]);
+
 
     const quickTips = React.useMemo(() => [
       'Summarize inventory status',
@@ -808,15 +933,16 @@ export default function DashboardPage() {
       'Show latest maintenance logs'
     ], []);
 
+
     return (
       <div className={styles.assistantCardInner}>
         <div className={styles.assistantBackdrop}></div>
         {/* Ripple effects around orb */}
-        <div 
+        <div
           className={styles.assistantRipple1}
           style={{ opacity: chatOpen ? 0.2 : 0.4 }}
         ></div>
-        <div 
+        <div
           className={styles.assistantRipple2}
           style={{ opacity: chatOpen ? 0.15 : 0.3 }}
         ></div>
@@ -833,11 +959,11 @@ export default function DashboardPage() {
           }}
         >
           {/* Stylized human head icon (IVY) */}
-          <svg 
-            className={styles.assistantCenterIcon} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
+          <svg
+            className={styles.assistantCenterIcon}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
             strokeWidth="1.5"
             style={{ width: chatOpen ? '32px' : '42px', height: chatOpen ? '32px' : '42px' }}
           >
@@ -851,7 +977,7 @@ export default function DashboardPage() {
             <path d="M9 12.5c0.5 0.5 1.5 0.5 2 0" stroke="rgba(255, 110, 110, 0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
           </svg>
         </div>
-        
+       
         {/* Chat Interface - only show when chatOpen is true */}
         {chatOpen && (
         <div className={styles.embeddedChatContainer} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20 }}>
@@ -972,14 +1098,24 @@ export default function DashboardPage() {
     );
   }
 
+
   return (
     <div className={styles['main-container']}>
+
 
       {/* Welcome banner */}
       <div className={`${styles.dashboardCard} ${styles.welcomeCard}`}>
         <div className={styles.welcomeInner}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div className={styles.welcomeTitle}>Welcome back, <span style={{ color: '#820000' }}>Admin!</span></div>
+            <div className={styles.welcomeTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              Welcome back, <span style={{ color: '#820000', display: 'flex', alignItems: 'center', gap: '6px' }}>Admin!<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#820000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+                <line x1="9" y1="12" x2="15" y2="12"></line>
+                <line x1="9" y1="18" x2="15" y2="18"></line>
+              </svg></span>
+            </div>
             <div className={styles.welcomeSub}>Have a quick view on the inventory this month</div>
           </div>
           <div className={styles.welcomeMeta}>
@@ -1121,6 +1257,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
+
             {/* Recently Added (small) */}
             <div style={{ gridColumn: '2 / 3' }}>
               <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.recentGlassCard} ${styles.clickable}`} onClick={() => handleCardClick('recently-added')} title="Click to view all inventory items">
@@ -1152,6 +1289,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+
 
             {/* Total Maintenance moved to right column (same height as calendar) */}
             <div style={{ gridColumn: '3 / 4', gridRow: '1 / 2' }}>
@@ -1196,12 +1334,14 @@ export default function DashboardPage() {
               </div>
             </div>
 
+
             {/* Row 2 left: Calendar */}
             <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3' }}>
               <div className={`${styles.dashboardCard} ${styles.softBlueCard}`} style={{ padding: 0 }}>
                 <CalendarCard />
               </div>
             </div>
+
 
             {/* Row 2 middle: Total Articles */}
             <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
@@ -1252,6 +1392,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
+
             {/* AI Assistant - spans from Total Articles (row 2) to bottom of table (row 3) */}
             <div style={{ gridColumn: '3 / 4', gridRow: '2 / 4' }}>
               <div className={`${styles.dashboardCard} ${styles.gradientDarkBlue} ${styles.aiAssistantCard}`} style={{ height: '100%' }}>
@@ -1259,11 +1400,12 @@ export default function DashboardPage() {
               </div>
             </div>
 
+
             {/* Row 3: Recently Added Items Table */}
             <div style={{ gridColumn: '1 / 3', gridRow: '3 / 4' }}>
               <div className={styles.dashboardTable}>
             <div className={styles.dashboardTableHeader}>
-              <div className={styles.dashboardTableTitle} style={{ color: 'var(--neutral-gray-700)' }}>New Items List</div>
+              <div className={styles.dashboardTableTitle} style={{ color: '#222248' }}>Top New Items</div>
             </div>
             <div className={styles.dashboardTableContent}>
               {recentItems.length === 0 ? (
@@ -1320,9 +1462,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-
-
-
-

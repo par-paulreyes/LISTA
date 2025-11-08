@@ -7,6 +7,7 @@ import { apiClient } from "../../config/api";
 import './inventory.css';
 import { FiRefreshCw } from 'react-icons/fi';
 
+
 interface Item {
   id: number;
   property_no: string;
@@ -23,6 +24,7 @@ interface Item {
   remarks?: string;
   created_at?: string; // Added for recently added calculation
 }
+
 
 function InventoryPageContent() {
   const [items, setItems] = useState<Item[]>([]);
@@ -43,6 +45,7 @@ function InventoryPageContent() {
   const [modalItemStatus, setModalItemStatus] = useState("");
   const [modalMaintenanceFilter, setModalMaintenanceFilter] = useState("");
 
+
   // Dashboard statistics state
   const [goodConditionCount, setGoodConditionCount] = useState(0);
   const [badConditionCount, setBadConditionCount] = useState(0);
@@ -55,9 +58,13 @@ function InventoryPageContent() {
   const [yesterdayAdded, setYesterdayAdded] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [refreshing, setRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
 
   const fetchItems = async (showLoading = true) => {
     if (showLoading) setLoading(true); else setRefreshing(true);
@@ -79,9 +86,11 @@ function InventoryPageContent() {
     }
   };
 
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
 
   useEffect(() => {
     if (!mounted) return;
@@ -93,21 +102,23 @@ function InventoryPageContent() {
     // Check for URL parameters to set initial filters
     const maintenanceParam = searchParams.get('maintenance');
     const itemStatusParam = searchParams.get('item_status');
-    
+   
     if (maintenanceParam) {
       setMaintenanceFilter(maintenanceParam);
     }
-    
+   
     if (itemStatusParam) {
       setItemStatus(itemStatusParam);
     }
-    
+   
     fetchItems();
   }, [router, searchParams, mounted]);
+
 
   const handleManualRefresh = () => {
     fetchItems(false);
   };
+
 
   // Filter logic
   const filteredItems = items.filter((item) => {
@@ -120,7 +131,7 @@ function InventoryPageContent() {
     const matchesCategory = category ? item.category === category : true;
     const matchesArticleType = articleType ? item.article_type === articleType : true;
     const matchesItemStatus = itemStatus ? item.item_status === itemStatus : true;
-    
+   
     // Maintenance filter logic
     let matchesMaintenance = true;
     if (maintenanceFilter === "pending") {
@@ -128,14 +139,45 @@ function InventoryPageContent() {
     } else if (maintenanceFilter === "completed") {
       matchesMaintenance = item.has_pending_maintenance === false;
     }
-    
+   
     return matchesSearch && matchesCategory && matchesArticleType && matchesItemStatus && matchesMaintenance;
   });
+
 
   // Get unique values for filters
   const categories = ["Electronic", "Utility", "Tool", "Supply"];
   const articleTypes = Array.from(new Set(items.map((item) => item.article_type)));
   const itemStatuses = Array.from(new Set(items.map((item) => item.item_status).filter(Boolean)));
+
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, category, articleType, itemStatus, maintenanceFilter]);
+
+
+  // Handle delete item
+  const handleDelete = async (itemId: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this item?')) return;
+   
+    try {
+      await apiClient.delete(`/items/${itemId}`);
+      fetchItems(false);
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      alert('Failed to delete item. Please try again.');
+    }
+  };
+
 
   // Handle clicking outside dropdown to close it
   useEffect(() => {
@@ -152,6 +194,7 @@ function InventoryPageContent() {
     };
   }, [showExportDropdown]);
 
+
   // Export handler for inventory
   const handleExport = async (format: string) => {
     setExporting(true);
@@ -159,17 +202,17 @@ function InventoryPageContent() {
       const response = await apiClient.get(`/items/export?format=${format}`, {
         responseType: 'blob',
       });
-      
+     
       let mimeType = 'text/csv';
       let fileExtension = format;
-      
+     
       if (format === 'pdf') {
         mimeType = 'application/pdf';
       } else if (format === 'excel') {
         mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         fileExtension = 'xlsx';
       }
-      
+     
       const blob = new Blob([response.data], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -186,6 +229,7 @@ function InventoryPageContent() {
       setExporting(false);
     }
   };
+
 
   // When opening modal, sync modal state with current filter state
   const openFilterModal = () => {
@@ -204,92 +248,13 @@ function InventoryPageContent() {
     setShowFilterModal(false);
   };
 
+
   return (
     <div className="main-container">
-      {/* Inventory Top Card */}
-      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
-        <div className="inventory-header-row" style={{ marginBottom: 0 }}>
-          <h3 className="inventory-header-title">Inventory</h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              className="filter-modal-btn"
-              onClick={openFilterModal}
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-                <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Filter
-            </button>
-            <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
-              <button
-                className="export-dropdown-btn"
-                onClick={() => setShowExportDropdown(!showExportDropdown)}
-                disabled={exporting}
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7,10 12,15 17,10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export
-              </button>
-              {showExportDropdown && (
-                <div className="export-dropdown-menu">
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("excel");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export Excel"}
-                  </button>
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("csv");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export CSV"}
-                  </button>
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("pdf");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export PDF"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Top Control Bar */}
+      <div className="inventory-controls-bar">
         {/* Search Bar */}
-        <div
-          className="inventory-search-container"
-          style={{
-            background: '#fff',
-            border: '1.5px solid #d1d5db',
-            borderRadius: '12px',
-            marginBottom: '0',
-            marginTop: '15px',
-            padding: '0 10px',
-            boxSizing: 'border-box',
-            height: '48px',
-            boxShadow: 'none',
-            position: 'relative',
-            zIndex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%'
-          }}
-        >
+        <div className="inventory-search-container">
           <div className="search-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"/>
@@ -299,13 +264,85 @@ function InventoryPageContent() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search by QR Code, Description/Specs, Property No., Serial No."
+            placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
+
+        {/* Action Buttons */}
+        <div className="inventory-action-buttons">
+          <button
+            className="filter-modal-btn"
+            onClick={openFilterModal}
+          >
+            <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
+              <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Filters
+          </button>
+          <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+              <button
+                className="export-dropdown-btn"
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                disabled={exporting}
+              >
+                <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export
+              </button>
+            {showExportDropdown && (
+              <div className="export-dropdown-menu">
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("excel");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export Excel"}
+                </button>
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("csv");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export CSV"}
+                </button>
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("pdf");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export PDF"}
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            className="add-item-btn"
+            onClick={() => router.push('/inventory/add')}
+          >
+            <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add New Item
+          </button>
+        </div>
       </div>
-      
+     
       {/* Filter Modal */}
       {showFilterModal && (
         <div className="filter-modal-overlay">
@@ -415,7 +452,7 @@ function InventoryPageContent() {
             <span>⚠️</span>
             <span style={{ fontWeight: '600' }}>Showing items with pending maintenance</span>
           </div>
-          <button 
+          <button
             onClick={() => setMaintenanceFilter("")}
             style={{
               marginTop: '0.5rem',
@@ -431,7 +468,7 @@ function InventoryPageContent() {
           </button>
         </div>
       )}
-      
+     
       {/* Bad Condition Filter Display */}
       {itemStatus === "Bad Condition" && (
         <div style={{
@@ -449,7 +486,7 @@ function InventoryPageContent() {
           <div style={{ fontSize: '0.875rem', marginTop: '0.25rem', opacity: 0.8 }}>
             These items require immediate attention and maintenance.
           </div>
-          <button 
+          <button
             onClick={() => {
               setItemStatus("");
               router.push('/inventory');
@@ -468,187 +505,135 @@ function InventoryPageContent() {
           </button>
         </div>
       )}
-      {!mounted && <div className="text-center text-blue-600">Loading...</div>}
-      {mounted && loading && <div className="text-center text-blue-600">Loading...</div>}
-      {mounted && error && <div className="text-center text-red-500">{error}</div>}
+      {!mounted && <div className="text-center" style={{ color: '#222428', padding: '2rem' }}>Loading...</div>}
+      {mounted && loading && <div className="text-center" style={{ color: '#222428', padding: '2rem' }}>Loading...</div>}
+      {mounted && error && <div className="text-center" style={{ color: '#820000', padding: '2rem' }}>{error}</div>}
       {mounted && !loading && !error && (
-        <div>
-          {/* Results Count */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '16px',
-            padding: '12px 16px',
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px'
-          }}>
-            <span style={{ fontSize: '14px', color: '#6b7280' }}>
-              Showing {filteredItems.length} of {items.length} items
-              {(category || articleType || itemStatus || maintenanceFilter) && ' (filtered)'}
-            </span>
-            {filteredItems.length > 0 && (
-              <button
-                onClick={handleManualRefresh}
-                disabled={refreshing}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#6b7280',
-                  cursor: refreshing ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '12px'
-                }}
-              >
-                <FiRefreshCw
-                  size={12}
-                  style={{
-                    animation: refreshing ? 'spin 1s linear infinite' : undefined
-                  }}
-                />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-            )}
-          </div>
-          
-          {filteredItems.length === 0 && (
-            <div className="text-center text-gray-500 p-6">No items found.</div>
-          )}
-          {filteredItems.map((item) => {
-            // Determine status class
-            let statusClass = "";
-            if (item.item_status === "Available") statusClass = "status-available";
-            else if (item.item_status === "To be Borrowed") statusClass = "status-to-borrow";
-            else if (item.item_status === "Borrowed") statusClass = "status-borrowed";
-            else if (item.item_status === "Bad Condition") statusClass = "status-bad";
-            else if (item.item_status === "Out of Stock") statusClass = "status-out-of-stock";
-            // fallback: no extra class
-            return (
-              <div key={item.id} className="inventory-card">
-                <Link href={`/inventory/${item.id}`} className="flex items-center w-full" style={{padding: 0, alignItems: 'stretch'}}>
-                  <div className="inventory-icon">
-                    {item.article_type.toLowerCase().includes('desktop') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('laptop') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="2" y1="10" x2="22" y2="10"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('printer') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <polyline points="6,9 6,2 18,2 18,9"/>
-                        <path d="M6,18H4a2,2 0 0,1 -2,-2v-5a2,2 0 0,1 2,-2h16a2,2 0 0,1 2,2v5a2,2 0 0,1 -2,2h-2"/>
-                        <rect x="6" y="14" width="12" height="8"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('monitor') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('scanner') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                        <line x1="6" y1="8" x2="18" y2="8"/>
-                        <line x1="6" y1="12" x2="18" y2="12"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('server') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                        <line x1="6" y1="6" x2="6" y2="6"/>
-                        <line x1="6" y1="18" x2="6" y2="18"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('network') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v6m0 6v6"/>
-                        <path d="M21 12h-6m-6 0H3"/>
-                        <path d="M19.78 4.22l-4.24 4.24m-6.36 6.36l-4.24 4.24"/>
-                        <path d="M4.22 4.22l4.24 4.24m6.36 6.36l4.24 4.24"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('tablet') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
-                        <line x1="12" y1="18" x2="12.01" y2="18"/>
-                      </svg>
-                    )}
-                    {item.article_type.toLowerCase().includes('power bank') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="2" y="7" width="20" height="10" rx="2" ry="2"/>
-                        <line x1="8" y1="2" x2="8" y2="7"/>
-                        <line x1="16" y1="2" x2="16" y2="7"/>
-                        <line x1="12" y1="17" x2="12" y2="17"/>
-                      </svg>
-                    )}
-                    {!item.article_type.toLowerCase().includes('desktop') && 
-                    !item.article_type.toLowerCase().includes('laptop') && 
-                    !item.article_type.toLowerCase().includes('printer') && 
-                    !item.article_type.toLowerCase().includes('monitor') && 
-                    !item.article_type.toLowerCase().includes('scanner') && 
-                    !item.article_type.toLowerCase().includes('server') && 
-                    !item.article_type.toLowerCase().includes('network') && 
-                    !item.article_type.toLowerCase().includes('tablet') && 
-                    !item.article_type.toLowerCase().includes('power bank') && (
-                      <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21,15 16,10 5,21"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="inventory-info">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                      <div className="inventory-propno">
-                        {item.qr_code ? (
-                          <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1f2937' }}>
-                            {item.qr_code}
-                          </span>
-                        ) : (
-                          <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#1f2937' }}>
-                            {item.property_no}
-                          </span>
-                        )}
-                      </div>
-                      <div className={`inventory-borrowing-status ${statusClass}`}>
-                        {item.item_status || 'Available'}
-                      </div>
-                    </div>
-                    <div className="inventory-type">{item.article_type}</div>
-                    {item.has_pending_maintenance && (
-                      <div className="maintenance-warning">
-                        <span>⚠️</span>
-                        <span>
-                          Pending Maintenance Task ({item.pending_maintenance_count ?? 1} task{(item.pending_maintenance_count ?? 1) > 1 ? 's' : ''})
+        <div className="inventory-table-wrapper">
+          {/* Table */}
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="inventory-table-empty">
+                    No items found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedItems.map((item) => {
+                  // Determine status class
+                  let statusClass = "";
+                  if (item.item_status === "Available") statusClass = "status-available";
+                  else if (item.item_status === "To be Borrowed") statusClass = "status-to-borrow";
+                  else if (item.item_status === "Borrowed") statusClass = "status-borrowed";
+                  else if (item.item_status === "Bad Condition") statusClass = "status-bad";
+                  else if (item.item_status === "Out of Stock") statusClass = "status-out-of-stock";
+                 
+                  const itemName = item.qr_code || item.property_no || 'Unnamed Item';
+                  const itemType = item.article_type || 'N/A';
+                  const itemCategory = item.category || 'N/A';
+                 
+                  return (
+                    <tr key={item.id} className="inventory-table-row" onClick={() => router.push(`/inventory/${item.id}`)}>
+                      <td className="inventory-table-item-name">{itemName}</td>
+                      <td className="inventory-table-type">{itemType}</td>
+                      <td className="inventory-table-category">{itemCategory}</td>
+                      <td>
+                        <span className={`inventory-status-pill ${statusClass}`}>
+                          {item.item_status || 'Available'}
                         </span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
+                      </td>
+                      <td className="inventory-table-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="action-btn action-btn-edit"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            router.push(`/inventory/${item.id}`);
+                          }}
+                          title="Edit"
+                        >
+                          <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button
+                          className="action-btn action-btn-delete"
+                          onClick={(e) => handleDelete(item.id, e)}
+                          title="Delete"
+                        >
+                          <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <polyline points="3,6 5,6 21,6"/>
+                            <path d="M19,6v14a2,2 0,0,1 -2,2H7a2,2 0,0,1 -2,-2V6m3,0V4a2,2 0,0,1 2,-2h4a2,2 0,0,1 2,2v2"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+
+
+          {/* Pagination */}
+          {filteredItems.length > 0 && totalPages > 1 && (
+            <div className="inventory-pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                Previous
+              </button>
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    return (
+                      <button
+                        key={page}
+                        className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return <span key={page} className="pagination-ellipsis">...</span>;
+                  }
+                  return null;
+                })}
               </div>
-            );
-          })}
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <polyline points="9,18 15,12 9,6"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
 
 export default function InventoryPage() {
   return (
@@ -656,4 +641,5 @@ export default function InventoryPage() {
       <InventoryPageContent />
     </Suspense>
   );
-} 
+}
+
