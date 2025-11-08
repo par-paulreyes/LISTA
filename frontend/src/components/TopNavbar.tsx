@@ -13,7 +13,22 @@ export default function TopNavbar() {
     if (!token) return;
     
     apiClient.get("/users/profile")
-      .then((response) => setUser(response.data))
+      .then((response) => {
+        setUser(response.data);
+        try {
+          const userId = response.data?.id ? String(response.data.id) : null;
+          if (userId) {
+            localStorage.setItem('user_id', userId);
+            // Dispatch event to notify Redux provider of user change
+            window.dispatchEvent(new CustomEvent('chatbot-user-changed', {
+              detail: { userId }
+            }));
+          }
+          if (response.data?.email) localStorage.setItem('email', String(response.data.email));
+        } catch (err) {
+          console.warn('Failed to cache user identity for chatbot', err);
+        }
+      })
       .catch(() => setUser(null));
   }, []);
 

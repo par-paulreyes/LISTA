@@ -1108,18 +1108,7 @@
 }
 
 /* Palette-based brand colors */
-:root {
-  --brand-dark: #003D82;
-  --brand-light: #E6F2FF;
-  --brand-background: #F8FBFF;
-  --brand-surface: #FFFFFF;
-  --ebony: #222428;
-  --violet-primary: #8B5CF6;
-  --violet-dark: #6B46C1;
-  --violet-light: #C4B5FD;
-  --violet-glow: rgba(139, 92, 246, 0.35);
-  --violet-glow-hover: rgba(139, 92, 246, 0.45);
-}
+/* brand color variables moved to globals.css */
 
 /* Dark blue to violet gradients */
 .gradientDarkBlue {

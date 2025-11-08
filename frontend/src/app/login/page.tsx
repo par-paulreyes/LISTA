@@ -28,6 +28,20 @@ export default function LoginPage() {
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        const user = response.data.user;
+        const userId = user?.id ? String(user.id) : username;
+        if (user?.id) {
+          localStorage.setItem('user_id', userId);
+        } else {
+          localStorage.setItem('user_id', userId);
+        }
+        if (user?.email) {
+          localStorage.setItem('email', String(user.email));
+        }
+        // Dispatch event to notify Redux provider of user change
+        window.dispatchEvent(new CustomEvent('chatbot-user-changed', {
+          detail: { userId }
+        }));
         showSuccess("Login Successful", "Welcome back! Redirecting to dashboard...");
         router.push('/');
       } else {

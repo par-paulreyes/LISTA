@@ -8,6 +8,7 @@ import styles from './page.module.css';
 import { supabase } from '../../../config/supabase';
 import { useToast } from '../../../contexts/ToastContext';
 import dashboardStyles from '../../dashboard.module.css';
+import { triggerDatabaseUpdate } from '../../../services/databaseUpdateService';
 // No compression - upload raw files as-is
 
 
@@ -360,7 +361,10 @@ function AddItemPageContent() {
           await apiClient.put(`/items/${newId}`, { image_url: finalImageUrl });
         }
       }
-      // 5. Show success message and redirect
+      // 5. Trigger database update notification
+      triggerDatabaseUpdate();
+      
+      // 6. Show success message and redirect
       showSuccess("Item Created", "Item has been created successfully!");
       router.push('/inventory');
     } catch (err: any) {

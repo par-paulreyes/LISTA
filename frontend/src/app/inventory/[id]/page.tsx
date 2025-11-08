@@ -269,19 +269,21 @@ export default function ItemDetailPage() {
       // Upload image to Supabase if a new image was selected
       if (selectedImageFile) {
         const { supabase } = await import('../../../config/supabase');
+        if (!supabase) {
+          throw new Error('Supabase storage is not configured. Please check your environment variables.');
+        }
         const fileExtension = selectedImageFile.name.split('.').pop() || 'jpg';
-        // Use consistent filename for each item to prevent duplicates
         const fileName = `item-pictures/${id}.${fileExtension}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
+
+        const { error: uploadError } = await supabase.storage
           .from('dtc-ims')
           .upload(fileName, selectedImageFile, {
             cacheControl: '3600',
-            upsert: true // Enable upsert to replace existing file
+            upsert: true,
           });
 
         if (uploadError) throw uploadError;
-        
+
         finalImageUrl = fileName;
         imageChanged = true;
       }
@@ -311,7 +313,11 @@ export default function ItemDetailPage() {
      
       // Update item
       await apiClient.put(`/items/${id}`, itemUpdateData);
-     
+      
+      // Trigger database update notification
+      const { triggerDatabaseUpdate } = await import('../../../services/databaseUpdateService');
+      triggerDatabaseUpdate();
+      
       // Create new maintenance logs
       for (const newLog of newLogs) {
         await apiClient.post(`/logs`, {
@@ -324,6 +330,10 @@ export default function ItemDetailPage() {
         });
       }
      
+      // Trigger database update after maintenance logs are updated
+      const { triggerDatabaseUpdate: triggerUpdate } = await import('../../../services/databaseUpdateService');
+      triggerUpdate();
+      
       // Update existing maintenance logs
       for (const log of editingLogs) {
         if (log.id && typeof log.id === 'number') {
