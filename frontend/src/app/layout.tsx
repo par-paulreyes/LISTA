@@ -3,9 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import '../../styles/globals.css';
 import './globals.css';
 import NavbarWrapper from '../components/NavbarWrapper';
-import ChatbotRoutes from '../components/ChatbotRoutes';
+import ChatbotInitializer from '../components/ChatbotInitializer';
 {/*import ConditionalTopNavbar from '../components/ConditionalTopNavbar';*/}
 import { ToastProvider } from '../contexts/ToastContext';
+import ReduxProvider from '../providers/ReduxProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,13 +39,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+        <ReduxProvider>
         <ToastProvider>
           {/*<ConditionalTopNavbar />*/}
           {children}
           <NavbarWrapper />
-          <ChatbotRoutes />
+            <ChatbotInitializer />
         </ToastProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

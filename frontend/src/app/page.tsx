@@ -7,6 +7,16 @@ import { apiClient } from "../config/api";
 import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus, FaBoxOpen, FaMapMarkerAlt } from "react-icons/fa";
 import { FiRefreshCw } from 'react-icons/fi';
 import React from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { 
+	addMessage as addMessageAction,
+	setOpen,
+	setInput,
+	setBusy,
+	setTyping,
+	setError,
+	setPendingPlan,
+} from "../features/chatbot/chatbotSlice";
 
 
 
@@ -393,7 +403,22 @@ export default function DashboardPage() {
     }
     setLoading(true);
     apiClient.get("/users/profile")
-      .then(res => setUser(res.data))
+      .then(res => {
+        setUser(res.data);
+        try {
+          const userId = res.data?.id ? String(res.data.id) : null;
+          if (userId) {
+            localStorage.setItem('user_id', userId);
+            // Dispatch event to notify Redux provider of user change
+            window.dispatchEvent(new CustomEvent('chatbot-user-changed', {
+              detail: { userId }
+            }));
+          }
+          if (res.data?.email) localStorage.setItem('email', String(res.data.email));
+        } catch (err) {
+          console.warn('Failed to cache user identity for chatbot', err);
+        }
+      })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, [router, mounted]);
@@ -479,6 +504,12 @@ export default function DashboardPage() {
 
 
 
+    // Listen for chatbot-triggered refresh requests
+    const handleChatbotRefresh = () => {
+      fetchDashboardData(false);
+    };
+    window.addEventListener('dashboard-refresh-requested', handleChatbotRefresh as EventListener);
+
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('popstate', handleRouteChange);
@@ -490,6 +521,7 @@ export default function DashboardPage() {
     return () => {
       clearInterval(refreshInterval);
       clearInterval(maintenanceCheckInterval);
+      window.removeEventListener('dashboard-refresh-requested', handleChatbotRefresh as EventListener);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('popstate', handleRouteChange);
@@ -658,85 +690,110 @@ export default function DashboardPage() {
 
   // Embedded IVY Chat component
   function EmbeddedIVYChat() {
-    const [chatOpen, setChatOpen] = React.useState(false);
-    const [input, setInput] = React.useState("");
-    const [busy, setBusy] = React.useState(false);
-    const [messages, setMessages] = React.useState<Array<{role: 'user' | 'assistant', text: string, data?: any}>>([
-      { role: 'assistant', text: 'I can help you find, check, update, or add items.' }
-    ]);
+    const dispatch = useAppDispatch();
+    const chatbotState = useAppSelector((state) => state.chatbot);
+    
+    // Ensure we have valid state with defaults
+    const messages = chatbotState?.messages || [];
+    const chatOpen = chatbotState?.isOpen || false;
+    const input = (chatbotState?.input ?? '') || '';
+    const busy = chatbotState?.busy || false;
+    const typing = chatbotState?.typing || false;
+    const pendingPlan = chatbotState?.pendingPlan || null;
+    
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const inputRef = React.useRef<HTMLInputElement>(null);
-    const [pendingPlan, setPendingPlan] = React.useState<{ originalMessage: string; plan: any } | null>(null);
 
     const send = React.useCallback(async () => {
-      const text = input.trim();
+      const text = (input || '').trim();
       if (!text || busy) return;
-      setInput("");
-      setMessages(prev => [...prev, { role: 'user', text }]);
-      setBusy(true);
-      setPendingPlan(null);
+      dispatch(setInput(""));
+      dispatch(addMessageAction({ role: 'user', text, timestamp: Date.now() }));
+      dispatch(setBusy(true));
+      dispatch(setTyping(true));
+      dispatch(setPendingPlan(null));
       try {
         const res = await apiClient.post('/chat', { 
           message: text,
-          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text }))
+          history: (messages || []).slice(-10).map(m => ({ role: m.role, text: m.text || '' }))
         });
         const payload = res.data || {};
         if (payload.type === 'answer' && payload.message) {
-          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.data }]);
+          dispatch(addMessageAction({ role: 'assistant', text: payload.message, data: payload.data, timestamp: Date.now() }));
         } else if (payload.type === 'action' && payload.message) {
-          setMessages(prev => [...prev, { role: 'assistant', text: `${payload.message}\n\nExample: ${JSON.stringify(payload.example_request)}`, data: payload.data }]);
+          dispatch(addMessageAction({ role: 'assistant', text: `${payload.message}\n\nExample: ${JSON.stringify(payload.example_request)}`, data: payload.data, timestamp: Date.now() }));
         } else if (payload.type === 'clarify' && payload.message) {
-          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.data }]);
+          dispatch(addMessageAction({ role: 'assistant', text: payload.message, data: payload.data, timestamp: Date.now() }));
         } else if (payload.type === 'plan' && payload.message) {
-          setMessages(prev => [...prev, { role: 'assistant', text: payload.message, data: payload.plan }]);
-          if (payload.plan) setPendingPlan({ originalMessage: text, plan: payload.plan });
+          dispatch(addMessageAction({ role: 'assistant', text: payload.message, data: payload.plan, timestamp: Date.now() }));
+          if (payload.plan) dispatch(setPendingPlan({ originalMessage: text, plan: payload.plan }));
         } else if (payload.type === 'error') {
-          setMessages(prev => [...prev, { role: 'assistant', text: payload.message || 'Request failed.' }]);
+          dispatch(addMessageAction({ role: 'assistant', text: `❌ ${payload.message || 'Request failed. Please try again.'}`, timestamp: Date.now() }));
         } else {
-          setMessages(prev => [...prev, { role: 'assistant', text: 'Unable to process that right now. Please try again.' }]);
+          dispatch(addMessageAction({ role: 'assistant', text: 'Unable to process that right now. Please try again.', timestamp: Date.now() }));
         }
       } catch (err: any) {
-        const serverMsg = err?.response?.data?.message || err?.message || 'Unable to process that right now. Please try again.';
-        setMessages(prev => [...prev, { role: 'assistant', text: serverMsg }]);
+        let errorMsg = 'Unable to process that right now. Please try again.';
+        if (err?.response?.status === 401) {
+          errorMsg = 'Session expired. Please refresh the page and log in again.';
+        } else if (err?.response?.status === 429) {
+          errorMsg = 'Too many requests. Please wait a moment and try again.';
+        } else if (err?.response?.status >= 500) {
+          errorMsg = 'Server error. Please try again in a moment.';
+        } else if (err?.response?.data?.message) {
+          errorMsg = err.response.data.message;
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+        dispatch(addMessageAction({ role: 'assistant', text: `❌ ${errorMsg}`, timestamp: Date.now() }));
       } finally {
-        setBusy(false);
+        dispatch(setBusy(false));
+        dispatch(setTyping(false));
       }
-    }, [input, busy]);
+    }, [input, busy, messages, dispatch]);
 
     const confirmPlan = React.useCallback(async () => {
       if (!pendingPlan || busy) return;
-      setBusy(true);
+      dispatch(setBusy(true));
+      dispatch(setTyping(true));
+      dispatch(setError(null));
       try {
         const res = await apiClient.post('/chat', { 
           message: pendingPlan.originalMessage, 
           confirm: true,
-          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text }))
+          history: (messages || []).slice(-10).map(m => ({ role: m.role, text: m.text || '' }))
         });
         const payload = res.data || {};
         let reply = '';
         if (payload.type === 'answer' && payload.message) reply = payload.message;
-        else if (payload.type === 'error') reply = payload.message || 'Request failed.';
+        else if (payload.type === 'error') reply = `❌ ${payload.message || 'Request failed.'}`;
         else if (payload.message) reply = payload.message;
-        else reply = 'Completed.';
-        setMessages(prev => [...prev, { role: 'assistant', text: reply, data: payload.data }]);
-        setPendingPlan(null);
-      } catch (_e) {
-        setMessages(prev => [...prev, { role: 'assistant', text: 'Action failed. Please try again.' }]);
+        else reply = '✅ Completed.';
+        dispatch(addMessageAction({ role: 'assistant', text: reply, data: payload.data, timestamp: Date.now() }));
+        dispatch(setPendingPlan(null));
+      } catch (err: any) {
+        const errorMsg = err?.response?.data?.message || err?.message || 'Action failed. Please try again.';
+        dispatch(addMessageAction({ role: 'assistant', text: `❌ ${errorMsg}`, timestamp: Date.now() }));
       } finally {
-        setBusy(false);
+        dispatch(setBusy(false));
+        dispatch(setTyping(false));
       }
-    }, [pendingPlan, busy]);
+    }, [pendingPlan, busy, messages, dispatch]);
 
     const cancelPlan = React.useCallback(() => {
-      setPendingPlan(null);
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Okay. I won\'t proceed. What would you like to do next?' }]);
-    }, []);
+      dispatch(setPendingPlan(null));
+      dispatch(addMessageAction({ role: 'assistant', text: 'Okay. I won\'t proceed. What would you like to do next?', timestamp: Date.now() }));
+    }, [dispatch]);
 
     React.useEffect(() => {
       if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        }, 50);
       }
-    }, [messages, chatOpen]);
+    }, [messages, chatOpen, typing]);
 
     const quickTips = React.useMemo(() => [
       'Summarize inventory status',
@@ -765,7 +822,7 @@ export default function DashboardPage() {
         ></div>
         <div 
           className={styles.assistantCenterOrb} 
-          onClick={() => setChatOpen(!chatOpen)}
+          onClick={() => dispatch(setOpen(!chatOpen))}
           style={{ 
             cursor: 'pointer', 
             zIndex: chatOpen ? 1 : 10,
@@ -810,7 +867,7 @@ export default function DashboardPage() {
               <div className={styles.embeddedChatTitle}>IVY</div>
             </div>
             <button 
-              onClick={() => setChatOpen(false)} 
+              onClick={() => dispatch(setOpen(false))} 
               className={styles.embeddedChatCloseBtn}
               aria-label="Close chat"
               title="Close"
@@ -819,10 +876,10 @@ export default function DashboardPage() {
             </button>
           </div>
           <div ref={scrollRef} className={styles.embeddedChatMessages} style={{ flex: 1, overflowY: 'auto' }}>
-            {messages.map((m, idx) => (
+            {(messages || []).map((m, idx) => (
               <div key={idx} className={styles.embeddedChatMessage} style={{ justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div className={`${styles.embeddedChatBubble} ${m.role === 'user' ? styles.embeddedChatBubbleUser : styles.embeddedChatBubbleAssistant}`}>
-                  <div className={styles.embeddedChatText}>{m.text}</div>
+                  <div className={styles.embeddedChatText}>{m.text || ''}</div>
                   {m.role === 'assistant' && Array.isArray(m.data) && m.data.length > 0 && (
                     <div className={styles.embeddedChatData}>
                       {(() => {
@@ -861,47 +918,53 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {busy && (
+            {(messages || []).length <= 2 && !busy && (
+              <div className={styles.embeddedChatQuickTips}>
+                {quickTips.map(t => (
+                  <button key={t} onClick={() => { dispatch(setInput(t)); inputRef.current?.focus(); }} className={styles.embeddedChatQuickTipBtn}>{t}</button>
+                ))}
+              </div>
+            )}
+            {typing && (
               <div className={styles.embeddedChatMessage} style={{ justifyContent: 'flex-start' }}>
                 <div className={`${styles.embeddedChatBubble} ${styles.embeddedChatBubbleAssistant}`}>
-                  <div className={styles.embeddedChatTypingIndicator}>
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                  <div className={styles.embeddedChatText} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#8B5CF6', marginRight: 4, animation: 'pulse 1.4s ease-in-out infinite' }} />
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#8B5CF6', marginRight: 4, animation: 'pulse 1.4s ease-in-out 0.2s infinite' }} />
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#8B5CF6', animation: 'pulse 1.4s ease-in-out 0.4s infinite' }} />
+                    <style>{`
+                      @keyframes pulse {
+                        0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+                        30% { opacity: 1; transform: scale(1); }
+                      }
+                    `}</style>
                   </div>
                 </div>
               </div>
             )}
-            {messages.length <= 2 && !busy && (
-              <div className={styles.embeddedChatQuickTips}>
-                {quickTips.map(t => (
-                  <button key={t} onClick={() => { setInput(t); inputRef.current?.focus(); }} className={styles.embeddedChatQuickTipBtn}>{t}</button>
-                ))}
-              </div>
-            )}
           </div>
-          <form onSubmit={(e) => { e.preventDefault(); send(); }} className={styles.embeddedChatForm}>
-            <div className={styles.embeddedChatInputWrapper}>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={busy ? 'Working...' : 'Ask about inventory or maintenance'}
-                disabled={busy}
-                ref={inputRef}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-                className={styles.embeddedChatInput}
-              />
-              <button type="submit" disabled={busy || !input.trim()} className={styles.embeddedChatSendBtn}>
-                {busy ? (
-                  <span>...</span>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                )}
-              </button>
-            </div>
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className={styles.embeddedChatForm} style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+            <input
+              value={input || ''}
+              onChange={(e) => dispatch(setInput(e.target.value || ''))}
+              placeholder={busy ? 'Working...' : 'Ask about inventory or maintenance'}
+              disabled={busy}
+              ref={inputRef}
+              onKeyDown={(e) => { 
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                  e.preventDefault(); 
+                  if (!busy && (input || '').trim()) send(); 
+                }
+                if (e.key === 'Escape') {
+                  dispatch(setOpen(false));
+                }
+              }}
+              className={styles.embeddedChatInput}
+              style={{ flex: 1, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '10px', background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 500, outline: 'none' }}
+            />
+            <button type="submit" disabled={busy || !(input || '').trim()} className={styles.embeddedChatSendBtn} style={{ padding: '10px 20px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #8B5CF6 0%, #6B46C1 100%)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, cursor: busy || !(input || '').trim() ? 'not-allowed' : 'pointer', minWidth: '80px', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)', opacity: busy || !(input || '').trim() ? 0.5 : 1 }}>
+              {busy ? '...' : 'Send'}
+            </button>
           </form>
         </div>
         )}
@@ -920,7 +983,7 @@ export default function DashboardPage() {
             <div className={styles.welcomeSub}>Have a quick view on the inventory this month</div>
           </div>
           <div className={styles.welcomeMeta}>
-            <div className={styles.welcomeSub}>Updated: {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div className={styles.welcomeSub}>Updated: {mounted ? lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
             <button
               onClick={handleManualRefresh}
               className={styles.refreshBtn}
