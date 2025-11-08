@@ -19,6 +19,7 @@ interface Log {
   quantity?: number;
   notes?: string;
   status?: string;
+  item_id?: number;
 }
 
 export default function LogsPage() {
@@ -32,6 +33,8 @@ export default function LogsPage() {
   const [exporting, setExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 10;
   
   // Modal state variables
   const [modalCategory, setModalCategory] = useState("");
@@ -60,6 +63,19 @@ export default function LogsPage() {
     };
   }, [showExportDropdown]);
 
+  const fetchLogs = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiClient.get("/logs");
+      setLogs(res.data);
+    } catch (err) {
+      setError("Error loading logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!mounted) return;
     const token = localStorage.getItem("token");
@@ -67,11 +83,7 @@ export default function LogsPage() {
       router.push("/login");
       return;
     }
-    apiClient
-      .get("/logs")
-      .then((res) => setLogs(res.data))
-      .catch((err) => setError("Error loading logs"))
-      .finally(() => setLoading(false));
+    fetchLogs();
   }, [router, mounted]);
 
   const handleExport = async (format: string) => {
@@ -131,7 +143,11 @@ export default function LogsPage() {
         (log.property_no &&
           log.property_no.toLowerCase().includes(search.toLowerCase())) ||
         (log.serial_no &&
-          log.serial_no.toLowerCase().includes(search.toLowerCase()));
+          log.serial_no.toLowerCase().includes(search.toLowerCase())) ||
+        (log.task_performed &&
+          log.task_performed.toLowerCase().includes(search.toLowerCase())) ||
+        (log.maintained_by &&
+          log.maintained_by.toLowerCase().includes(search.toLowerCase()));
 
       const matchesCategory = categoryFilter ? getItemCategory(log) === categoryFilter : true;
       
@@ -147,6 +163,17 @@ export default function LogsPage() {
         return dateA - dateB; // Oldest first
       }
     });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedLogs.length / logsPerPage);
+  const startIndex = (currentPage - 1) * logsPerPage;
+  const endIndex = startIndex + logsPerPage;
+  const paginatedLogs = filteredAndSortedLogs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, sortOrder]);
 
   // When opening modal, sync modal state with current filter state
   const openFilterModal = () => {
@@ -171,82 +198,27 @@ export default function LogsPage() {
     setShowFilterModal(false);
   };
 
+  // Handle delete log
+  const handleDelete = async (logId: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this log?')) return;
+   
+    try {
+      await apiClient.delete(`/logs/${logId}`);
+      fetchLogs();
+    } catch (err) {
+      console.error('Error deleting log:', err);
+      alert('Failed to delete log. Please try again.');
+    }
+  };
+
   return (
     <div className="main-container">
-      {/* Logs Top Card (copied from Inventory) */}
-      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
-        <div className="inventory-header-row" style={{ marginBottom: 0 }}>
-          <h3 className="inventory-header-title">Logs</h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              className="filter-modal-btn"
-              onClick={openFilterModal}
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-                <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Filter
-            </button>
-            <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
-              <button
-                className="export-dropdown-btn"
-                onClick={() => setShowExportDropdown(!showExportDropdown)}
-                disabled={exporting}
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7,10 12,15 17,10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export
-              </button>
-              {showExportDropdown && (
-                <div className="export-dropdown-menu">
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("csv");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export CSV"}
-                  </button>
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("pdf");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export PDF"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        {/* Search Bar (inventory style) */}
-        <div
-          className="inventory-search-container"
-          style={{
-            background: '#fff',
-            border: '1.5px solid #d1d5db',
-            borderRadius: '12px',
-            marginBottom: '0',
-            marginTop: '15px',
-            padding: '0 10px',
-            boxSizing: 'border-box',
-            height: '48px',
-            boxShadow: 'none',
-            position: 'relative',
-            zIndex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%'
-          }}
-        >
+      {/* Top Control Bar */}
+      <div className="inventory-controls-bar">
+        {/* Search Bar */}
+        <div className="inventory-search-container">
           <div className="search-icon">
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"/>
@@ -256,10 +228,61 @@ export default function LogsPage() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search by QR Code, Type"
+            placeholder="Search"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="inventory-action-buttons">
+          <button
+            className="filter-modal-btn"
+            onClick={openFilterModal}
+          >
+            <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
+              <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Filters
+          </button>
+          <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
+              <button
+                className="export-dropdown-btn"
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+                disabled={exporting}
+              >
+                <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7,10 12,15 17,10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export
+              </button>
+            {showExportDropdown && (
+              <div className="export-dropdown-menu">
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("csv");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export CSV"}
+                </button>
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("pdf");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export PDF"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       {/* Filter Modal */}
@@ -277,23 +300,14 @@ export default function LogsPage() {
                 <line x1="15" y1="5" x2="5" y2="15" strokeLinecap="round" />
               </svg>
             </button>
-            <div className="filter-modal-title">Filter & Sort</div>
-
+            <div className="filter-modal-title">Filter</div>
             <div className="filter-modal-fields">
               <div className="filter-modal-field">
                 <label>Category</label>
                 <select
                   value={modalCategory}
-                  onChange={(e) => setModalCategory(e.target.value)}
-                  className="filterbar-select"
-                  style={{
-                    padding: '8px 12px',
-                    border: '1.5px solid #d1d5db',
-                    borderRadius: '8px',
-                    backgroundColor: '#fff',
-                    fontSize: '14px',
-                    minWidth: '120px'
-                  }}
+                  onChange={e => setModalCategory(e.target.value)}
+                  className="filter-modal-select"
                 >
                   <option value="">All Categories</option>
                   <option value="Electronic">Electronic</option>
@@ -302,28 +316,18 @@ export default function LogsPage() {
                   <option value="Supply">Supply</option>
                 </select>
               </div>
-
               <div className="filter-modal-field">
                 <label>Sort by Date</label>
                 <select
                   value={modalSortOrder}
-                  onChange={(e) => setModalSortOrder(e.target.value as "recent" | "oldest")}
-                  className="filterbar-select"
-                  style={{
-                    padding: '8px 12px',
-                    border: '1.5px solid #d1d5db',
-                    borderRadius: '8px',
-                    backgroundColor: '#fff',
-                    fontSize: '14px',
-                    minWidth: '120px'
-                  }}
+                  onChange={e => setModalSortOrder(e.target.value as "recent" | "oldest")}
+                  className="filter-modal-select"
                 >
                   <option value="recent">Recent to Oldest</option>
                   <option value="oldest">Oldest to Recent</option>
                 </select>
               </div>
             </div>
-
             <div className="filter-modal-actions">
               <button
                 className="filter-modal-cancel"
@@ -335,41 +339,47 @@ export default function LogsPage() {
                 className="filter-modal-apply"
                 onClick={applyModalFilters}
               >
-                Apply
+                Filter
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {!mounted && <div className="loading">Loading...</div>}
-      {mounted && loading && <div className="loading">Loading...</div>}
-      {mounted && error && <div className="error">{error}</div>}
-
+      {!mounted && <div className="text-center" style={{ color: '#222428', padding: '2rem' }}>Loading...</div>}
+      {mounted && loading && <div className="text-center" style={{ color: '#222428', padding: '2rem' }}>Loading...</div>}
+      {mounted && error && <div className="text-center" style={{ color: '#820000', padding: '2rem' }}>{error}</div>}
       {mounted && !loading && !error && (
-        <div className="logs-container">
-          {filteredAndSortedLogs.length === 0 && (
-            <div className="no-logs">No logs found.</div>
-          )}
-          {filteredAndSortedLogs.length > 0 && (
-            <div className="table-container">
-              <table className="table-proper">
-                <thead>
-                  <tr className="table-row">
-                    <th className="th">QR CODE</th>
-                    <th className="th">TASK PERFORMED</th>
-                    <th className="th">MAINTAINED BY</th>
-                    <th className="th">DATE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedLogs.map((log, index) => (
-                    <tr key={log.id} style={{
-                      borderBottom: index < filteredAndSortedLogs.length - 1 ? '1px solid #e9ecef' : 'none'
-                    }}>
-                      <td>{log.qr_code || log.property_no}</td>
-                      <td>{log.task_performed}</td>
-                      <td>{log.maintained_by}</td>
+        <div className="inventory-table-wrapper">
+          {/* Table */}
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>QR Code</th>
+                <th>Task Performed</th>
+                <th>Maintained By</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAndSortedLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="inventory-table-empty">
+                    No logs found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedLogs.map((log) => {
+                  return (
+                    <tr 
+                      key={log.id} 
+                      className="inventory-table-row" 
+                      onClick={() => log.item_id && router.push(`/inventory/${log.item_id}`)}
+                    >
+                      <td className="inventory-table-item-name">{log.qr_code || log.property_no}</td>
+                      <td className="inventory-table-type">{log.task_performed}</td>
+                      <td className="inventory-table-category">{log.maintained_by}</td>
                       <td>
                         {new Date(log.maintenance_date).toLocaleDateString('en-US', {
                           month: 'numeric',
@@ -377,10 +387,81 @@ export default function LogsPage() {
                           year: 'numeric'
                         })}
                       </td>
+                      <td className="inventory-table-actions" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="action-btn action-btn-edit"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (log.item_id) {
+                              router.push(`/inventory/${log.item_id}`);
+                            }
+                          }}
+                          title="View Item"
+                        >
+                          <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button
+                          className="action-btn action-btn-delete"
+                          onClick={(e) => handleDelete(log.id, e)}
+                          title="Delete"
+                        >
+                          <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <polyline points="3,6 5,6 21,6"/>
+                            <path d="M19,6v14a2,2 0,0,1 -2,2H7a2,2 0,0,1 -2,-2V6m3,0V4a2,2 0,0,1 2,-2h4a2,2 0,0,1 2,2v2"/>
+                          </svg>
+                        </button>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+
+          {/* Pagination */}
+          {filteredAndSortedLogs.length > 0 && totalPages > 1 && (
+            <div className="inventory-pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <polyline points="15,18 9,12 15,6"/>
+                </svg>
+                Previous
+              </button>
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    return (
+                      <button
+                        key={page}
+                        className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return <span key={page} className="pagination-ellipsis">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <polyline points="9,18 15,12 9,6"/>
+                </svg>
+              </button>
             </div>
           )}
         </div>
