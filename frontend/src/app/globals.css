@@ -10,6 +10,8 @@
   --primary-red: #dc2626;
   --primary-red-light: #ef4444;
   --primary-red-dark: #b91c1c;
+
+  --primary-blue: #0066CC;
  
   /* Secondary Colors */
   --secondary-blue: #2563eb;
@@ -44,8 +46,8 @@
   --bg-gray-100: #f1f5f9;
  
   /* Text Colors */
-  --text-primary: var(--neutral-gray-800);
-  --text-secondary: var(--neutral-gray-600);
+  --text-primary: #1A2332;
+  --text-secondary: #5C6C7D;
   --text-muted: var(--neutral-gray-500);
   --text-white: #ffffff;
  

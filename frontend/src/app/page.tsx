@@ -666,8 +666,8 @@ export default function DashboardPage() {
     const monthName = today.toLocaleString('default', { month: 'long' });
 
     return (
-      <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.calendarCardSoft}`}>
-        <div className={styles.calendarHeader}>
+      <div className={styles.calendarCardSoft} style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className={styles.calendarHeader} style={{ marginBottom: '10px' }}>
           <div className={styles.cardTitleSm}>Calendar</div>
           <div className={styles.calendarMonth}>{monthName} {year}</div>
         </div>
@@ -676,7 +676,7 @@ export default function DashboardPage() {
             <div key={d} className={styles.calendarWeekday}>{d}</div>
           ))}
         </div>
-        <div className={styles.calendarGrid}>
+        <div className={styles.calendarGrid} style={{ flex: 1 }}>
           {weeks.map((d, i) => {
             const isToday = d === today.getDate();
             return (
@@ -846,9 +846,9 @@ export default function DashboardPage() {
             {/* Body/shoulder */}
             <path d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" fill="#ffffff" stroke="none"/>
             {/* Single eye dot */}
-            <circle cx="12" cy="9" r="1.2" fill="rgba(139, 92, 246, 0.7)" stroke="none"/>
+            <circle cx="12" cy="9" r="1.2" fill="rgba(255, 90, 90, 0.75)" stroke="none"/>
             {/* Curved mouth */}
-            <path d="M9 12.5c0.5 0.5 1.5 0.5 2 0" stroke="rgba(139, 92, 246, 0.5)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+            <path d="M9 12.5c0.5 0.5 1.5 0.5 2 0" stroke="rgba(255, 110, 110, 0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
           </svg>
         </div>
         
@@ -856,7 +856,16 @@ export default function DashboardPage() {
         {chatOpen && (
         <div className={styles.embeddedChatContainer} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20 }}>
           <div className={styles.embeddedChatHeader}>
-            <div className={styles.embeddedChatTitle}>IVY</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="25" height="25" viewBox="0 0 24 24" fill="#820000" style={{ flexShrink: 0 }}>
+                <rect x="4" y="6" width="16" height="12" rx="2" fill="#820000"/>
+                <circle cx="9" cy="11" r="1.5" fill="#ffffff"/>
+                <circle cx="15" cy="11" r="1.5" fill="#ffffff"/>
+                <path d="M9 14h6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M18 4l-1.5-1.5M18 4l-1.5 1.5" stroke="#820000" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <div className={styles.embeddedChatTitle}>IVY</div>
+            </div>
             <button 
               onClick={() => dispatch(setOpen(false))} 
               className={styles.embeddedChatCloseBtn}
@@ -909,7 +918,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {(messages || []).length <= 2 && (
+            {(messages || []).length <= 2 && !busy && (
               <div className={styles.embeddedChatQuickTips}>
                 {quickTips.map(t => (
                   <button key={t} onClick={() => { dispatch(setInput(t)); inputRef.current?.focus(); }} className={styles.embeddedChatQuickTipBtn}>{t}</button>
@@ -965,18 +974,12 @@ export default function DashboardPage() {
 
   return (
     <div className={styles['main-container']}>
-      {/* Top actions bar */}
-      <div className={styles.topActions}>
-        <button className={styles.topBtn}>Add Metrics</button>
-        <button className={styles.topBtn}>Select dates</button>
-        <button className={styles.topBtn}>Filters</button>
-      </div>
 
       {/* Welcome banner */}
       <div className={`${styles.dashboardCard} ${styles.welcomeCard}`}>
         <div className={styles.welcomeInner}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div className={styles.welcomeTitle}>Welcome back, <span style={{ color: '#003D82' }}>Admin!</span></div>
+            <div className={styles.welcomeTitle}>Welcome back, <span style={{ color: '#820000' }}>Admin!</span></div>
             <div className={styles.welcomeSub}>Have a quick view on the inventory this month</div>
           </div>
           <div className={styles.welcomeMeta}>
@@ -1088,17 +1091,17 @@ export default function DashboardPage() {
       )}
       {mounted && !loading && (!error || hasCachedData) && (
         <>
-          {/* Grid layout matching the provided design */}
-          <div className={styles.gridThree}>
+          {/* Grid layout matching the provided design - unified grid for alignment */}
+          <div className={styles.gridThree} style={{ gridTemplateRows: 'auto auto auto' }}>
             {/* Items' Conditions (formerly Needs Action) */}
             <div style={{ gridColumn: '1 / 2' }}>
-              <div className={`${styles.dashboardCard} ${styles.gradientDarkBlue} ${styles.conditionsCard}`} style={{ minHeight: 190 }} onClick={() => router.push('/inventory?item_status=Bad%20Condition')} title="Click to view all items with Bad Condition status">
+              <div className={`${styles.dashboardCard} ${styles.gradientBlackRed} ${styles.conditionsCard}`} style={{ minHeight: 190 }} onClick={() => router.push('/inventory?item_status=Bad%20Condition')} title="Click to view all items with Bad Condition status">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div className={styles.itemsCardTitle}>Items Conditions</div>
                   <span style={{ color: 'rgba(255,255,255,0.8)' }}>⋯</span>
                 </div>
                 <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem', fontWeight: 500, marginBottom: 8 }}>
-                  {badConditionCount > 0 ? 'item needs action' : 'All items in good condition'}
+                  {badConditionCount > 0 ? 'Some items needs action' : 'All items in good condition'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 10 }}>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -1120,12 +1123,12 @@ export default function DashboardPage() {
 
             {/* Recently Added (small) */}
             <div style={{ gridColumn: '2 / 3' }}>
-              <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.softBlueCard} ${styles.clickable}`} onClick={() => handleCardClick('recently-added')} title="Click to view all inventory items">
+              <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.recentGlassCard} ${styles.clickable}`} onClick={() => handleCardClick('recently-added')} title="Click to view all inventory items">
                 <div className={styles.recentlyAddedHeader}>
                   <div className={styles.cardTitleSm}>Recently Added</div>
                   <span className={styles.ellipsis}>⋯</span>
                 </div>
-                <div className={styles.cardSubtext}>+{recentlyAdded} this week</div>
+                <div className={styles.cardSubtext} style={{ fontSize: '0.95rem', fontWeight: 500 }}>+{recentlyAdded} this week</div>
                 <div className={styles.twoColStats}>
                   <div className={styles.statBlock}>
                     <span className={`${styles.iconPill} ${styles.iconUniform}`}>
@@ -1151,7 +1154,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Total Maintenance moved to right column (same height as calendar) */}
-            <div style={{ gridColumn: '3 / 4' }}>
+            <div style={{ gridColumn: '3 / 4', gridRow: '1 / 2' }}>
               <div className={`${styles.dashboardCard} ${styles.minH190} ${styles.softBlueCard}`} style={{ position: 'relative', overflow: 'hidden' }} onClick={() => handleCardClick('total-maintenance')} title="Click to view items with pending maintenance">
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitleSm}>Total Maintenance</div>
@@ -1175,8 +1178,8 @@ export default function DashboardPage() {
                       <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6,13 11,18 18,7"/></svg>
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
-                      <span style={{ color: '#374151' }}>Completed</span>
+                      <span className={styles.statNumber}><CountUp end={isNaN(completedMaintenance) ? 0 : completedMaintenance} /></span>
+                      <span style={{ color: '#222428' }}>Completed</span>
                     </div>
                   </div>
                   <div style={{ width: 1, background: 'var(--bg-gray-200)', height: 48, margin: '0 16px' }} />
@@ -1185,8 +1188,8 @@ export default function DashboardPage() {
                       <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', marginTop: 2 }}>
-                      <span style={{ fontWeight: 700, fontSize: '13px' }}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
-                      <span style={{ color: '#374151' }}>Pending</span>
+                      <span className={styles.statNumber}><CountUp end={isNaN(pendingMaintenance) ? 0 : pendingMaintenance} /></span>
+                      <span style={{ color: '#222428' }}>Pending</span>
                     </div>
                   </div>
                 </div>
@@ -1194,18 +1197,20 @@ export default function DashboardPage() {
             </div>
 
             {/* Row 2 left: Calendar */}
-            <div style={{ gridColumn: '1 / 2' }}>
-              <CalendarCard />
+            <div style={{ gridColumn: '1 / 2', gridRow: '2 / 3' }}>
+              <div className={`${styles.dashboardCard} ${styles.softBlueCard}`} style={{ padding: 0 }}>
+                <CalendarCard />
+              </div>
             </div>
 
             {/* Row 2 middle: Total Articles */}
-            <div style={{ gridColumn: '2 / 3' }}>
+            <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
               <div className={`${styles.dashboardCard} ${styles.minH284} ${styles.softBlueCard} ${styles.clickable}`} onClick={() => router.push('/inventory')} title="Click to view all inventory items">
                 <div className={styles.cardHeader}>
                   <div className={styles.cardTitleSm}>Total Articles</div>
                   <span className={styles.ellipsis}>⋯</span>
                 </div>
-                <div className={styles.cardSubtext}>Items for each category</div>
+                <div className={styles.cardSubtext} style={{ fontSize: '0.95rem', fontWeight: 500 }}>Items for each category</div>
                 <div className={styles.articlesGrid}>
                   <div className={styles.articleCell}>
                     <span className={`${styles.articlePill} ${styles.iconUniform}`}>
@@ -1247,17 +1252,18 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Row 2 right: AI Assistant */}
-            <div style={{ gridColumn: '3 / 4' }}>
-              <div className={`${styles.dashboardCard} ${styles.minH284} ${styles.gradientDarkBlue} ${styles.aiAssistantCard}`}>
+            {/* AI Assistant - spans from Total Articles (row 2) to bottom of table (row 3) */}
+            <div style={{ gridColumn: '3 / 4', gridRow: '2 / 4' }}>
+              <div className={`${styles.dashboardCard} ${styles.gradientDarkBlue} ${styles.aiAssistantCard}`} style={{ height: '100%' }}>
                 <EmbeddedIVYChat />
               </div>
             </div>
-          </div>
-          {/* Recent Items Table/List */}
-          <div className={styles.dashboardTable}>
+
+            {/* Row 3: Recently Added Items Table */}
+            <div style={{ gridColumn: '1 / 3', gridRow: '3 / 4' }}>
+              <div className={styles.dashboardTable}>
             <div className={styles.dashboardTableHeader}>
-              <div className={styles.dashboardTableTitle} style={{ color: 'var(--neutral-gray-700)' }}>Recently Added Items</div>
+              <div className={styles.dashboardTableTitle} style={{ color: 'var(--neutral-gray-700)' }}>New Items List</div>
             </div>
             <div className={styles.dashboardTableContent}>
               {recentItems.length === 0 ? (
@@ -1296,7 +1302,13 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-      {/* Add CSS for spinning animation */}
+            </div>
+            {/* Row 3: Empty cell in column 3 to maintain grid alignment */}
+            <div style={{ gridColumn: '3 / 4', gridRow: '3 / 4' }}>
+              {/* Empty space - AI Assistant above spans into this visual space */}
+            </div>
+          </div>
+       {/* Add CSS for spinning animation */}
       <style jsx>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
