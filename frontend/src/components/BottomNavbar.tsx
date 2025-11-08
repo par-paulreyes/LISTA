@@ -117,7 +117,7 @@ export default function BottomNavbar() {
           transition: color 0.32s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .navbar-icon.active .navbar-label {
-          color: #0066CC;
+          color: #820000;
           font-weight: 600;
         }
         @media (max-width: 1024px) {
@@ -185,7 +185,7 @@ function NavItem({
         className="navbar-label"
         style={{
           fontSize: 12,
-          color: isActiveOrHover ? "#0066CC" : "#5C6C7D",
+          color: isActiveOrHover ? "#820000" : "#5C6C7D",
           margin: 0,
           fontFamily:
             "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -203,7 +203,7 @@ function NavItem({
           width: 65,
           borderRadius: 2,
           marginTop: 2,
-          background: active ? "#0066cc" : "transparent",
+          background: active ? "#820000" : "transparent",
           display: "block",
           transition: "background 0.32s cubic-bezier(0.4, 0, 0.2, 1)",
         }}

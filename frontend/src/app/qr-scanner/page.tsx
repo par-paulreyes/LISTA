@@ -5,7 +5,7 @@ import jsQR from "jsqr";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../config/api";
 import { useToast } from "../../contexts/ToastContext";
-import styles from "../dashboard.module.css";
+import styles from "../qr-scanner/qr-scanner.module.css";
 import { CaseUpper, Camera, Upload, QrCode } from "lucide-react";
 
 
@@ -258,89 +258,38 @@ export default function QRScannerPage() {
       // Webcam in its own box, buttons below, no dashed container at all
       return (
         <>
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <div style={{
-              width: 400,
-              height: 400,
-              borderRadius: 16,
-              background: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '32px 0 0 0',
-              overflow: 'hidden',
-              position: 'relative',
-              border: '2px dashed rgb(183, 184, 185)', // solid border only
-              boxShadow: 'none',
-            }}>
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/png"
-                videoConstraints={{ facingMode: "environment" }}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: 16,
-                  background: '#fff',
-                }}
-              />
+          <div className={styles.scannerContentHeader}>
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 0 }}>Scanner Interface</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', opacity: 0.85, marginTop: 2 }}>Scan QR Codes to view or add an item</div>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', marginTop: 32 }}>
-              <button
-                onClick={handleManualInput}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '1rem 1.2rem 1rem',
-                  backgroundColor: '#c9184a',
-                  color: '#fff',
-                  borderRadius: 12,
-                  border: 'none',
-                  fontFamily: 'Host Grotesk, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  minWidth: 120,
-                  boxShadow: 'none',
-                  transition: 'background 0.2s',
-                }}
-              >
-                <QrCode size={20} style={{ marginRight: 8 }} />
-                Enter Manually
-              </button>
-              <button
-                onClick={() => setShowFileUpload(true)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '0.5rem 1.2rem',
-                  backgroundColor: '#c9184a',
-                  color: '#fff',
-                  borderRadius: 12,
-                  border: 'none',
-                  fontFamily: 'Host Grotesk, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  minWidth: 120,
-                  boxShadow: 'none',
-                  transition: 'background 0.2s',
-                }}
-              >
-                <Upload size={20} style={{ marginRight: 8 }} />
-                Upload Image
-              </button>
-            </div>
+          </div>
+          <div className={styles.cameraBox}>
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/png"
+              videoConstraints={{ facingMode: "environment" }}
+              className={styles.webcam}
+            />
+          </div>
+          <div className={styles.buttonGroup}>
+            <button
+              onClick={handleManualInput}
+              className={styles.qrButtonPrimary}
+            >
+              <QrCode size={20} style={{ marginRight: 8 }} />
+              Enter Manually
+            </button>
+            <button
+              onClick={() => setShowFileUpload(true)}
+              className={styles.qrButtonPrimary}
+            >
+              <Upload size={20} style={{ marginRight: 8 }} />
+              Upload Image
+            </button>
           </div>
         </>
       );
@@ -349,23 +298,8 @@ export default function QRScannerPage() {
 
     if (cameraAvailable === null) {
       return (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem',
-          color: '#666',
-          width: '100%',
-          height: '320px',
-        }}>
-          <div style={{
-            width: '2rem',
-            height: '2rem',
-            border: '2px solid #b91c1c',
-            borderTop: '2px solid transparent',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+        <div className={styles.spinnerContainer}>
+          <div className={styles.spinner}></div>
           <span style={{ marginLeft: '0.5rem' }}>Checking camera availability...</span>
         </div>
       );
@@ -375,19 +309,7 @@ export default function QRScannerPage() {
     if (showManualInput) {
       // Match the wireframe for manual input
       return (
-        <div style={{
-          width: 360,
-          height: 360,
-          margin: '60px auto 0 auto',
-          border: '1.5px dashed #b7b8b9',
-          borderRadius: 12,
-          background: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '32px 24px 28px 24px',
-        }}>
+        <div className={styles.manualInputBox}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 18 }}>
             <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#b7b8b9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" rx="1.5"/>
@@ -406,68 +328,21 @@ export default function QRScannerPage() {
             value={manualQrCode}
             onChange={(e) => setManualQrCode(e.target.value)}
             placeholder="Enter QR code (COMPANY-TAG-ID)"
-            style={{
-              width: '100%',
-              padding: '10px 16px',
-              border: '1.5px solid #cbd5e1',
-              borderRadius: 8,
-              fontSize: '15px',
-              fontFamily: 'Host Grotesk, sans-serif',
-              fontWeight: 400,
-              color: '#222',
-              backgroundColor: '#fff',
-              outline: 'none',
-              marginBottom: 18,
-              marginTop: 0,
-              boxSizing: 'border-box',
-              transition: 'border-color 0.2s, box-shadow 0.2s',
-            }}
-            onFocus={e => {
-              e.target.style.borderColor = '#2563eb';
-              e.target.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.10)';
-            }}
-            onBlur={e => {
-              e.target.style.borderColor = '#cbd5e1';
-              e.target.style.boxShadow = 'none';
-            }}
+            className={styles.manualInput}
             onKeyPress={e => e.key === 'Enter' && handleManualSubmit()}
           />
           
-          <div style={{ display: 'flex', gap: 10, width: '100%', marginTop: 0 }}>
+          <div className={styles.buttonGroup} style={{ display: 'flex', gap: 10, width: '100%', marginTop: 0 }}>
             <button
               onClick={handleManualSubmit}
               disabled={!manualQrCode.trim()}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                backgroundColor: manualQrCode.trim() ? '#c9184a' : '#9ca3af',
-                color: '#fff',
-                borderRadius: 6,
-                border: 'none',
-                cursor: manualQrCode.trim() ? 'pointer' : 'not-allowed',
-                fontFamily: 'Host Grotesk, sans-serif',
-                fontWeight: 500,
-                fontSize: '0.97rem',
-                transition: 'all 0.2s',
-              }}
+              className={styles.manualSubmitButton}
             >
               Submit
             </button>
             <button
               onClick={handleManualCancel}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                backgroundColor: '#f3f4f6',
-                color: 'var(--neutral-gray-800)',
-                borderRadius: 6,
-                border: '1px solid #e5e7eb',
-                cursor: 'pointer',
-                fontFamily: 'Host Grotesk, sans-serif',
-                fontWeight: 500,
-                fontSize: '0.97rem',
-                transition: 'all 0.2s',
-              }}
+              className={styles.manualCancelButton}
             >
               Cancel
             </button>
@@ -480,92 +355,32 @@ export default function QRScannerPage() {
     // Unified dashed box for file upload state
     if ((!cameraAvailable || showFileUpload) && !showManualInput) {
       return (
-        <div style={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            width: 360,
-            height: 320,
-            border: '1.5px dashed #b7b8b9',
-            borderRadius: 12,
-            background: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '32px 0 0 0',
-          }}>
+        <div className={styles.fileUploadBox}>
+          <div className={styles.fileUploadIcon}>
             <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#b7b8b9" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="5" width="18" height="14" rx="2"/>
               <circle cx="8.5" cy="12" r="2.5"/>
               <path d="M21 15l-5-5L5 19"/>
             </svg>
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 24, width: 360 }}>
+          <div className={styles.buttonGroup}>
             <button
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                backgroundColor: '#c9184a',
-                color: '#fff',
-                borderRadius: 6,
-                border: 'none',
-                fontFamily: 'Host Grotesk, sans-serif',
-                fontWeight: 500,
-                fontSize: '0.97rem',
-                cursor: 'pointer',
-                transition: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
+              className={styles.qrButtonPrimary}
             >
               Choose File
             </button>
             {cameraAvailable && (
               <button
                 onClick={() => setShowFileUpload(false)}
-                style={{
-                  flex: 1,
-                  padding: '9px 0',
-                  backgroundColor: '#f3f4f6',
-                  color: 'var(--neutral-gray-800)',
-                  borderRadius: 6,
-                  border: '1px solid #e5e7eb',
-                  fontFamily: 'Host Grotesk, sans-serif',
-                  fontWeight: 500,
-                  fontSize: '0.97rem',
-                  cursor: 'pointer',
-                  transition: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
+                className={styles.qrButtonSecondary}
               >
                 Use Camera
               </button>
             )}
             <button
               onClick={() => setShowFileUpload(false)}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                backgroundColor: '#f3f4f6',
-                color: 'var(--neutral-gray-800)',
-                borderRadius: 6,
-                border: '1px solid #e5e7eb',
-                fontFamily: 'Host Grotesk, sans-serif',
-                fontWeight: 500,
-                fontSize: '0.97rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
+              className={styles.qrButtonCancel}
             >
               Cancel
             </button>
@@ -585,30 +400,9 @@ export default function QRScannerPage() {
 
   if (!mounted) {
     return (
-      <div style={{
-        maxWidth: 700,
-        margin: '40px auto 0 auto',
-        background: '#fff',
-        borderRadius: 24,
-        boxShadow: '0 4px 32px rgba(0,0,0,0.10)',
-        padding: '32px 32px 40px 32px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 32,
-        minHeight: 'calc(100vh - 120px)',
-        fontFamily: 'Host Grotesk, sans-serif'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-          <div style={{
-            width: '2rem',
-            height: '2rem',
-            border: '2px solid #b91c1c',
-            borderTop: '2px solid transparent',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <span style={{ marginLeft: '0.5rem', color: '#666' }}>Loading...</span>
-        </div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <span style={{ marginLeft: '0.5rem', color: '#666' }}>Loading...</span>
       </div>
     );
   }
@@ -616,90 +410,20 @@ export default function QRScannerPage() {
 
   return (
     <div className={styles['main-container']}>
-      {/* Header Card - match dashboard top card */}
-      <div className={styles.dashboardCard} style={{ background: 'var(--neutral-gray-200)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24, transition: 'none' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          {/* Left: QR Scanner title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className={styles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>QR Scanner</div>
-            <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', opacity: 0.85, marginTop: 2 }}>Scan QR Codes to view or add an item</div>
-          </div>
-          {/* Right: Cancel button */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <button
-              onClick={() => router.back()}
-              style={{
-                background: 'var(--neutral-gray-50)',
-                border: '1px solid #e5e7eb',
-                borderRadius: 8,
-                padding: '9px 28px',
-                fontSize: '0.95rem',
-                color: '#444',
-                cursor: 'pointer',
-                fontWeight: 500,
-                transition: 'background 0.2s',
-              }}
-              onMouseOver={e => (e.currentTarget.style.background = '#e5e7eb')}
-              onMouseOut={e => (e.currentTarget.style.background = '#f3f4f6')}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-
-
+      
       {/* Scanner Content Card */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '32px 0 32px 0',
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: 400,
-          margin: '0 auto',
-          background: '#fff',
-         
-          borderRadius: 16,
-          minHeight: 320,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxSizing: 'border-box',
-        }}>
+      <div className={styles.scannerContentCard}>
+        <div className={styles.scannerContentBox}>
           {renderScannerContent()}
         </div>
       </div>
 
 
       {/* Error, scanned, loading, success messages (unchanged) */}
-      <div style={{ width: '100%', maxWidth: 400, margin: '0 auto', marginBottom: 24 }}>
+      <div className={styles.messageContainer}>
         {loading && (
-          <div style={{
-            marginTop: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: '10px',
-            color: '#0369a1',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            width: '100%',
-          }}>
-            <div style={{
-              width: '1rem',
-              height: '1rem',
-              border: '2px solid #0369a1',
-              borderTop: '2px solid transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
+          <div className={styles.loadingMessage}>
+            <div className={styles.spinner}></div>
             Loading...
           </div>
         )}
