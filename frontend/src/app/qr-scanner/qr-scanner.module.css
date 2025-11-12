@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* CSS Variables for consistent theming */
-/* Color Variations for Different Card Types */
-
 .main-container {
   max-width: 1120px;
   margin: 0 auto 0 auto;
@@ -31,11 +28,11 @@
   width: 360px;
 }
 
-.qrButtonPrimary {
+.qrButtonPrimary, .qrButtonCancel, .manualSubmitButton, .manualCancelButton {
   flex: 1;
   padding: 9px 0;
   background-color: #fff;
-  color: var(--text-secondary);
+  color: var(--neutral-gray-500);
   border-radius: 6px;
   border: 1px solid var(--neutral-gray-400);
   font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
@@ -47,14 +44,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.3s ease;
 }
 
-.qrButtonPrimary:hover {
-  background: #820000; /* dark red → bright red */
-  color: #fff;
-  transition: background 0.3s ease;
-  border: none;
+.qrButtonPrimary:hover, .qrButtonCancel:hover, .manualSubmitButton:hover, .manualCancelButton:hover {/* dark red → bright red */
+  color: #ae0d0d;
+  border-color: #ae0d0d;
+  background-color: var(--neutral-gray-100);
 }
 
 .qrButtonSecondary {
@@ -73,20 +68,6 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-
-.qrButtonCancel {
-  flex: 1;
-  padding: 9px 0;
-  background-color: #f3f4f6;
-  color: var(--neutral-gray-800);
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
-  font-weight: 500;
-  font-size: 0.97rem;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
 /* Card and Center Containers */
@@ -135,7 +116,7 @@
   margin: 0;
   overflow: hidden;
   position: relative;
-  border: 2px dashed #b7b8b9;
+  border: 3px dashed #820000;
 }
 
 .webcam {
@@ -143,20 +124,20 @@
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-  background: #fff;
 }
 
-.manualInputBox {
-  width: 360px;
-  height: 360px;
-  margin: 60px auto 0 auto;
-  border: 1.5px dashed #b7b8b9;
+.manualInputBox, .fileUploadBox {
+  width: 400px;
+  height: 400px;
+  margin: 0 auto;
+  border: 3px dashed #820000;
   border-radius: 12px;
   background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 .spinner {
@@ -206,7 +187,7 @@
 .manualInput {
   width: 100%;
   padding: 10px 16px;
-  border: 1.5px solid #cbd5e1;
+  border: 1.5px solid var(--neutral-gray-300);
   border-radius: 8px;
   font-size: 15px;
   font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
@@ -219,6 +200,7 @@
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
+
 .manualInput:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37,99,235,0.10);
@@ -255,25 +237,34 @@
 }
 
 .scannerContentBox {
-    align-items: center;
-    width: 100%;
-    height: 80vh;
-    background: #fff;
-    border-radius: 16px;
-    border: 1px solid #D1E3F8;
-    display: flex;
-    padding: 30px 16px 20px;
-    flex-direction: column;
-    box-sizing: border-box;
-    font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
-    gap: 25px;
+  align-items: center;
+  width: 100%;
+  height: 80vh;
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--neutral-gray-300);
+  display: flex;
+  padding: 30px 16px 20px;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
+  gap: 25px;
 }
 
 .scannerContentHeader {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    width: 100%;
-    padding: 0 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0 16px;
+}
+
+.spinnerContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  gap: 0.5rem;
 }

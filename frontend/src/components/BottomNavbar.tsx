@@ -94,39 +94,6 @@ export default function BottomNavbar() {
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        .navbar-icon, .navbar-icon:visited, .navbar-icon:active, .navbar-icon:focus {
-          text-decoration: none !important;
-          color: inherit !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        .navbar-icon.qr:hover {
-          background: none; /* Remove circle style */
-          box-shadow: none;
-        }
-        .navbar-label {
-          font-size: 12px;
-          color: #5C6C7D;
-          margin: 0;
-          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          font-weight: 500;
-          letter-spacing: 0.01em;
-          text-decoration: none !important;
-          transition: color 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .navbar-icon.active .navbar-label {
-          color: #820000;
-          font-weight: 600;
-        }
-        @media (max-width: 1024px) {
-          /* Tablet and small desktop */
-        }
-        @media (max-width: 640px) {
-          /* Mobile adjustments */
-        }
-      `}</style>
     </>
   )
 }

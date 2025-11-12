@@ -4,20 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Webcam from "react-webcam";
 import { apiClient, getImageUrl } from "../../../config/api";
 import { Camera, Upload, X, Check, Plus, Trash2, ArrowRight, ArrowLeft, Info, Settings, CheckCircle, AlertTriangle, XCircle, AlertOctagon } from "lucide-react";
-import styles from './page.module.css';
+import styles from './addItem.module.css';
 import { supabase } from '../../../config/supabase';
 import { useToast } from '../../../contexts/ToastContext';
-import dashboardStyles from '../../dashboard.module.css';
 import { triggerDatabaseUpdate } from '../../../services/databaseUpdateService';
 // No compression - upload raw files as-is
-
-
-
-
-
-
-
-
 
 
 function AddItemPageContent() {
@@ -57,6 +48,7 @@ function AddItemPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const webcamRef = useRef<Webcam>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   const [cameraConstraints, setCameraConstraints] = useState<any>({
@@ -442,19 +434,6 @@ function AddItemPageContent() {
   return (
     <div className={styles["main-container"]}>
       {/* Top card exactly like dashboard */}
-      <div className={styles.dashboardCardAddStatic} style={{ color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          {/* Left: Add Item title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className={dashboardStyles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Add Item</div>
-          </div>
-          {/* Right: Inventory System label */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>Inventory System</div>
-          </div>
-        </div>
-      </div>
-      {/* Only show the title, no header card */}
       {/* Main Content Card */}
       <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: 16, boxShadow: 'none', padding: 0 }} encType="multipart/form-data">
         <div style={{ padding: 0 }}>
@@ -499,7 +478,7 @@ function AddItemPageContent() {
                     <button
                       type="button"
                       onClick={() => setShowCamera(false)}
-                      className={styles.takePhotoBtn}
+                      className={styles.cancelBtn}
                     >
                       <X size={18} />
                       Cancel
@@ -522,13 +501,23 @@ function AddItemPageContent() {
                     />
                   </div>
                   <div className={styles.imageUploadActions}>
-                    <label className={styles.uploadLabel}>
-                      <Upload size={18} style={{marginRight: 6}} />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.uploadLabel}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload size={18} />
                       Upload New Image
-                      <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-                    </label>
+                    </button>
                     <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                      <Camera size={18} style={{marginRight: 6}} />
+                      <Camera size={18} />
                       Take New Photo
                     </button>
                   </div>
@@ -536,18 +525,28 @@ function AddItemPageContent() {
               ) : (
                 <div className="flex flex-col items-center w-full">
                   <div className={styles.imageUploadIcon}>
-                    <Camera size={40} />
+                    <Camera size={40} color="#820000" />
                   </div>
                   <div className={styles.imageUploadTitle}>Add Item Picture</div>
                   <div className={styles.imageUploadDesc}>Capture or upload an image to help identify this item</div>
                   <div className={styles.imageUploadActions}>
-                    <label className={styles.uploadLabel}>
-                      <Upload size={18} style={{marginRight: 6}} />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: "none" }}
+                    />
+                    <button
+                      type="button"
+                      className={styles.uploadLabel}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload size={18} />
                       Upload Image
-                      <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
-                    </label>
+                    </button>
                     <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                      <Camera size={18} style={{marginRight: 6}} />
+                      <Camera size={18} />
                       Capture Photo
                     </button>
                   </div>
@@ -840,32 +839,18 @@ function AddItemPageContent() {
             <button
               type="button"
               onClick={handleCancel}
-              style={{
-                background: '#9ca3af',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '10px 24px',
-                fontWeight: 500,
-                fontSize: 15,
-                cursor: 'pointer',
-                boxShadow: 'none',
-                marginRight: 8
-              }}
+              className={styles.discardBtn}
             >
+              <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
+                <path d="M5.83325 22.1666L13.9999 13.9999M13.9999 13.9999L22.1666 5.83325M13.9999 13.9999L5.83325 5.83325M13.9999 13.9999L22.1666 22.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               Discard
             </button>
             <button
               type="submit"
+              className={styles.submitBtn}
               disabled={loading || !detectedCategory}
               style={{
-                background: '#16a34a',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '10px 24px',
-                fontWeight: 600,
-                fontSize: 15,
                 cursor: loading || !detectedCategory ? 'not-allowed' : 'pointer',
                 opacity: loading || !detectedCategory ? 0.7 : 1
               }}
@@ -876,7 +861,12 @@ function AddItemPageContent() {
                   Saving...
                 </>
               ) : (
-                <>Save Item</>
+                <>
+                  <svg width="20" height="20" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
+                    <path d="M21.75 28.75V21.3378C21.7496 21.0127 21.6813 20.6909 21.5491 20.3908C21.4169 20.0907 21.2233 19.8181 20.9795 19.5887C20.7356 19.3592 20.4463 19.1775 20.128 19.0537C19.8098 18.93 19.4688 18.8667 19.1246 18.8676H10.3754C10.0312 18.8667 9.69025 18.93 9.37197 19.0537C9.05369 19.1775 8.76436 19.3592 8.52053 19.5887C8.27669 19.8181 8.08313 20.0907 7.95092 20.3908C7.81871 20.6909 7.75043 21.0127 7.75 21.3378V28.75M21.75 1.19335V4.86757C21.7496 5.19263 21.6813 5.51443 21.5491 5.81455C21.4169 6.11468 21.2233 6.38724 20.9795 6.61667C20.7356 6.84609 20.4463 7.02786 20.128 7.1516C19.8098 7.27534 19.4688 7.3386 19.1246 7.33779H10.3754C10.0312 7.3386 9.69025 7.27534 9.37197 7.1516C9.05369 7.02786 8.76436 6.84609 8.52053 6.61667C8.27669 6.38724 8.08313 6.11468 7.95092 5.81455C7.81871 5.51443 7.75043 5.19263 7.75 4.86757V0.750016M21.75 1.19335C21.0669 0.90119 20.3257 0.750047 19.5759 0.750016H7.75M21.75 1.19335C22.3166 1.43602 22.8387 1.77513 23.2884 2.19668L27.2116 5.89112C27.6988 6.34895 28.0855 6.89311 28.3495 7.49239C28.6134 8.09167 28.7496 8.73427 28.75 9.38334V23.8064C28.7496 24.4567 28.6134 25.1005 28.3493 25.701C28.0851 26.3015 27.6982 26.8469 27.2107 27.3061C26.7232 27.7652 26.1445 28.1291 25.508 28.3769C24.8714 28.6246 24.1893 28.7514 23.5008 28.75H6.00082C5.31231 28.7516 4.63022 28.625 3.99356 28.3775C3.3569 28.1299 2.77817 27.7662 2.29048 27.3072C1.80278 26.8482 1.4157 26.3029 1.15137 25.7024C0.887038 25.102 0.750647 24.4583 0.75 23.808V5.69045C0.750864 5.04033 0.887414 4.39673 1.15184 3.79648C1.41627 3.19623 1.80339 2.6511 2.29106 2.19225C2.77873 1.73341 3.35739 1.36986 3.99394 1.12239C4.63049 0.874915 5.31245 0.74838 6.00082 0.750016H7.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Save Item
+                </>
               )}
             </button>
           </div>
