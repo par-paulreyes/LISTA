@@ -1186,7 +1186,7 @@ export default function DashboardPage() {
             )}
             <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               {hasCachedData ? 'Showing Cached Data' : 'Connection Error'}
-        </div>
+            </div>
             <div style={{ fontSize: '0.95rem', opacity: 0.9 }}>{error}</div>
           </div>
           <button

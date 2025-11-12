@@ -513,11 +513,11 @@ function AddItemPageContent() {
                       className={styles.uploadLabel}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <Upload size={18} />
+                      <Upload size={18} style={{marginRight: 6}} />
                       Upload New Image
                     </button>
                     <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                      <Camera size={18} />
+                      <Camera size={18} style={{marginRight: 6}} />
                       Take New Photo
                     </button>
                   </div>
@@ -542,11 +542,11 @@ function AddItemPageContent() {
                       className={styles.uploadLabel}
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <Upload size={18} />
+                      <Upload size={18} style={{marginRight: 6}} />
                       Upload Image
                     </button>
                     <button type="button" className={styles.takePhotoBtn} onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}>
-                      <Camera size={18} />
+                      <Camera size={18} style={{marginRight: 6}} />
                       Capture Photo
                     </button>
                   </div>

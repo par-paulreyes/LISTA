@@ -44,6 +44,8 @@ function InventoryPageContent() {
   const [modalArticleType, setModalArticleType] = useState("");
   const [modalItemStatus, setModalItemStatus] = useState("");
   const [modalMaintenanceFilter, setModalMaintenanceFilter] = useState("");
+  const [isFilterHovered, setIsFilterHovered] = useState(false);
+  const [isExportHovered, setIsExportHovered] = useState(false);
 
 
   // Dashboard statistics state
@@ -276,10 +278,15 @@ function InventoryPageContent() {
           <button
             className="filter-modal-btn"
             onClick={openFilterModal}
+            onMouseEnter={() => setIsFilterHovered(true)}
+            onMouseLeave={() => setIsFilterHovered(false)}
           >
-            <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-              <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <Image
+              src={isFilterHovered ? "/assets/icons/filter_active.svg" : "/assets/icons/filter_inactive.svg"}
+              alt="Filter"
+              width={16}
+              height={16}
+            />
             Filters
           </button>
           <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
@@ -287,12 +294,15 @@ function InventoryPageContent() {
                 className="export-dropdown-btn"
                 onClick={() => setShowExportDropdown(!showExportDropdown)}
                 disabled={exporting}
+                onMouseEnter={() => setIsExportHovered(true)}
+                onMouseLeave={() => setIsExportHovered(false)}
               >
-                <svg width="16" height="16" fill="none" stroke="#ae0d0d" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7,10 12,15 17,10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
+                <Image
+                  src={isExportHovered ? "/assets/icons/export_active.svg" : "/assets/icons/export_inactive.svg"}
+                  alt="Export"
+                  width={16}
+                  height={16}
+                />
                 Export
               </button>
             {showExportDropdown && (
