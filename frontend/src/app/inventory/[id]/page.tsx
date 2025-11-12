@@ -612,6 +612,9 @@ export default function ItemDetailPage() {
       <div className={styles.headerRow}>
         <div>
           <h3 className={styles.itemDetailTitle}>Item Detail</h3>
+          <div className={styles.itemDetailTitle2}>
+            {(isEditing ? editingItem.qr_code : item.qr_code)}
+          </div>
         </div>
         <div className={styles.topButtonRow}>
           {!isEditing ? (
@@ -625,218 +628,228 @@ export default function ItemDetailPage() {
           )}
         </div>
       </div>
-      <div className={styles.topImageBox} style={{position:'relative'}}>
-        {isEditing && selectedImagePreview ? (
-          <img src={selectedImagePreview} alt="item preview" className={styles.topImage} />
-        ) : itemImageUrl ? (
-          <img src={itemImageUrl} alt="item" className={styles.topImage} />
-        ) : (
-          <span>image</span>
-        )}
-        {isEditing && (
-          <>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleImageChange}
-            />
-            <button className={styles.changeImageBtn} onClick={handleImageButtonClick} disabled={uploadingImage} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
-              {uploadingImage ? 'Processing...' : 'Select Image'}
-            </button>
-          </>
-        )}
-      </div> 
-      <div>
-        <div className={styles.articleTitle}>
-          {(isEditing ? editingItem.qr_code : item.qr_code) || (isEditing ? editingItem.property_no : item.property_no)?.toUpperCase()}
+      <div className={styles.row}>
+        <div className={styles.column1}>
+          <div className={styles.column1_1}>
+            <div className={styles.frame}>
+              <div className={styles.topImageBox} style={{position:'relative'}}>
+                {isEditing && selectedImagePreview ? (
+                  <img src={selectedImagePreview} alt="item preview" className={styles.topImage} />
+                ) : itemImageUrl ? (
+                  <img src={itemImageUrl} alt="item" className={styles.topImage} />
+                ) : (
+                  <span>image</span>
+                )}
+                {isEditing && (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      onChange={handleImageChange}
+                    />
+                    <button className={styles.changeImageBtn} onClick={handleImageButtonClick} disabled={uploadingImage} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
+                      {uploadingImage ? 'Processing...' : 'Select Image'}
+                    </button>
+                  </>
+                )}
+              </div> 
+            </div>
+            <div>
+              <div className={styles.articleTitle}>
+                {(isEditing ? editingItem.qr_code : item.qr_code) || (isEditing ? editingItem.property_no : item.property_no)?.toUpperCase()}
+              </div>
+              <div className={styles.centeredSubtitle}>{isEditing ? editingItem.article_type : item.article_type}</div>
+            </div>
+          </div>
+          <div className={styles.column1_2}>
+            <div className={styles.statusCard}>
+              <div className={styles.statusTxtContainer}>
+                <h4 className={styles.statusTitle}>Status</h4>
+                <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%', color:'#6b7280'}}><span>Maintenance Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
+                <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%', color:'#6b7280'}}><span>Pending Tasks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className={styles.centeredSubtitle}>{isEditing ? editingItem.article_type : item.article_type}</div>
-      </div>
-      <div className={styles.midNav}>
-        <button
-          className={`${styles.tabBtn} ${midNavTab === 'general' ? styles.tabBtnActive : ''}`}
-          onClick={() => setMidNavTab('general')}
-        >
-          General Info
-        </button>
-        <button
-          className={`${styles.tabBtn} ${midNavTab === 'logs' ? styles.tabBtnActive : ''}`}
-          onClick={() => setMidNavTab('logs')}
-        >
-          Maintenance
-        </button>
-      </div>
-      {/* Middle Section: General Info & Specifications */}
-      <div className={styles.middleSection}>
-        {midNavTab === 'general' && (
-          <>
-            <div className={styles.infoCard}>
-              <h4 className={styles.sectionTitle}>General Information</h4>
-              <div className={styles.infoCardContent}>
-                {isEditing || !isEditing ? (
-                  <div className={styles.recContainer}>
-                    <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={isEditing ? editingItem.qr_code || '' : item.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>Property No</span><input value={isEditing ? editingItem.property_no || '' : item.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>Serial No</span><input value={isEditing ? editingItem.serial_no || '' : item.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>Location</span><input value={isEditing ? editingItem.location || '' : item.location || ''} onChange={e => handleInputChange('location', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>End User</span><input value={isEditing ? editingItem.end_user || '' : item.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>Date Acquired</span><input type="date" value={isEditing ? formatDateForInput(editingItem.date_acquired) : formatDateForInput(item.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} disabled={!isEditing} /></div>
-                    <div className={styles.grayRect}><span className={styles.label}>Status</span>
-                      <select className={styles.statusDropdown} value={isEditing ? editingItem.item_status || 'Available' : item.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)} disabled={!isEditing}>
-                        {isToolOrSupply ? (
+        <div className={styles.column2}>
+          <div className={styles.midNav}>
+            <button
+              className={`${styles.tabBtn} ${midNavTab === 'general' ? styles.tab1BtnActive : ''}`}
+              onClick={() => setMidNavTab('general')}
+            >
+              General Info
+            </button>
+            <button
+              className={`${styles.tabBtn} ${midNavTab === 'logs' ? styles.tab2BtnActive : ''}`}
+              onClick={() => setMidNavTab('logs')}
+            >
+              Maintenance
+            </button>
+          </div>
+          {/* Middle Section: General Info & Specifications */}
+          <div className={styles.middleSection}>
+            {midNavTab === 'general' && (
+              <>
+                <div className={styles.infoCard}>
+                  <div className={styles.infoCardContent}>
+                    {isEditing || !isEditing ? (
+                      <div className={styles.recContainer}>
+                        <div className={styles.grayRect}><span className={styles.label}>QR Code</span><input value={isEditing ? editingItem.qr_code || '' : item.qr_code || ''} onChange={e => handleInputChange('qr_code', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Property No</span><input value={isEditing ? editingItem.property_no || '' : item.property_no || ''} onChange={e => handleInputChange('property_no', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Serial No</span><input value={isEditing ? editingItem.serial_no || '' : item.serial_no || ''} onChange={e => handleInputChange('serial_no', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Location</span><input value={isEditing ? editingItem.location || '' : item.location || ''} onChange={e => handleInputChange('location', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>End User</span><input value={isEditing ? editingItem.end_user || '' : item.end_user || ''} onChange={e => handleInputChange('end_user', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Date Acquired</span><input type="date" value={isEditing ? formatDateForInput(editingItem.date_acquired) : formatDateForInput(item.date_acquired)} onChange={e => handleInputChange('date_acquired', e.target.value)} disabled={!isEditing} /></div>
+                        <div className={styles.grayRect}><span className={styles.label}>Status</span>
+                          <select className={styles.statusDropdown} value={isEditing ? editingItem.item_status || 'Available' : item.item_status || 'Available'} onChange={e => handleInputChange('item_status', e.target.value)} disabled={!isEditing}>
+                            {isToolOrSupply ? (
+                              <>
+                                <option value="Available">Available</option>
+                                <option value="Out of Stock">Out of Stock</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="Available">Available</option>
+                                <option value="Bad Condition">Bad Condition</option>
+                                <option value="To be Borrowed">To be Borrowed</option>
+                                <option value="Borrowed">Borrowed</option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+                        <div className={styles.grayRect}><span className={styles.label}>Remarks</span><input value={isEditing ? editingItem.remarks || '' : item.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} disabled={!isEditing} /></div>
+                        {/* Electronics-specific fields */}
+                        {isElectronic && (
                           <>
-                            <option value="Available">Available</option>
-                            <option value="Out of Stock">Out of Stock</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="Available">Available</option>
-                            <option value="Bad Condition">Bad Condition</option>
-                            <option value="To be Borrowed">To be Borrowed</option>
-                            <option value="Borrowed">Borrowed</option>
+                            <div className={styles.grayRect}><span className={styles.label}>Article Type</span><input value={isEditing ? editingItem.article_type || '' : item.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} disabled={!isEditing} /></div>
+                            <div className={styles.grayRect}><span className={styles.label}>Brand</span><input value={isEditing ? editingItem.brand || '' : item.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} disabled={!isEditing} /></div>
+                            <div className={styles.grayRect}><span className={styles.label}>Price</span><input type="number" value={isEditing ? editingItem.price || '' : item.price || ''} onChange={e => handleInputChange('price', e.target.value)} disabled={!isEditing} /></div>
+                            <div className={styles.grayRect}><span className={styles.label}>Supply Officer</span><input value={isEditing ? editingItem.supply_officer || '' : item.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} disabled={!isEditing} /></div>
+                            <div className={styles.grayRect}><span className={styles.label}>Company</span><input value={isEditing ? editingItem.company_name || '' : item.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} disabled={!isEditing} /></div>
                           </>
                         )}
-                      </select>
-                    </div>
-                    <div className={styles.grayRect}><span className={styles.label}>Remarks</span><input value={isEditing ? editingItem.remarks || '' : item.remarks || ''} onChange={e => handleInputChange('remarks', e.target.value)} disabled={!isEditing} /></div>
-                    {/* Electronics-specific fields */}
-                    {isElectronic && (
-                      <>
-                        <div className={styles.grayRect}><span className={styles.label}>Article Type</span><input value={isEditing ? editingItem.article_type || '' : item.article_type || ''} onChange={e => handleInputChange('article_type', e.target.value)} disabled={!isEditing} /></div>
-                        <div className={styles.grayRect}><span className={styles.label}>Brand</span><input value={isEditing ? editingItem.brand || '' : item.brand || ''} onChange={e => handleInputChange('brand', e.target.value)} disabled={!isEditing} /></div>
-                        <div className={styles.grayRect}><span className={styles.label}>Price</span><input type="number" value={isEditing ? editingItem.price || '' : item.price || ''} onChange={e => handleInputChange('price', e.target.value)} disabled={!isEditing} /></div>
-                        <div className={styles.grayRect}><span className={styles.label}>Supply Officer</span><input value={isEditing ? editingItem.supply_officer || '' : item.supply_officer || ''} onChange={e => handleInputChange('supply_officer', e.target.value)} disabled={!isEditing} /></div>
-                        <div className={styles.grayRect}><span className={styles.label}>Company</span><input value={isEditing ? editingItem.company_name || '' : item.company_name || ''} onChange={e => handleInputChange('company_name', e.target.value)} disabled={!isEditing} /></div>
-                      </>
-                    )}
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-              <h4 className={styles.sectionTitle}>Specifications</h4>
-              <div className={styles.infoCardContent}>
-                {isEditing ? (
-                  <div className={styles.specsContainer}>
-                    <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
-                  </div>
-                ) : (
-                  <div className={styles.specsContainer}>
-                    {item.specifications ? (
-                      <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
-                        {formatSpecifications(item.specifications).map((spec, index) => (
-                          <span key={index} className={styles.specs}>{spec}</span>
-                        ))}
+                  <h4 className={styles.sectionTitle}>Specifications</h4>
+                  <div className={styles.infoCardContent}>
+                    {isEditing ? (
+                      <div className={styles.specsContainer}>
+                        <div className={styles.grayRect}><textarea value={editingItem.specifications || ''} onChange={e => handleInputChange('specifications', e.target.value)} className={styles.specInput} /></div>
                       </div>
                     ) : (
-                      <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
+                      <div className={styles.specsContainer}>
+                        {item.specifications ? (
+                          <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                            {formatSpecifications(item.specifications).map((spec, index) => (
+                              <span key={index} className={styles.specs}>{spec}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{color: '#888'}}>No {isElectronic ? 'specifications' : 'description'} available</span>
+                        )}
+                      </div>
                     )}
+                  </div>
+                </div>
+              </>
+            )}
+            {midNavTab === 'logs' && (
+              <div className={styles.logsSection}>
+                {/* Logs content (already uses isEditing logic) */}
+                {(isElectronic || isUtility) ? (
+                  <>
+                    <div className={styles.checklist}>
+                      {logsToShow.length > 0 ? logsToShow.map((log, i) => (
+                        <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start'}}>
+                          <div style={{display:'flex',alignItems:'center',gap:8}}>
+                            {isEditing ? (
+                              <input
+                                type="checkbox"
+                                checked={log.completed}
+                                onChange={() => handleChecklistToggle(i)}
+                                style={{width:18,height:18,cursor:'pointer'}}
+                              />
+                            ) : (
+                              log.completed ? <FaRegCheckSquare style={{color:'#22c55e'}}/> : <FaRegSquare style={{color:'#f59e42'}}/>
+                            )}
+                            <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>
+                              {isEditing && String(log.id)?.startsWith('new-') ? (
+                                <input
+                                  value={log.task_performed || ''}
+                                  onChange={e => handleNewLogChange(i - editingLogs.length, 'task_performed', e.target.value)}
+                                  placeholder="Enter task performed"
+                                  className={styles.editHighlight}
+                                  style={{width: '200px'}}
+                                />
+                              ) : (
+                                log.task_performed
+                              )}
+                            </span>
+                            {getTaskStatusIcon(log.status)}
+                            <span style={{fontSize:12, color:'#888'}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
+                            {isEditing && String(log.id)?.startsWith('new-') && (
+                              <button
+                                onClick={() => removeNewLog(i - editingLogs.length)}
+                                style={{marginLeft: 'auto', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer'}}
+                              >
+                                <FaTrash size={14} />
+                              </button>
+                            )}
+                          </div>
+                          <div style={{marginLeft:28}}>
+                            <div>
+                              Maintained By: {isEditing && String(log.id)?.startsWith('new-') ? (
+                                <span style={{fontWeight: 500}}>{log.maintained_by}</span>
+                              ) : (
+                                log.maintained_by
+                              )}
+                            </div>
+                            <div>Status: {log.status.charAt(0).toUpperCase() + log.status.slice(1)}</div>
+                            <div>Date: {formatDisplayDate(log.maintenance_date)}</div>
+                            <div>
+                              Notes: {isEditing ? (
+                                <input
+                                  value={log.notes || ''}
+                                  onChange={e => String(log.id)?.startsWith('new-') ? handleNewLogChange(i - editingLogs.length, 'notes', e.target.value) : handleLogChange(i, 'notes', e.target.value)}
+                                  className={styles.editHighlight}
+                                />
+                              ) : (
+                                <span>{log.notes}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )) : <div style={{color: '#888'}}>No logs found.</div>}
+                      {isEditing && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={addNewLog}
+                            className={styles.addNewMaintBtn}
+                          >
+                            <FaPlus size={14} />
+                            Add New Maintenance Log
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className={styles.tabsContent}>
+                    <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
+                      <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
+                      <p>No additional tabs available for this item type.</p>
+                      <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information in previous tabs.</p>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
-          </>
-        )}
-        {midNavTab === 'logs' && (
-          <div className={styles.logsSection}>
-            {/* Logs content (already uses isEditing logic) */}
-            {(isElectronic || isUtility) ? (
-              <>
-                <div className={styles.statusCard}>
-                  <h4>Status</h4>
-                  <div className={styles.statusTxtContainer}>
-                    <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Maintenance Status</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.maintenance_status === 'pending' ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; Pending</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; Up to Date</span>}</b></div>
-                    <div className={styles.statusTxt} style={{display:'flex',justifyContent:'space-between',width:'100%'}}><span>Pending Tasks</span> <b style={{fontWeight:700,textAlign:'right',minWidth:120,display:'inline-block'}}>{item.pending_maintenance_count > 0 ? <span style={{color:'#f59e42',marginLeft:4}}>&#9888; {item.pending_maintenance_count} task{item.pending_maintenance_count > 1 ? 's' : ''}</span> : <span style={{color:'#22c55e',marginLeft:4}}>&#10003; None</span>}</b></div>
-                  </div>
-                </div>
-                <div className={styles.checklist}>
-                  <h4>Logs and Activities</h4>
-                  {logsToShow.length > 0 ? logsToShow.map((log, i) => (
-                    <div key={log.id} className={styles.checklistItem + ' ' + (log.completed ? 'completed' : 'pending') + (isEditing ? ' ' + styles.editable : '')} style={{flexDirection:'column',alignItems:'flex-start'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:8}}>
-                        {isEditing ? (
-                          <input
-                            type="checkbox"
-                            checked={log.completed}
-                            onChange={() => handleChecklistToggle(i)}
-                            style={{width:18,height:18,cursor:'pointer'}}
-                          />
-                        ) : (
-                          log.completed ? <FaRegCheckSquare style={{color:'#22c55e'}}/> : <FaRegSquare style={{color:'#f59e42'}}/>
-                        )}
-                        <span style={{fontWeight:600,textDecoration:log.completed?'line-through':'none'}}>
-                          {isEditing && String(log.id)?.startsWith('new-') ? (
-                            <input
-                              value={log.task_performed || ''}
-                              onChange={e => handleNewLogChange(i - editingLogs.length, 'task_performed', e.target.value)}
-                              placeholder="Enter task performed"
-                              className={styles.editHighlight}
-                              style={{width: '200px'}}
-                            />
-                          ) : (
-                            log.task_performed
-                          )}
-                        </span>
-                        {getTaskStatusIcon(log.status)}
-                        <span style={{fontSize:12, color:'#888'}}>{log.status === 'completed' ? 'Completed' : 'Pending'}</span>
-                        {isEditing && String(log.id)?.startsWith('new-') && (
-                          <button
-                            onClick={() => removeNewLog(i - editingLogs.length)}
-                            style={{marginLeft: 'auto', color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer'}}
-                          >
-                            <FaTrash size={14} />
-                          </button>
-                        )}
-                      </div>
-                      <div style={{marginLeft:28}}>
-                        <div>
-                          Maintained By: {isEditing && String(log.id)?.startsWith('new-') ? (
-                            <span style={{fontWeight: 500}}>{log.maintained_by}</span>
-                          ) : (
-                            log.maintained_by
-                          )}
-                        </div>
-                        <div>Status: {log.status.charAt(0).toUpperCase() + log.status.slice(1)}</div>
-                        <div>Date: {formatDisplayDate(log.maintenance_date)}</div>
-                        <div>
-                          Notes: {isEditing ? (
-                            <input
-                              value={log.notes || ''}
-                              onChange={e => String(log.id)?.startsWith('new-') ? handleNewLogChange(i - editingLogs.length, 'notes', e.target.value) : handleLogChange(i, 'notes', e.target.value)}
-                              className={styles.editHighlight}
-                            />
-                          ) : (
-                            <span>{log.notes}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )) : <div style={{color: '#888'}}>No logs found.</div>}
-                  {isEditing && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={addNewLog}
-                        className={styles.addNewMaintBtn}
-                      >
-                        <FaPlus size={14} />
-                        Add New Maintenance Log
-                      </button>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className={styles.tabsContent}>
-                <div style={{textAlign: 'center', padding: '40px 20px', color: '#666'}}>
-                  <FaClipboardList style={{fontSize: '48px', marginBottom: '16px', opacity: 0.5}} />
-                  <p>No additional tabs available for this item type.</p>
-                  <p style={{fontSize: '14px', marginTop: '8px'}}>Tools and Supplies items show all relevant information in previous tabs.</p>
-                </div>
-              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
