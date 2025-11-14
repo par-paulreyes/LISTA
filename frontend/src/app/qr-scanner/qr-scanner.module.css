@@ -7,7 +7,7 @@
   box-shadow: 0 8px 28px rgba(0,0,0,0.06);
   border-left: 1px solid var(--neutral-gray-300);
   border-right: 1px solid var(--neutral-gray-300);
-  padding: 25px 20px 16px 20px;
+  padding: 16px 20px 16px 20px;
   display: flex;
   flex-direction: column;
   font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
@@ -28,13 +28,34 @@
   width: 360px;
 }
 
+.headerRow {
+  background-color: #fff;
+  border: 2px solid #820000;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  max-height: 80px;
+  width: 100%;
+  padding: 16px;
+  align-items: center;
+}
+
+.manualSubmitButton, .qrButtonPrimary{
+ background-color: #820000;
+ color: #fff;
+ border: none;
+}
+
+.manualCancelButton, .qrButtonCancel {
+  background-color: #fff;
+  color: var(--neutral-gray-500);
+  border: 1px solid var(--neutral-gray-400);
+}
+
 .qrButtonPrimary, .qrButtonCancel, .manualSubmitButton, .manualCancelButton {
   flex: 1;
   padding: 9px 0;
-  background-color: #fff;
-  color: var(--neutral-gray-500);
   border-radius: 6px;
-  border: 1px solid var(--neutral-gray-400);
   font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
   font-weight: 500;
   font-size: 0.97rem;
@@ -46,10 +67,14 @@
   gap: 8px;
 }
 
-.qrButtonPrimary:hover, .qrButtonCancel:hover, .manualSubmitButton:hover, .manualCancelButton:hover {/* dark red → bright red */
+.qrButtonCancel:hover, .manualCancelButton:hover {/* dark red → bright red */
   color: #ae0d0d;
   border-color: #ae0d0d;
   background-color: var(--neutral-gray-100);
+}
+
+.manualSubmitButton:hover, .qrButtonPrimary:hover {/* bright red → darker red */ 
+  background-color: #660000;
 }
 
 .qrButtonSecondary {
@@ -94,6 +119,20 @@
   box-sizing: border-box;
 }
 
+.qrScannerBox {
+  width: 1078.4px;
+  height: 900px;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-gray-300);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  gap: 16px;
+}
+
 .dashedBox {
   width: 360px;
   height: 320px;
@@ -132,7 +171,7 @@
   margin: 0 auto;
   border: 3px dashed #820000;
   border-radius: 12px;
-  background: #fff;
+  background: #fff8f8;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -241,14 +280,12 @@
   width: 100%;
   height: 80vh;
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--neutral-gray-300);
   display: flex;
-  padding: 30px 16px 20px;
+  padding: 0 0 20px;
   flex-direction: column;
   box-sizing: border-box;
   font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
-  gap: 25px;
+  gap: 15px;
 }
 
 .scannerContentHeader {
@@ -257,7 +294,6 @@
   justify-content: space-between;
   align-items: flex-start;
   width: 100%;
-  padding: 0 16px;
 }
 
 .spinnerContainer {
