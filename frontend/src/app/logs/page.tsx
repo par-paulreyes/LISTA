@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { apiClient, getApiUrl } from "../../config/api";
+import { apiClient } from "../../config/api";
 import "./logs.css";
 import "../inventory/inventory.css";
 
@@ -32,6 +33,10 @@ export default function LogsPage() {
   const [exporting, setExporting] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isFilterHovered, setIsFilterHovered] = useState(false);
+  const [isExportHovered, setIsExportHovered] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const logsPerPage = 10;
   
   // Modal state variables
   const [modalCategory, setModalCategory] = useState("");
@@ -148,6 +153,17 @@ export default function LogsPage() {
       }
     });
 
+  const totalPages = Math.ceil(filteredAndSortedLogs.length / logsPerPage);
+  const startIndex = (currentPage - 1) * logsPerPage;
+  const paginatedLogs = filteredAndSortedLogs.slice(
+    startIndex,
+    startIndex + logsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, sortOrder]);
+
   // When opening modal, sync modal state with current filter state
   const openFilterModal = () => {
     setModalCategory(categoryFilter);
@@ -173,95 +189,121 @@ export default function LogsPage() {
 
   return (
     <div className="main-container">
-      {/* Logs Top Card (copied from Inventory) */}
-      <div style={{ background: 'var(--neutral-gray-200)', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', border: '1.5px solid #e5e7eb', padding: 20, marginBottom: 24 }}>
-        <div className="inventory-header-row" style={{ marginBottom: 0 }}>
-          <h3 className="inventory-header-title">Logs</h3>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              className="filter-modal-btn"
-              onClick={openFilterModal}
-            >
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{marginRight: '6px'}}>
-                <path d="M4 4h16M6 8h12M8 12h8M10 16h4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Filter
-            </button>
-            <div className={`export-dropdown ${showExportDropdown ? 'open' : ''}`} ref={dropdownRef}>
-              <button
-                className="export-dropdown-btn"
-                onClick={() => setShowExportDropdown(!showExportDropdown)}
-                disabled={exporting}
-              >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7,10 12,15 17,10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export
-              </button>
-              {showExportDropdown && (
-                <div className="export-dropdown-menu">
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("csv");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export CSV"}
-                  </button>
-                  <button
-                    className="export-dropdown-item"
-                    onClick={() => {
-                      handleExport("pdf");
-                      setShowExportDropdown(false);
-                    }}
-                    disabled={exporting}
-                  >
-                    {exporting ? "Exporting..." : "Export PDF"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        {/* Search Bar (inventory style) */}
-        <div
-          className="inventory-search-container"
-          style={{
-            background: '#fff',
-            border: '1.5px solid #d1d5db',
-            borderRadius: '12px',
-            marginBottom: '0',
-            marginTop: '15px',
-            padding: '0 10px',
-            boxSizing: 'border-box',
-            height: '48px',
-            boxShadow: 'none',
-            position: 'relative',
-            zIndex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%'
-          }}
-        >
+      <div className="inventory-controls-bar logs-controls-bar">
+        <div className="inventory-search-container">
           <div className="search-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <svg
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </div>
           <input
             type="text"
             className="search-input"
-            placeholder="Search by QR Code, Type"
+            placeholder="Search by QR code, property no., or serial no."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <div className="inventory-action-buttons">
+          <button
+            className="filter-modal-btn"
+            onClick={openFilterModal}
+            onMouseEnter={() => setIsFilterHovered(true)}
+            onMouseLeave={() => setIsFilterHovered(false)}
+          >
+            <Image
+              src={
+                isFilterHovered
+                  ? "/assets/icons/filter_active.svg"
+                  : "/assets/icons/filter_inactive.svg"
+              }
+              alt="Filter"
+              width={16}
+              height={16}
+            />
+            Filters
+          </button>
+          <div
+            className={`export-dropdown ${showExportDropdown ? "open" : ""}`}
+            ref={dropdownRef}
+          >
+            <button
+              className="export-dropdown-btn"
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+              disabled={exporting}
+              onMouseEnter={() => setIsExportHovered(true)}
+              onMouseLeave={() => setIsExportHovered(false)}
+            >
+              <Image
+                src={
+                  isExportHovered
+                    ? "/assets/icons/export_active.svg"
+                    : "/assets/icons/export_inactive.svg"
+                }
+                alt="Export"
+                width={16}
+                height={16}
+              />
+              Export
+            </button>
+            {showExportDropdown && (
+              <div className="export-dropdown-menu">
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("csv");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export CSV"}
+                </button>
+                <button
+                  className="export-dropdown-item"
+                  onClick={() => {
+                    handleExport("pdf");
+                    setShowExportDropdown(false);
+                  }}
+                  disabled={exporting}
+                >
+                  {exporting ? "Exporting..." : "Export PDF"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {(categoryFilter || sortOrder === "oldest") && (
+        <div className="logs-filter-chip-row">
+          {categoryFilter && (
+            <button
+              className="logs-filter-chip"
+              onClick={() => setCategoryFilter("")}
+            >
+              Category: {categoryFilter}
+              <span aria-hidden="true">x</span>
+            </button>
+          )}
+          {sortOrder === "oldest" && (
+            <button
+              className="logs-filter-chip"
+              onClick={() => setSortOrder("recent")}
+            >
+              Oldest first
+              <span aria-hidden="true">x</span>
+            </button>
+          )}
+        </div>
+      )}
       {/* Filter Modal */}
       {showFilterModal && (
         <div className="filter-modal-overlay">
@@ -347,40 +389,126 @@ export default function LogsPage() {
       {mounted && error && <div className="error">{error}</div>}
 
       {mounted && !loading && !error && (
-        <div className="logs-container">
-          {filteredAndSortedLogs.length === 0 && (
-            <div className="no-logs">No logs found.</div>
-          )}
-          {filteredAndSortedLogs.length > 0 && (
-            <div className="table-container">
-              <table className="table-proper">
-                <thead>
-                  <tr className="table-row">
-                    <th className="th">QR CODE</th>
-                    <th className="th">TASK PERFORMED</th>
-                    <th className="th">MAINTAINED BY</th>
-                    <th className="th">DATE</th>
+        <div className="inventory-table-wrapper">
+          <table className="inventory-table logs-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Task Performed</th>
+                <th>Maintained By</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAndSortedLogs.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="inventory-table-empty">
+                    No logs found.
+                  </td>
+                </tr>
+              )}
+              {filteredAndSortedLogs.length > 0 &&
+                paginatedLogs.map((log) => (
+                  <tr
+                    key={log.id}
+                    className="inventory-table-row logs-table-row"
+                  >
+                    <td className="inventory-table-item-name">
+                      {log.qr_code || log.property_no || "N/A"}
+                    </td>
+                    <td className="inventory-table-category">
+                      {getItemCategory(log)}
+                    </td>
+                    <td className="inventory-table-type">
+                      {log.task_performed || "—"}
+                    </td>
+                    <td>{log.maintained_by || "—"}</td>
+                    <td className="logs-table-date">
+                      {new Date(log.maintenance_date).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedLogs.map((log, index) => (
-                    <tr key={log.id} style={{
-                      borderBottom: index < filteredAndSortedLogs.length - 1 ? '1px solid #e9ecef' : 'none'
-                    }}>
-                      <td>{log.qr_code || log.property_no}</td>
-                      <td>{log.task_performed}</td>
-                      <td>{log.maintained_by}</td>
-                      <td>
-                        {new Date(log.maintenance_date).toLocaleDateString('en-US', {
-                          month: 'numeric',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+            </tbody>
+          </table>
+          {filteredAndSortedLogs.length > 0 && totalPages > 1 && (
+            <div className="inventory-pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+                Previous
+              </button>
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          className={`pagination-number ${
+                            currentPage === page ? "active" : ""
+                          }`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={`ellipsis-${page}`} className="pagination-ellipsis">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+                )}
+              </div>
+              <button
+                className="pagination-btn"
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <polyline points="9,18 15,12 9,6" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
