@@ -20,6 +20,9 @@ export default function QRScannerPage() {
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showManualInput, setShowManualInput] = useState(false);
   const [manualQrCode, setManualQrCode] = useState("");
+  const [showTagInfo, setShowTagInfo] = useState(false);
+  const [infoHover, setInfoHover] = useState(false);
+  const [closeHover, setCloseHover] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [parsedQR, setParsedQR] = useState<{ company: string; tag: string; id: string } | null>(null);
   const router = useRouter();
@@ -314,16 +317,46 @@ export default function QRScannerPage() {
       // Match the wireframe for manual input
       return (
         <>
-          <div className={styles.headerRow}>
-            <div className={styles.scannerContentHeader}>
-              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 0 }}>Manual Input</div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', opacity: 0.85, marginTop: 2 }}>Enter QR Codes to view or add an item</div>
+            <div className={styles.headerRow}>
+              <div className={styles.scannerContentHeader}>
+                <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 0 }}>Manual Input</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', opacity: 0.85, marginTop: 2 }}>Enter QR Codes to view or add an item</div>
+                  </div>
                 </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowTagInfo(true)}
+                  aria-label="Supported tag types"
+                  title="Supported QR Tag Types"
+                  onMouseEnter={() => setInfoHover(true)}
+                  onMouseLeave={() => setInfoHover(false)}
+                  onFocus={() => setInfoHover(true)}
+                  onBlur={() => setInfoHover(false)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: 999,
+                    width: 36,
+                    height: 36,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 6,
+                  }}
+                >
+                  <img
+                    src={(infoHover || showTagInfo) ? '/assets/icons/info_active.svg' : '/assets/icons/info_inactive.svg'}
+                    alt="Info"
+                    style={{ width: 28, height: 28, display: 'block' }}
+                  />
+                </button>
+              </div>
             </div>
-          </div>
           <div className={styles.qrScannerBox}>
             <div className={styles.manualInputBox}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 18 }}>
@@ -458,6 +491,79 @@ export default function QRScannerPage() {
           }
         }
       `}</style>
+      {/* Tag info modal */}
+      {showTagInfo && (
+        <div role="dialog" aria-modal="true" aria-label="Supported QR tag types" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200 }}>
+          <div style={{ background: '#fff', borderRadius: 12, maxWidth: 520, width: '90%', padding: 20, boxSizing: 'border-box', boxShadow: '0 12px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 18 }}>Supported QR Tag Types</h3>
+              <button
+                onClick={() => setShowTagInfo(false)}
+                aria-label="Close"
+                onMouseEnter={() => setCloseHover(true)}
+                onMouseLeave={() => setCloseHover(false)}
+                onFocus={() => setCloseHover(true)}
+                onBlur={() => setCloseHover(false)}
+                style={{ background: 'transparent', border: 'none', fontSize: 18, cursor: 'pointer', color: closeHover ? '#820000' : 'inherit' }}
+              >
+                ✕
+              </button>
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', margin: 0 }} aria-label="Supported QR tag types table">
+              <tbody>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>PC</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Desktop Computer</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>PR</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Printer</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>MON</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Monitor</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>TP</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Laptop</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>MS</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Mouse</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>KEY</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Keyboard</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>UPS</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>UPS (Uninterruptible Power Supply)</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>TAB</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Tablet</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>PWB</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Power Bank</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>UTLY</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Utility</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>TOOL</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Tool</td>
+                </tr>
+                <tr>
+                  <td style={{ width: 80, padding: '6px 0', verticalAlign: 'top', fontWeight: 700 }}>SPLY</td>
+                  <td style={{ padding: '6px 0', verticalAlign: 'top' }}>Supply</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
