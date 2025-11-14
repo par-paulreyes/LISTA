@@ -750,7 +750,7 @@ select, .export-dropdown select {
 .table-proper {
     width: 100%;
     border-collapse: collapse;
-    fontSize: 14px;
+    font-size: 14px;
 }
 
 .table-row {
@@ -796,6 +796,61 @@ td {
 
 .table-proper tr:nth-child(even) {
     background-color: rgb(248, 249, 250);
+}
+
+.logs-controls-bar {
+  margin-bottom: 24px;
+}
+
+.logs-filter-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.logs-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 6px 16px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logs-filter-chip span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.logs-filter-chip:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.logs-table {
+  table-layout: auto;
+}
+
+.logs-table th,
+.logs-table td {
+  text-align: left;
+}
+
+.logs-table-row {
+  cursor: default;
+}
+
+.logs-table-date {
+  font-weight: 500;
+  color: #111827;
 }
 
 td:nth-child(1) {
