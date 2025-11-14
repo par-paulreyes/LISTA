@@ -370,6 +370,7 @@ export default function ProfilePage() {
       <div className="profile-page-background"></div>
       <div className="profile-page-wrapper">
         <div className="main-container">
+          <div className="content-container">
       {/* Back Link */}
       <button
         onClick={() => router.back()}
@@ -640,26 +641,29 @@ export default function ProfilePage() {
         </form>
         </div>
       </div>
-      <div className="profile-action-buttons">
-        {/* Admin-only section */}
-        {profile?.role === 'admin' && (
+      {!isEditing && (
+        <div className="profile-action-buttons">
+          {/* Admin-only section */}
+          {profile?.role === 'admin' && (
+            <button
+              onClick={() => router.push("/register")}
+              className="action-btn register-btn"
+            >
+              <UserPlus size={18} style={{ marginRight: 8 }} />
+              Register New User
+            </button>
+          )}
+          {/* Logout button */}
           <button
-            onClick={() => router.push("/register")}
-            className="action-btn register-btn"
+            onClick={handleLogout}
+            className="action-btn logout-btn-new"
           >
-            <UserPlus size={18} style={{ marginRight: 8 }} />
-            Register New User
+            <LogOut size={18} style={{ marginRight: 8 }} />
+            Logout
           </button>
-        )}
-        {/* Logout button */}
-        <button
-          onClick={handleLogout}
-          className="action-btn logout-btn-new"
-        >
-          <LogOut size={18} style={{ marginRight: 8 }} />
-          Logout
-        </button>
-      </div>
+        </div>
+      )}
+          </div>
       </div>
       </div>
     </>

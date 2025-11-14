@@ -1,17 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=Host+Grotesk:ital,wght@0,300..800;1,300..800&display=swap');
 
+/* Page wrapper */
+.registerPageWrapper {
+  min-height: 100vh;
+  width: 100%;
+  padding: 24px 0;
+  margin: 0;
+  position: relative;
+  background: transparent;
+}
+
 .container {
-  max-width: 700px;
-  margin: 0px auto 0 auto;
-  background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.10);
-  padding: 32px 32px 40px 32px;
+  max-width: 1120px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 0;
+  border-left: 1px solid var(--neutral-gray-300);
+  border-right: 1px solid var(--neutral-gray-300);
+  padding: 16px 20px 32px 20px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  font-family: 'Host Grotesk', sans-serif;
+  gap: 24px;
+  font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
   min-height: calc(100vh - 120px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.06);
+}
+
+.contentContainer {
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+  border: 1px solid var(--neutral-gray-300);
+  border-radius: 8px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+/* Back Link */
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #820000;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: #ae0d0d;
+}
+
+/* Header Section */
+.headerSection {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 @media (max-width: 1024px) {
@@ -217,10 +271,11 @@
 }
 
 .errorContainer {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
+  background-color: rgba(220, 38, 38, 0.1);
+  border: 1px solid var(--primary-red);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
 }
 
 .errorContent {
@@ -231,13 +286,13 @@
 .errorIcon {
   width: 1rem;
   height: 1rem;
-  color: #f87171;
+  color: var(--primary-red);
   margin-right: 0.5rem;
 }
 
 .errorText {
-  color: #b91c1c;
-  font-size: 0.75rem;
+  color: var(--primary-red);
+  font-size: 0.875rem;
   font-weight: 500;
   font-family: 'Host Grotesk', sans-serif;
 }
@@ -301,35 +356,66 @@
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 32px;
+}
+
 .submitButton {
-  width: 100%;
-  background-color: #182848;
-  color: white;
-  padding: 12px 0;
-  border-radius: 12px;
-  font-weight: 500;
-  font-size: 1.1rem;
+  background: #820000;
+  color: #fff;
   border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 1rem;
   cursor: pointer;
-  opacity: 1;
-  margin-top: 0;
-  margin-bottom: 0;
-  transition: background 0.2s;
+  transition: all 0.2s;
   font-family: 'Host Grotesk', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  height: auto;
+  min-width: 120px;
 }
 
-.submitButton:hover {
-  background-color: transparent;
-  color: #182848;
-  border: 1px solid #182848 !important;
+.submitButton:hover:not(:disabled) {
+  background: #af1e1e;
+  color: #fff;
+  border-color: #9a0000;
 }
 
 .submitButton:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.6;
+}
+
+.cancelButton {
+  background: #fff;
+  color: var(--neutral-gray-500);
+  border: 1px solid var(--neutral-gray-400);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Host Grotesk', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: auto;
+  min-width: 120px;
+}
+
+.cancelButton:hover {
+  color: #ae0d0d;
+  border-color: #ae0d0d;
+  background-color: var(--neutral-gray-100);
 }
 
 .submitButtonSpinner {
@@ -573,12 +659,11 @@
 }
 
 .formLabel {
-  min-width: 160px;
+  min-width: 180px;
   margin-bottom: 0;
-  font-weight: 600;
-  color: #222;
-  font-size: 15px;
-  letter-spacing: 0.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 1rem;
   font-family: 'Host Grotesk', sans-serif;
   flex-shrink: 0;
 }
@@ -597,36 +682,35 @@
   width: 100%;
   max-width: 100%;
   margin-bottom: 0;
-  padding-left: 40px;
-  padding-right: 56px;
-  padding: 12px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 12px;
-  font-size: 15px;
+  padding: 12px 16px;
+  border: 1px solid #820000;
+  border-radius: 8px;
+  font-size: 1rem;
   font-weight: 400;
-  color: #222;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  color: var(--text-primary);
+  background: var(--neutral-gray-50);
   font-family: 'Host Grotesk', sans-serif;
   box-sizing: border-box;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .inputNarrow::placeholder {
-  color: #9ca3af;
+  color: var(--text-secondary);
   opacity: 1;
 }
 
 .inputNarrow:focus {
   outline: none;
-  border-color: #182848;
-  box-shadow: 0 0 0 3px rgba(24, 40, 72, 0.1);
+  border-color: #ae0d0d;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(130, 0, 0, 0.1);
 }
 
 .inputNarrow[type='password'],
 .inputNarrow[type='text'][name='password'],
 .inputNarrow[type='text'][name='confirmPassword'],
 .inputNarrow[type='password'][name='confirmPassword'] {
-  padding: 12px 60px 12px 12px;
+  padding: 12px 56px 12px 16px;
 }
 
 @media (max-width: 600px) {
@@ -653,11 +737,11 @@
 }
 
 .validationError {
-  color: #dc2626;
+  color: var(--primary-red);
   font-size: 12px;
   font-weight: 500;
   margin-top: 4px;
-  margin-left: 176px;
+  margin-left: 0;
   font-family: 'Host Grotesk', sans-serif;
 }
 
@@ -669,11 +753,12 @@
 }
 
 .formContainer {
-  background: var(--bg-white);
+  background: #ffffff;
   border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
-  padding: 24px;
+  padding: 32px 24px;
+  margin-bottom: 24px;
+  border: none;
+  box-shadow: none;
   transition: all 0.2s ease;
   font-family: 'Host Grotesk', sans-serif;
 }

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "../../config/api";
 import styles from "./page.module.css";
-import { X, UserPlus, Eye, EyeOff } from "lucide-react";
+import { X, UserPlus, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useToast } from "../../contexts/ToastContext";
 
 interface FormData {
@@ -286,16 +286,22 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className={styles.container}>
-      {/* Dashboard-style header card */}
-      <div className={styles.dashboardCard} style={{ background: 'var(--neutral-gray-200)', color: 'var(--text-primary)', minHeight: 80, marginBottom: 24 }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-          {/* Left: Register New User title */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <div className={styles.dashboardTitle} style={{ color: 'var(--text-primary)', marginBottom: 0 }}>Register New User</div>
-          </div>
+    <div className={styles.registerPageWrapper}>
+      <div className={styles.container}>
+        <div className={styles.contentContainer}>
+               {/* Back Link */}
+        <button
+          onClick={() => router.push("/profile")}
+          className={styles.backLink}
+        >
+          <ArrowLeft size={18} />
+          Back
+        </button>
+
+        {/* Header */}
+        <div className={styles.headerSection}>
+          <h3 className={styles.pageTitle}>Register New User</h3>
         </div>
-      </div>
       <div className={styles.formContainer}>
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -441,21 +447,19 @@ export default function RegisterPage() {
             </div>
           </div>
           {/* Submit/Cancel Button Row */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32, marginRight: 0, paddingBottom: 16 }}>
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className={styles.cancelButton}
+            >
+              <X size={18} style={{ marginRight: 8 }} />
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={submitting}
-              style={{
-                background: '#16a34a',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 8,
-                padding: '10px 24px',
-                fontWeight: 600,
-                fontSize: 15,
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                opacity: submitting ? 0.7 : 1
-              }}
+              className={styles.submitButton}
             >
               {submitting ? (
                 <>
@@ -469,21 +473,14 @@ export default function RegisterPage() {
               ) : (
                 <>
                   <UserPlus size={18} style={{ marginRight: 8 }} />
-                  Create
+                  Create User
                 </>
               )}
             </button>
           </div>
         </form>
       </div>
-      {/* Footer */}
-      <div className={styles.footer}>
-        <p className={styles.footerText}>
-          Only administrators can create new user accounts
-        </p>
-        <p className={styles.footerCopyright}>
-          © 2025 DTC-IMS. All rights reserved.
-        </p>
+        </div>
       </div>
     </div>
   );
