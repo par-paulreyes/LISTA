@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import styles from "./dashboard.module.css";
 import { apiClient } from "../config/api";
-import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus, FaBoxOpen, FaMapMarkerAlt } from "react-icons/fa";
+import { FaHome, FaClipboardList, FaHistory, FaUser, FaSync, FaSyncAlt, FaTools, FaChartBar, FaBoxes, FaPlus, FaBoxOpen, FaMapMarkerAlt, FaHandSparkles } from "react-icons/fa";
 import { FiRefreshCw } from 'react-icons/fi';
 import React from "react";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
@@ -958,24 +958,11 @@ export default function DashboardPage() {
             opacity: chatOpen ? 0.4 : 1
           }}
         >
-          {/* Stylized human head icon (IVY) */}
-          <svg
+          {/* IVY icon */}
+          <FaHandSparkles 
             className={styles.assistantCenterIcon}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            style={{ width: chatOpen ? '32px' : '42px', height: chatOpen ? '32px' : '42px' }}
-          >
-            {/* Head shape */}
-            <circle cx="12" cy="9" r="4.5" fill="#ffffff" stroke="none"/>
-            {/* Body/shoulder */}
-            <path d="M6 20c0-3.314 2.686-6 6-6s6 2.686 6 6" fill="#ffffff" stroke="none"/>
-            {/* Single eye dot */}
-            <circle cx="12" cy="9" r="1.2" fill="rgba(255, 90, 90, 0.75)" stroke="none"/>
-            {/* Curved mouth */}
-            <path d="M9 12.5c0.5 0.5 1.5 0.5 2 0" stroke="rgba(255, 110, 110, 0.7)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
-          </svg>
+            style={{ width: chatOpen ? '32px' : '42px', height: chatOpen ? '32px' : '42px', color: '#ffffff' }}
+          />
         </div>
        
         {/* Chat Interface - only show when chatOpen is true */}
@@ -983,13 +970,7 @@ export default function DashboardPage() {
         <div className={styles.embeddedChatContainer} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20 }}>
           <div className={styles.embeddedChatHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <svg width="25" height="25" viewBox="0 0 24 24" fill="#820000" style={{ flexShrink: 0 }}>
-                <rect x="4" y="6" width="16" height="12" rx="2" fill="#820000"/>
-                <circle cx="9" cy="11" r="1.5" fill="#ffffff"/>
-                <circle cx="15" cy="11" r="1.5" fill="#ffffff"/>
-                <path d="M9 14h6" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M18 4l-1.5-1.5M18 4l-1.5 1.5" stroke="#820000" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
+              <FaHandSparkles size={30} color="#ffffff" style={{ flexShrink: 0 }} />
               <div className={styles.embeddedChatTitle}>IVY</div>
             </div>
             <button 
@@ -1069,7 +1050,7 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          <form onSubmit={(e) => { e.preventDefault(); send(); }} className={styles.embeddedChatForm} style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}>
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className={styles.embeddedChatForm} style={{ display: 'flex', gap: '10px', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.2)', background: 'rgba(244, 244, 244, 0.15)', backdropFilter: 'blur(8px)' }}>
             <input
               value={input || ''}
               onChange={(e) => dispatch(setInput(e.target.value || ''))}
@@ -1088,7 +1069,7 @@ export default function DashboardPage() {
               className={styles.embeddedChatInput}
               style={{ flex: 1, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '10px', background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 500, outline: 'none' }}
             />
-            <button type="submit" disabled={busy || !(input || '').trim()} className={styles.embeddedChatSendBtn} style={{ padding: '10px 20px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #8B5CF6 0%, #6B46C1 100%)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, cursor: busy || !(input || '').trim() ? 'not-allowed' : 'pointer', minWidth: '80px', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)', opacity: busy || !(input || '').trim() ? 0.5 : 1 }}>
+            <button type="submit" disabled={busy || !(input || '').trim()} className={styles.embeddedChatSendBtn} style={{ padding: '10px 20px', border: 'none', borderRadius: '10px', background: 'linear-gradient(135deg, #820000 0%,rgb(144, 106, 230) 100%)', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, cursor: busy || !(input || '').trim() ? 'not-allowed' : 'pointer', minWidth: '80px', boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)', opacity: busy || !(input || '').trim() ? 0.5 : 1 }}>
               {busy ? '...' : 'Send'}
             </button>
           </form>
@@ -1108,13 +1089,7 @@ export default function DashboardPage() {
         <div className={styles.welcomeInner}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div className={styles.welcomeTitle} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              Welcome back, <span style={{ color: '#820000', display: 'flex', alignItems: 'center', gap: '6px' }}>Admin!<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#820000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-                <line x1="9" y1="12" x2="15" y2="12"></line>
-                <line x1="9" y1="18" x2="15" y2="18"></line>
-              </svg></span>
+              Welcome back, <span style={{ color: '#820000', display: 'flex', alignItems: 'center', gap: '6px' }}>Admin!<FaUser size={18} color="#820000" style={{ flexShrink: 0 }} /></span>
             </div>
             <div className={styles.welcomeSub}>Have a quick view on the inventory this month</div>
           </div>
@@ -1301,14 +1276,15 @@ export default function DashboardPage() {
                 <div className={`${styles.maintenanceMeta} ${pendingMaintenance > 0 ? styles.maintenanceMetaPending : styles.maintenanceMetaOk}`}>
                   {pendingMaintenance > 0 ? `${pendingMaintenance} Pending` : `${completedMaintenance} Completed`}
                 </div>
-                <div className={styles.progressBar}>
-                  <div className={styles.dashboardProgressBarCompleted} style={{ width: `${animatedWidth}%`, zIndex: 2 }} />
-                  {pendingMaintenance > 0 && animatedWidth > 0 && (
-                    <div style={{ position: 'absolute', left: `${animatedWidth}%`, top: 0, height: '100%', width: '2px', background: 'rgba(255, 255, 255, 0.8)', zIndex: 3, boxShadow: '0 0 4px rgba(255, 255, 255, 0.5)' }} />
-                  )}
-                  {pendingMaintenance > 0 && (
-                    <div style={{ position: 'absolute', left: `${animatedWidth}%`, top: 0, height: '100%', width: `${animatedPendingWidth}%`, background: 'linear-gradient(90deg, #C4B5FD 0%, #8B5CF6 100%)', borderRadius: '5px', zIndex: 1, animation: 'pending-pulse 2s ease-in-out infinite', boxShadow: '0 0 8px rgba(139, 92, 246, 0.3)' }} />
-                  )}
+                <div className={styles.newProgressBar}>
+                  <div className={styles.newProgressBarTrack}>
+                    <div 
+                      className={styles.newProgressBarFill} 
+                      style={{ width: `${progressPercent}%` }}
+                    >
+                      <div className={styles.newProgressBarGlow}></div>
+                    </div>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

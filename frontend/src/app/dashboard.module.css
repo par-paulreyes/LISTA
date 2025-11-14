@@ -1244,6 +1244,71 @@
   background: #fff5f5 !important;
 }
 
+/* Calendar tooltip styles */
+.calendarDay[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: tooltip-fade-in 0.2s ease;
+}
+
+.calendarDay[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.85);
+  z-index: 1001;
+  pointer-events: none;
+  animation: tooltip-fade-in 0.2s ease;
+}
+
+.calendarDayToday[title]:hover::after {
+  background: rgba(130, 0, 0, 0.95);
+}
+
+.calendarDayToday[title]:hover::before {
+  border-top-color: rgba(130, 0, 0, 0.95);
+}
+
+.calendarDayMaintenance[title]:hover::after {
+  background: rgba(130, 0, 0, 0.95);
+}
+
+.calendarDayMaintenance[title]:hover::before {
+  border-top-color: rgba(130, 0, 0, 0.95);
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 
 
 
@@ -1554,7 +1619,7 @@
 .embeddedChatTitle {
   font-weight: 600;
   font-size: 1rem;
-  color: #ff8e8e;
+  color: #ffffff;
   letter-spacing: 0.5px;
 }
 
@@ -1982,7 +2047,7 @@
 
 
 /* Total Maintenance card */
-.maintenanceMeta { font-size: 0.95rem; font-weight: 500; margin-top: 8px; margin-bottom: 12px; color: #222428; cursor: pointer;}
+.maintenanceMeta { font-size: 0.95rem; font-weight: 500; margin-top: 8px; margin-bottom: 10px; color: #222428; cursor: pointer}
 
 
 .maintenanceMetaPending { color: #222428; }
@@ -1992,6 +2057,33 @@
 
 
 .progressBar { width: 100%; height: 10px; background: var(--bg-gray-100); border-radius: 2px; margin: 8px 0 12px 0; overflow: hidden; position: relative; }
+
+/* New loading-style progress bar */
+.newProgressBar {
+  width: 100%;
+  margin: 0 0 10 0;
+  position: relative;
+}
+
+.newProgressBarTrack {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(130, 0, 0, 0.3);
+}
+
+.newProgressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #820000 0%, #a00000 50%, #820000 100%);
+  border-radius: 8px;
+  position: relative;
+  transition: width 0.8s ease;
+  box-shadow: 0 0 10px rgba(130, 0, 0, 0.5);
+}
+
 
 
 /* Total Articles grid */
