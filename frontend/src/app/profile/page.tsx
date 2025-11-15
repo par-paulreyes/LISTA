@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import Webcam from "react-webcam";
 import { apiClient, getImageUrl } from "../../config/api";
 import imageCompression from 'browser-image-compression';
-import { Camera, Upload, X, Edit, Check, UserPlus, LogOut, ArrowLeft } from "lucide-react";
+import { Camera, Upload, LogOut, ArrowLeft, UserPlus } from "lucide-react";
+import { FaEdit, FaSave, FaTimes, FaUserPlus } from "react-icons/fa";
 import './profile.css';
 import { supabase } from '../../config/supabase';
 import { useToast } from '../../contexts/ToastContext';
@@ -369,302 +370,250 @@ export default function ProfilePage() {
     <>
       <div className="profile-page-background"></div>
       <div className="profile-page-wrapper">
-        <div className="main-container">
-          <div className="content-container">
-      {/* Back Link */}
-      <button
-        onClick={() => router.back()}
-        className="back-link"
-      >
-        <ArrowLeft size={18} />
-        Back
-      </button>
-
-      {/* Profile Header */}
-      <div className="profile-header-section">
-        <h3 className="profile-title">Profile</h3>
-        <div className="profile-header-actions">
+        <div className="detail-container">
+      {/* Header Row - Matching Item Detail */}
+      <div className="header-row">
+        <div>
+          <h3 className="item-detail-title">Profile</h3>
+          <div className="item-detail-title2">
+            {profile?.username || profile?.full_name || 'User Profile'}
+          </div>
+        </div>
+        <div className="top-button-row">
           {isEditing ? (
-            <>
-              <button
-                type="button"
-                className="save-changes-btn"
-                disabled={saving}
-                onClick={() => formRef.current?.requestSubmit()}
-              >
-                <Check size={18} style={{ marginRight: 8 }} />
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="cancel-btn"
-                disabled={saving}
-              >
-                <X size={18} style={{ marginRight: 8 }} />
-                Cancel
-              </button>
-            </>
+            <button
+              onClick={() => router.back()}
+              className="back-button-header"
+            >
+              <ArrowLeft size={16} style={{ marginRight: 6 }} />
+              Back
+            </button>
           ) : (
             <button
               type="button"
               onClick={handleEdit}
-              className="edit-btn-header"
+              className="edit-btn"
             >
-              <Edit size={18} style={{ marginRight: 8 }} />
+              <FaEdit style={{ marginRight: 8 }} />
               Edit
             </button>
           )}
         </div>
       </div>
-      {/* Profile Picture Card - Separate box for profile picture */}
-      <div className="profile-picture-card">
-        {/* Profile Picture Section */}
-        <div className="profile-picture-section">
-          {/* Show camera if active */}
-          {showCamera ? (
-            <div className="camera-container">
-              <div className="profile-image-preview-box">
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/png"
-                  videoConstraints={{
-                    width: { ideal: 220 },
-                    height: { ideal: 220 },
-                    facingMode: "environment"
-                  }}
-                  onUserMedia={() => handleCameraReady()}
-                  onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
-                  className="profile-webcam"
-                />
-              </div>
-              <div className="profile-image-upload-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    capturePhoto();
-                    setShowCamera(false);
-                  }}
-                  className="profile-capture-photo-btn"
-                >
-                  <Camera size={18} />
-                  Capture Photo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCamera(false)}
-                  className="profile-cancel-btn"
-                >
-                  <X size={18} />
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : capturedImage || selectedImageFile ? (
-            <div className="preview-container">
-              <div className="profile-image-preview-box">
-                <img
-                  src={previewUrl!}
-                  alt="Profile Preview"
-                  className="profile-preview-image"
-                />
-              </div>
-              <div className="profile-image-upload-actions">
-                <button
-                  type="button"
-                  onClick={retakePhoto}
-                  className="profile-retake-btn"
-                >
-                  <Camera size={18} />
-                  Retake
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setCapturedImage(""); setSelectedImageFile(null); setImageCompressionInfo(null); }}
-                  className="profile-cancel-btn"
-                >
-                  <X size={18} />
-                  Remove
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="profile-picture-placeholder">
-                {imageUrl ? (
+      {/* Two Column Layout - Matching Item Detail */}
+      <div className="row">
+        {/* Left Column - Profile Picture and Info */}
+        <div className="column1">
+          <div className="column1_1">
+            <div className="frame">
+              <div className="top-image-box" style={{position:'relative'}}>
+                {/* Show camera if active */}
+                {showCamera ? (
+                  <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/png"
+                    videoConstraints={{
+                      width: { ideal: 200 },
+                      height: { ideal: 200 },
+                      facingMode: "environment"
+                    }}
+                    onUserMedia={() => handleCameraReady()}
+                    onUserMediaError={(err) => handleCameraError(err instanceof Error ? err.name : 'Camera access denied')}
+                    className="top-image"
+                  />
+                ) : capturedImage || selectedImageFile ? (
+                  <img
+                    src={previewUrl!}
+                    alt="Profile Preview"
+                    className="top-image"
+                  />
+                ) : imageUrl ? (
                   <img
                     src={imageUrl}
                     alt="Profile"
-                    className="profile-picture-image"
+                    className="top-image"
                   />
                 ) : (
-                  <div className="profile-picture-icon">
-                    <svg width="96" height="96" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  </div>
+                  <FaUserPlus size={96} color="#9ca3af" />
+                )}
+                {isEditing && (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      style={{ display: 'none' }}
+                      onChange={handleProfilePicChange}
+                    />
+                    {showCamera ? (
+                      <>
+                        <button className="change-image-btn" onClick={() => {
+                          capturePhoto();
+                          setShowCamera(false);
+                        }} disabled={uploading} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
+                          Capture Photo
+                        </button>
+                        <button className="change-image-btn" onClick={() => setShowCamera(false)} style={{position:'absolute',bottom:12,right:12,zIndex:2}}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button className="change-image-btn" onClick={() => {
+                        if (capturedImage) {
+                          retakePhoto();
+                        } else if (selectedImageFile) {
+                          setCapturedImage("");
+                          setSelectedImageFile(null);
+                          setImageCompressionInfo(null);
+                        } else {
+                          fileInputRef.current?.click();
+                        }
+                      }} disabled={uploading} style={{position:'absolute',bottom:12,left:'50%',transform:'translateX(-50%)',zIndex:2}}>
+                        {uploading ? 'Processing...' : (capturedImage || selectedImageFile ? 'Change Image' : 'Select Image')}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
-              {isEditing && !success && (
-                <div className="profile-photo-options">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    style={{ display: 'none' }}
-                    onChange={handleProfilePicChange}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="profile-upload-option-btn"
-                    disabled={uploading}
-                  >
-                    <Upload size={16} />
-                    Upload Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowCamera(true); setCameraError(""); setCameraLoading(true); }}
-                    className="profile-camera-option-btn"
-                    disabled={uploading}
-                  >
-                    <Camera size={16} />
-                    Take Photo
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Profile Info Card - Separate box for form fields */}
-      <div className="profile-info-card">
-        {/* Profile Info Form */}
-        <div className="profile-info-section">
-          <form
-            ref={formRef}
-            onSubmit={handleSubmit}
-            className="profile-form"
-          >
-            <div className="form-fields">
-            <div className="form-field">
-              <label className="field-label">Username</label>
-              <input
-                type="text"
-                name="username"
-                className="profile-input"
-                value={form.username || ""}
-                placeholder="Enter Username"
-                disabled
-              />
             </div>
-            <div className="form-field">
-              <label className="field-label">Full Name</label>
-              <input
-                type="text"
-                name="full_name"
-                className="profile-input"
-                value={form.full_name || ""}
-                placeholder="Enter Full Name"
-                onChange={handleChange}
-                required
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="form-field">
-              <label className="field-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                className="profile-input"
-                value={form.email || ""}
-                placeholder="Enter Email"
-                onChange={handleChange}
-                required
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="form-field">
-              <label className="field-label">Role</label>
-              <input
-                type="text"
-                name="role"
-                className="profile-input"
-                value={form.role || ""}
-                placeholder="Enter Role"
-                disabled
-              />
-            </div>
-            <div className="form-field">
-              <label className="field-label">Company</label>
-              <input
-                type="text"
-                name="company_name"
-                className="profile-input"
-                value={form.company_name || ""}
-                placeholder="Enter Company"
-                disabled
-              />
-            </div>
-            {isEditing && (
-              <div className="password-fields">
-                <div className="form-field">
-                  <label className="field-label">New Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    className="profile-input"
-                    value={form.password || ""}
-                    placeholder="Leave blank to keep current password"
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                  />
-                </div>
-                <div className="form-field">
-                  <label className="field-label">Confirm New Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    className="profile-input"
-                    value={form.confirmPassword || ""}
-                    placeholder="Leave blank to keep current password"
-                    onChange={handleChange}
-                  />
-                </div>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="article-title">
+                {profile?.full_name || profile?.username || 'User'}
               </div>
-            )}
+              <div className="centered-subtitle">{profile?.role || 'User'}</div>
+            </div>
           </div>
-        </form>
-        </div>
-      </div>
-      {!isEditing && (
-        <div className="profile-action-buttons">
-          {/* Admin-only section */}
-          {profile?.role === 'admin' && (
-            <button
-              onClick={() => router.push("/register")}
-              className="action-btn register-btn"
-            >
-              <UserPlus size={18} style={{ marginRight: 8 }} />
-              Register New User
-            </button>
+          {isEditing ? (
+            <div className="profile-action-buttons-left">
+              <button
+                type="button"
+                className="profile-save-btn"
+                disabled={saving}
+                onClick={() => formRef.current?.requestSubmit()}
+              >
+                <FaSave style={{ marginRight: 6 }} />
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="profile-cancel-btn"
+                disabled={saving}
+              >
+                <FaTimes style={{ marginRight: 6 }} />
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="profile-action-buttons-left">
+              {profile?.role === 'admin' && (
+                <button
+                  onClick={() => router.push("/register")}
+                  className="action-btn register-btn"
+                >
+                  <UserPlus size={16} style={{ marginRight: 6 }} />
+                  Register New User
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="action-btn logout-btn-new"
+              >
+                <LogOut size={16} style={{ marginRight: 6 }} />
+                Logout
+              </button>
+            </div>
           )}
-          {/* Logout button */}
-          <button
-            onClick={handleLogout}
-            className="action-btn logout-btn-new"
-          >
-            <LogOut size={18} style={{ marginRight: 8 }} />
-            Logout
-          </button>
         </div>
-      )}
+        {/* Right Column - Form Fields */}
+        <div className="column2">
+          <div className="mid-nav">
+            <button className="tab-btn tab1-btn-active">
+              General Information
+            </button>
           </div>
+          <div className="middle-section">
+            <div className="info-card">
+              <div className="info-card-content">
+                <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+                >
+                  <div className="rec-container">
+                    <div className="gray-rect">
+                      <span className="label">Username</span>
+                      <input 
+                        value={form.username || ''} 
+                        onChange={handleChange}
+                        name="username"
+                        disabled
+                      />
+                    </div>
+                    <div className="gray-rect">
+                      <span className="label">Full Name</span>
+                      <input 
+                        value={form.full_name || ''} 
+                        onChange={handleChange}
+                        name="full_name"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="gray-rect">
+                      <span className="label">Email</span>
+                      <input 
+                        value={form.email || ''} 
+                        onChange={handleChange}
+                        name="email"
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div className="gray-rect">
+                      <span className="label">Role</span>
+                      <input 
+                        value={form.role || ''} 
+                        disabled
+                      />
+                    </div>
+                    <div className="gray-rect">
+                      <span className="label">Company</span>
+                      <input 
+                        value={form.company_name || ''} 
+                        disabled
+                      />
+                    </div>
+                    {isEditing && (
+                      <>
+                        <div className="gray-rect">
+                          <span className="label">New Password</span>
+                          <input 
+                            type="password"
+                            value={form.password || ''} 
+                            onChange={handleChange}
+                            name="password"
+                            placeholder="Leave blank to keep current password"
+                          />
+                        </div>
+                        <div className="gray-rect">
+                          <span className="label">Confirm Password</span>
+                          <input 
+                            type="password"
+                            value={form.confirmPassword || ''} 
+                            onChange={handleChange}
+                            name="confirmPassword"
+                            placeholder="Leave blank to keep current password"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+        </div>
       </div>
     </>
   );
