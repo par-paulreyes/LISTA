@@ -385,8 +385,7 @@ export default function ProfilePage() {
               onClick={() => router.back()}
               className="back-button-header"
             >
-              <ArrowLeft size={16} style={{ marginRight: 6 }} />
-              Back
+              <ArrowLeft size={18} />
             </button>
           ) : (
             <button

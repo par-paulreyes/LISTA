@@ -302,8 +302,7 @@ export default function RegisterPage() {
               onClick={() => router.push("/profile")}
               className={styles.backButtonHeader}
             >
-              <ArrowLeft size={16} style={{ marginRight: 6 }} />
-              Back
+              <ArrowLeft size={18}/>
             </button>
           </div>
         </div>
@@ -441,7 +440,7 @@ export default function RegisterPage() {
                             {passwordStrength.label}
                           </span>
                         </span>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '8px', width: '100%'}}>
+                        <div style={{position: 'relative', width: '100%'}}>
                           <input
                             type={showPassword ? "text" : "password"}
                             value={formData.password}
@@ -452,20 +451,31 @@ export default function RegisterPage() {
                             }}
                             placeholder="Enter password"
                             required
-                            style={{...getPasswordInputStyle(), flex: 1}}
+                            style={{...getPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            style={{background: 'none', border: 'none', cursor: 'pointer', padding: '4px'}}
+                            style={{
+                              position: 'absolute',
+                              right: '10px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
                           >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
                         </div>
-                      </div>
+                      </div>  
                       <div className={styles.grayRect}>
                         <span className={styles.label}>Confirm Password</span>
-                        <div style={{display: 'flex', alignItems: 'center', gap: '8px', width: '100%'}}>
+                        <div style={{position: 'relative', width: '100%'}}>
                           <input
                             type={showConfirmPassword ? "text" : "password"}
                             value={formData.confirmPassword}
@@ -476,12 +486,23 @@ export default function RegisterPage() {
                             }}
                             placeholder="Confirm password"
                             required
-                            style={{...getConfirmPasswordInputStyle(), flex: 1}}
+                            style={{...getConfirmPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
                           />
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            style={{background: 'none', border: 'none', cursor: 'pointer', padding: '4px'}}
+                            style={{
+                              position: 'absolute',
+                              right: '10px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
                           >
                             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>

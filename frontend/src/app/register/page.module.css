@@ -11,19 +11,19 @@
   padding: 16px 0;
   margin: 0;
   position: relative;
+  z-index: 1;
   background: transparent;
 }
 
 .registerPageWrapper button {
   border-radius: 8px;
-  height: 44px;
   padding: 0 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   font-family: 'Host Grotesk', sans-serif;
   cursor: pointer;
   border: 1px solid transparent;
@@ -53,20 +53,12 @@
 
 /* Back Link */
 .backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
   color: var(--dtc-primary);
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 0;
   margin-bottom: 8px;
   transition: color 0.2s;
-  height: auto;
-  align-self: flex-start;
   margin-right: auto;
 }
 
@@ -86,7 +78,7 @@
   justify-content: space-between;
   max-height: 80px;
   width: 100%;
-  padding: 20px;
+  padding: 20px 0px 20px 20px;
   align-items: center;
 }
 
@@ -97,32 +89,27 @@
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-left: 40px;
 }
 
 .backButtonHeader {
   background: #fff;
   color: var(--neutral-gray-500);
-  border: 1px solid var(--neutral-gray-400);
-  border-radius: 6px;
-  padding: 10px 16px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  transition: all 0.2s ease;
   font-family: 'Host Grotesk', sans-serif;
   white-space: nowrap;
   height: 40px;
   min-width: 120px;
+  margin-left: auto;
 }
 
 .backButtonHeader:hover {
   color: #ae0d0d;
-  border-color: #ae0d0d;
-  background-color: var(--neutral-gray-100);
 }
 
 .itemDetailTitle {
@@ -521,13 +508,14 @@
 }
 
 .infoCardContent .grayRect > div {
-  flex: 1;
+  flex: 1 !important;
   min-width: 0;
+  width: auto !important;
 }
 
 .infoCardContent .label {
-  min-width: 120px;
-  width: 120px;
+  min-width: 140px;
+  width: 140px;
   font-weight: 500;
   color: #6b7280;
   font-size: 1rem;
@@ -535,13 +523,13 @@
   padding-top: 10px;
   line-height: 1.5;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .infoCardContent input, .infoCardContent textarea {
   border-radius: 6px;
   padding: 10px;
   border: 1px solid #e5e7eb;
-  width: 100%;
   background: #f9f9f9;
   font-size: 1rem;
   margin-bottom: 0;
@@ -597,7 +585,8 @@
 }
 
 .grayRect > div[style*="display: flex"] {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   box-sizing: border-box;
 }
 
@@ -694,7 +683,7 @@
 .topButtonRow button,
 .buttonRow button {
   min-width: 140px;
-  padding: 0 32px;
+  padding: 0 20px;
 }
 
 .saveBtn,

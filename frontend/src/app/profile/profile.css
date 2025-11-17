@@ -64,7 +64,7 @@
   color: var(--neutral-gray-500);
   border: 1px solid var(--neutral-gray-400);
   border-radius: 6px;
-  padding: 10px 16px;
+  padding: 20px 0px 20px 20px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -77,12 +77,11 @@
   white-space: nowrap;
   height: 40px;
   min-width: 120px;
+  margin-left: auto;
 }
 
 .back-button-header:hover {
   color: #ae0d0d;
-  border-color: #ae0d0d;
-  background-color: var(--neutral-gray-100);
 }
 
 /* Header Row - Matching Item Detail */
@@ -107,6 +106,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  margin-left: 40px;
 }
 
 .item-detail-title {
@@ -132,7 +132,7 @@
 
 .top-button-row button {
   min-width: 140px;
-  padding: 0 32px;
+  padding: 0 20px;
 }
 
 .edit-btn {
@@ -145,7 +145,7 @@
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 8px 12px;
   font-weight: 500;
   background: #820000;
   color: #fff;
@@ -728,8 +728,8 @@
 }
 
 .info-card-content .label {
-  min-width: 120px;
-  width: 120px;
+  min-width: 140px;
+  width: 140px;
   font-weight: 500;
   color: #6b7280;
   font-size: 1rem;
@@ -737,13 +737,13 @@
   padding-top: 10px;
   line-height: 1.5;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .info-card-content input, .info-card-content textarea {
   border-radius: 6px;
   padding: 10px;
   border: 1px solid #e5e7eb;
-  width: 100%;
   background: #f9f9f9;
   font-size: 1rem;
   margin-bottom: 0;
@@ -779,7 +779,6 @@
   padding: 0 0 0 0;
   border: none;
   background: none;
-  max-width: 100%;
 }
 
 .gray-rect input, .gray-rect textarea {
