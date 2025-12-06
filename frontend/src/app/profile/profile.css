@@ -175,6 +175,8 @@
   height: 45px;
   border-radius: 5px;
   font-size: 0.97rem;
+  min-width: 210px;
+  width: 210px;
 }
 
 .edit-btn:hover,
@@ -197,10 +199,20 @@
 .profile-camera-option-btn {
   background: #fff;
   color: var(--neutral-gray-500);
-  border: 1px solid var(--neutral-gray-300);
+  border: 1px solid var(--neutral-gray-400) !important;
   height: 45px;
-  border-radius: 8px;
+  border-radius: 5px;
   font-size: 0.97rem;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.logout-btn {
+  min-width: 210px;
+  width: 210px;
 }
 
 .cancel-btn:hover,
@@ -264,6 +276,7 @@
   display: flex;
   margin: 0 auto;
   justify-content: center; /* centers horizontally */
+  align-items: center;
   gap: 10px; /* optional spacing */
 }
 
@@ -1196,19 +1209,19 @@
 .cancel-btn, .action-btn-logout {
   background: #fff;
   color: var(--neutral-gray-500);
-  border: 1px solid var(--neutral-gray-400);
-  border-radius: 6px;
-  padding: 10px 20px;
+  border: 1px solid var(--neutral-gray-400) !important;
+  border-radius: 5px;
+  padding: 0 20px;
   cursor: pointer;
   transition: all 0.2s;
   font-family: 'Host Grotesk', sans-serif;
   font-weight: 500;
-  font-size: 1rem;
-  display: flex;
+  font-size: 0.97rem;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
-  height: 38px;
+  height: 45px;
 }
 
 .cancel-btn:hover {
