@@ -7,12 +7,13 @@
   --dtc-border: var(--neutral-gray-300, #e5e7eb);
   --dtc-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   min-height: 100vh;
-  width: 100%;
-  padding: 16px 0;
-  margin: 0;
   position: relative;
   z-index: 1;
-  background: transparent;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  font-family: 'Host Grotesk', Arial, Helvetica, sans-serif;
 }
 
 .registerPageWrapper button {
@@ -113,15 +114,15 @@
 }
 
 .itemDetailTitle {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 700;
   white-space: nowrap;
   margin-right: 24px;
   color: #000;
 }
 
 .itemDetailTitle2 {
-  font-weight: 700;
+  font-weight: 500;
   font-size: 16px;
   color: #000;
 }
@@ -155,9 +156,16 @@
 .column2 {
   flex: 1 1 600px;
   min-width: 280px;
+  box-sizing: border-box;
+}
+
+.column2_1 {
   border: 1px solid var(--neutral-gray-300);
   border-radius: 16px;
-  box-sizing: border-box;
+}
+
+.column2_2 {
+  display: flex;
 }
 
 @media (max-width: 1024px) {
@@ -312,15 +320,15 @@
 }
 
 .topImageBox {
-  min-width: 180px;
-  min-height: 180px;
-  max-width: 180px;
-  max-height: 180px;
-  width: 180px;
-  height: 180px;
+  min-width: 200px;
+  min-height: 200px;
+  max-width: 500px;
+  max-height: 500px;
+  width: 200px;
+  height: 200px;
   background: #f3f4f6;
-  border-radius: 10px;
-  border: 3px solid #ffffff;
+  border-radius: 15px;
+  border: 5px solid #820000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -616,11 +624,11 @@
 /* Action Buttons - Left Column */
 .registerActionButtonsLeft {
   display: flex;
-  flex-direction: column;
   gap: 10px;
-  margin-top: 0px;
+  margin-top: 20px;
   width: 100%;
   align-items: center;
+  justify-content: center;
 }
 
 .registerActionButtonsLeft .registerSaveBtn {

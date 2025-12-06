@@ -64,7 +64,7 @@ export default function BottomNavbar() {
           justifyContent: "center",
           background: "#ffffff",
           borderRadius: 0,
-          borderTop: "1px solid #d1e3f8",
+          borderTop: "1px solid #d1d5db",
         }}
       >
         <div

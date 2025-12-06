@@ -297,14 +297,6 @@ export default function RegisterPage() {
               Create a new user account
             </div>
           </div>
-          <div className={styles.topButtonRow}>
-            <button
-              onClick={() => router.push("/profile")}
-              className={styles.backButtonHeader}
-            >
-              <ArrowLeft size={18}/>
-            </button>
-          </div>
         </div>
 
         {/* Two Column Layout - Matching Item Detail */}
@@ -312,205 +304,207 @@ export default function RegisterPage() {
           {/* Left Column - Placeholder */}
           <div className={styles.column1}>
             <div className={styles.column1_1}>
-              <div className={styles.frame}>
-                <div className={styles.topImageBox}>
-                  <User size={72} strokeWidth={1.2} color="#820000" />
-                </div>
+              <div className={styles.topImageBox}>
+                <User size={72} strokeWidth={1.2} color="#820000" />
               </div>
               <div>
                 <div className={styles.articleTitle}>New User</div>
                 <div className={styles.centeredSubtitle}>Registration</div>
               </div>
             </div>
-            <div className={styles.registerActionButtonsLeft}>
-              <button
-                type="submit"
-                form="register-form"
-                disabled={submitting}
-                className={styles.registerSaveBtn}
-              >
-                {submitting ? (
-                  <>
-                    <svg className={styles.submitButtonSpinner} fill="none" viewBox="0 0 24 24">
-                      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <FaSave style={{ marginLeft: 8, marginRight: 8 }} />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus size={16} style={{ marginRight: 6 }} />
-                    Register User
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className={styles.registerCancelBtn}
-              >
-                <FaTimes style={{ marginRight: 6 }} />
-                Cancel
-              </button>
-            </div>
           </div>
           {/* Right Column - Form Fields */}
           <div className={styles.column2}>
-            <div className={styles.midNav}>
-              <button className={`${styles.tabBtn} ${styles.tab1BtnActive}`}>
-                User Information
-              </button>
-            </div>
-            <div className={styles.middleSection}>
-              <div className={styles.infoCard}>
-                <div className={styles.infoCardContent}>
-                  <form id="register-form" onSubmit={handleSubmit}>
-                    {error && (
-                      <div className={styles.errorContainer} style={{marginBottom: '16px', padding: '0 14px'}}>
-                        <div className={styles.errorContent}>
-                          <svg className={styles.errorIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className={styles.errorText}>{error}</span>
+            <div className={styles.column2_1}>
+              <div className={styles.midNav}>
+                <button className={`${styles.tabBtn} ${styles.tab1BtnActive}`}>
+                  User Information
+                </button>
+              </div>
+              <div className={styles.middleSection}>
+                <div className={styles.infoCard}>
+                  <div className={styles.infoCardContent}>
+                    <form id="register-form" onSubmit={handleSubmit}>
+                      {error && (
+                        <div className={styles.errorContainer} style={{marginBottom: '16px', padding: '0 14px'}}>
+                          <div className={styles.errorContent}>
+                            <svg className={styles.errorIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className={styles.errorText}>{error}</span>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <div className={styles.recContainer}>
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>Username</span>
-                        <input
-                          type="text"
-                          value={formData.username}
-                          onChange={e => setFormData({ ...formData, username: e.target.value })}
-                          placeholder="Enter username"
-                          required
-                          style={getInputStyle('username')}
-                        />
-                      </div>
-                      {!fieldValidation.username && (
-                        <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Username is required</div>
                       )}
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>Full Name</span>
-                        <input
-                          type="text"
-                          value={formData.full_name}
-                          onChange={e => setFormData({ ...formData, full_name: e.target.value })}
-                          placeholder="Enter full name"
-                          required
-                          style={getInputStyle('full_name')}
-                        />
-                      </div>
-                      {!fieldValidation.full_name && (
-                        <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Full name is required</div>
-                      )}
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>Email</span>
-                        <input
-                          type="email"
-                          value={formData.email}
-                          onChange={e => setFormData({ ...formData, email: e.target.value })}
-                          placeholder="Enter email address"
-                          required
-                          style={getInputStyle('email')}
-                        />
-                      </div>
-                      {!fieldValidation.email && (
-                        <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Please enter a valid email address</div>
-                      )}
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>Company Name</span>
-                        <input
-                          type="text"
-                          value={formData.company_name}
-                          onChange={e => setFormData({ ...formData, company_name: e.target.value })}
-                          placeholder="e.g., DTC"
-                          required
-                          style={getInputStyle('company_name')}
-                        />
-                      </div>
-                      {!fieldValidation.company_name && (
-                        <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Company name is required</div>
-                      )}
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>
-                          Password 
-                          <span style={{ color: passwordStrength.color, marginLeft: '8px', fontSize: '0.875rem' }}>
-                            {passwordStrength.label}
+                      <div className={styles.recContainer}>
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>Username</span>
+                          <input
+                            type="text"
+                            value={formData.username}
+                            onChange={e => setFormData({ ...formData, username: e.target.value })}
+                            placeholder="Enter username"
+                            required
+                            style={getInputStyle('username')}
+                          />
+                        </div>
+                        {!fieldValidation.username && (
+                          <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Username is required</div>
+                        )}
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>Full Name</span>
+                          <input
+                            type="text"
+                            value={formData.full_name}
+                            onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                            placeholder="Enter full name"
+                            required
+                            style={getInputStyle('full_name')}
+                          />
+                        </div>
+                        {!fieldValidation.full_name && (
+                          <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Full name is required</div>
+                        )}
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>Email</span>
+                          <input
+                            type="email"
+                            value={formData.email}
+                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="Enter email address"
+                            required
+                            style={getInputStyle('email')}
+                          />
+                        </div>
+                        {!fieldValidation.email && (
+                          <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Please enter a valid email address</div>
+                        )}
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>Company Name</span>
+                          <input
+                            type="text"
+                            value={formData.company_name}
+                            onChange={e => setFormData({ ...formData, company_name: e.target.value })}
+                            placeholder="e.g., DTC"
+                            required
+                            style={getInputStyle('company_name')}
+                          />
+                        </div>
+                        {!fieldValidation.company_name && (
+                          <div style={{padding: '0 14px', color: '#ef4444', fontSize: '0.875rem'}}>Company name is required</div>
+                        )}
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>
+                            Password 
+                            <span style={{ color: passwordStrength.color, marginLeft: '8px', fontSize: '0.875rem' }}>
+                              {passwordStrength.label}
+                            </span>
                           </span>
-                        </span>
-                        <div style={{position: 'relative', width: '100%'}}>
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            value={formData.password}
-                            onChange={e => {
-                              const newPassword = e.target.value;
-                              setFormData({ ...formData, password: newPassword });
-                              validatePassword(newPassword);
-                            }}
-                            placeholder="Enter password"
-                            required
-                            style={{...getPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              padding: '4px',
-                              display: 'flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                      </div>  
-                      <div className={styles.grayRect}>
-                        <span className={styles.label}>Confirm Password</span>
-                        <div style={{position: 'relative', width: '100%'}}>
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={formData.confirmPassword}
-                            onChange={e => {
-                              const newConfirmPassword = e.target.value;
-                              setFormData({ ...formData, confirmPassword: newConfirmPassword });
-                              validateConfirmPassword(newConfirmPassword);
-                            }}
-                            placeholder="Confirm password"
-                            required
-                            style={{...getConfirmPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              padding: '4px',
-                              display: 'flex',
-                              alignItems: 'center'
-                            }}
-                          >
-                            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
+                          <div style={{position: 'relative', width: '100%'}}>
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={e => {
+                                const newPassword = e.target.value;
+                                setFormData({ ...formData, password: newPassword });
+                                validatePassword(newPassword);
+                              }}
+                              placeholder="Enter password"
+                              required
+                              style={{...getPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              style={{
+                                position: 'absolute',
+                                right: '10px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>  
+                        <div className={styles.grayRect}>
+                          <span className={styles.label}>Confirm Password</span>
+                          <div style={{position: 'relative', width: '100%'}}>
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={formData.confirmPassword}
+                              onChange={e => {
+                                const newConfirmPassword = e.target.value;
+                                setFormData({ ...formData, confirmPassword: newConfirmPassword });
+                                validateConfirmPassword(newConfirmPassword);
+                              }}
+                              placeholder="Confirm password"
+                              required
+                              style={{...getConfirmPasswordInputStyle(), width: '100%', paddingRight: '40px'}}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              style={{
+                                position: 'absolute',
+                                right: '10px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center'
+                              }}
+                            >
+                              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </form>
+                    </form>
+                  </div>
                 </div>
+              </div>
+            </div>
+            <div className={styles.column2_2}>
+              <div className={styles.registerActionButtonsLeft}>
+                <button
+                  type="submit"
+                  form="register-form"
+                  disabled={submitting}
+                  className={styles.registerSaveBtn}
+                >
+                  {submitting ? (
+                    <>
+                      <svg className={styles.submitButtonSpinner} fill="none" viewBox="0 0 24 24">
+                        <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <FaSave style={{ marginLeft: 8, marginRight: 8 }} />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} style={{ marginRight: 6 }} />
+                      Register User
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className={styles.registerCancelBtn}
+                >
+                  <FaTimes style={{ marginRight: 6 }} />
+                  Cancel
+                </button>
               </div>
             </div>
           </div>

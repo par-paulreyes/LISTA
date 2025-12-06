@@ -441,7 +441,7 @@ function AddItemPageContent() {
           <div className={styles.imageBoxMargin} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
 
-            <div className={styles.imageUpload} style={{ margin: '0 auto' }}>
+            <div className={styles.imageUpload}>
               {/* Show camera if active */}
               {showCamera ? (
                 <div className="flex flex-col items-center w-full">
@@ -837,16 +837,6 @@ function AddItemPageContent() {
           {/* Submit Button Row - Discard (gray) left, Save Item (blue) right */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 32, marginRight: 32, paddingBottom: 16 }}>
             <button
-              type="button"
-              onClick={handleCancel}
-              className={styles.discardBtn}
-            >
-              <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
-                <path d="M5.83325 22.1666L13.9999 13.9999M13.9999 13.9999L22.1666 5.83325M13.9999 13.9999L5.83325 5.83325M13.9999 13.9999L22.1666 22.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Discard
-            </button>
-            <button
               type="submit"
               className={styles.submitBtn}
               disabled={loading || !detectedCategory}
@@ -868,6 +858,16 @@ function AddItemPageContent() {
                   Save Item
                 </>
               )}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className={styles.discardBtn}
+            >
+              <svg width="20" height="20" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
+                <path d="M5.83325 22.1666L13.9999 13.9999M13.9999 13.9999L22.1666 5.83325M13.9999 13.9999L5.83325 5.83325M13.9999 13.9999L22.1666 22.1666" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Discard
             </button>
           </div>
         </div>

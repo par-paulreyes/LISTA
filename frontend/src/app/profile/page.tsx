@@ -381,12 +381,26 @@ export default function ProfilePage() {
         </div>
         <div className="top-button-row">
           {isEditing ? (
-            <button
-              onClick={() => router.back()}
-              className="back-button-header"
-            >
-              <ArrowLeft size={18} />
-            </button>
+            <div className="profile-action-buttons-left">
+              <button
+                type="button"
+                className="profile-save-btn"
+                disabled={saving}
+                onClick={() => formRef.current?.requestSubmit()}
+              >
+                <FaSave style={{ marginRight: 6 }} />
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="profile-cancel-btn"
+                disabled={saving}
+              >
+                <FaTimes style={{ marginRight: 6 }} />
+                Cancel
+              </button>
+            </div>
           ) : (
             <button
               type="button"
@@ -483,132 +497,111 @@ export default function ProfilePage() {
               <div className="centered-subtitle">{profile?.role || 'User'}</div>
             </div>
           </div>
-          {isEditing ? (
-            <div className="profile-action-buttons-left">
-              <button
-                type="button"
-                className="profile-save-btn"
-                disabled={saving}
-                onClick={() => formRef.current?.requestSubmit()}
-              >
-                <FaSave style={{ marginRight: 6 }} />
-                {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="profile-cancel-btn"
-                disabled={saving}
-              >
-                <FaTimes style={{ marginRight: 6 }} />
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="profile-action-buttons-left">
-              {profile?.role === 'admin' && (
-                <button
-                  onClick={() => router.push("/register")}
-                  className="action-btn register-btn"
-                >
-                  <UserPlus size={16} style={{ marginRight: 6 }} />
-                  Register New User
-                </button>
-              )}
-              <button
-                onClick={handleLogout}
-                className="action-btn logout-btn-new"
-              >
-                <LogOut size={16} style={{ marginRight: 6 }} />
-                Logout
-              </button>
-            </div>
-          )}
         </div>
         {/* Right Column - Form Fields */}
         <div className="column2">
-          <div className="mid-nav">
-            <button className="tab-btn tab1-btn-active">
-              General Information
-            </button>
-          </div>
-          <div className="middle-section">
-            <div className="info-card">
-              <div className="info-card-content">
-                <form
-                  ref={formRef}
-                  onSubmit={handleSubmit}
-                >
-                  <div className="rec-container">
-                    <div className="gray-rect">
-                      <span className="label">Username</span>
-                      <input 
-                        value={form.username || ''} 
-                        onChange={handleChange}
-                        name="username"
-                        disabled
-                      />
+          <div className="column2_1">
+            <div className="mid-nav">
+              <button className="tab-btn tab1-btn-active">
+                General Information
+              </button>
+            </div>
+            <div className="middle-section">
+              <div className="info-card">
+                <div className="info-card-content">
+                  <form
+                    ref={formRef}
+                    onSubmit={handleSubmit}
+                  >
+                    <div className="rec-container">
+                      <div className="gray-rect">
+                        <span className="label">Username</span>
+                        <input 
+                          value={form.username || ''} 
+                          onChange={handleChange}
+                          name="username"
+                          disabled
+                        />
+                      </div>
+                      <div className="gray-rect">
+                        <span className="label">Full Name</span>
+                        <input 
+                          value={form.full_name || ''} 
+                          onChange={handleChange}
+                          name="full_name"
+                          disabled={!isEditing}
+                        />
+                      </div>
+                      <div className="gray-rect">
+                        <span className="label">Email</span>
+                        <input 
+                          value={form.email || ''} 
+                          onChange={handleChange}
+                          name="email"
+                          disabled={!isEditing}
+                        />
+                      </div>
+                      <div className="gray-rect">
+                        <span className="label">Role</span>
+                        <input 
+                          value={form.role || ''} 
+                          disabled
+                        />
+                      </div>
+                      <div className="gray-rect">
+                        <span className="label">Company</span>
+                        <input 
+                          value={form.company_name || ''} 
+                          disabled
+                        />
+                      </div>
+                      {isEditing && (
+                        <>
+                          <div className="gray-rect">
+                            <span className="label">New Password</span>
+                            <input 
+                              type="password"
+                              value={form.password || ''} 
+                              onChange={handleChange}
+                              name="password"
+                              placeholder="Leave blank to keep current password"
+                            />
+                          </div>
+                          <div className="gray-rect">
+                            <span className="label">Confirm Password</span>
+                            <input 
+                              type="password"
+                              value={form.confirmPassword || ''} 
+                              onChange={handleChange}
+                              name="confirmPassword"
+                              placeholder="Leave blank to keep current password"
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div className="gray-rect">
-                      <span className="label">Full Name</span>
-                      <input 
-                        value={form.full_name || ''} 
-                        onChange={handleChange}
-                        name="full_name"
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="gray-rect">
-                      <span className="label">Email</span>
-                      <input 
-                        value={form.email || ''} 
-                        onChange={handleChange}
-                        name="email"
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="gray-rect">
-                      <span className="label">Role</span>
-                      <input 
-                        value={form.role || ''} 
-                        disabled
-                      />
-                    </div>
-                    <div className="gray-rect">
-                      <span className="label">Company</span>
-                      <input 
-                        value={form.company_name || ''} 
-                        disabled
-                      />
-                    </div>
-                    {isEditing && (
-                      <>
-                        <div className="gray-rect">
-                          <span className="label">New Password</span>
-                          <input 
-                            type="password"
-                            value={form.password || ''} 
-                            onChange={handleChange}
-                            name="password"
-                            placeholder="Leave blank to keep current password"
-                          />
-                        </div>
-                        <div className="gray-rect">
-                          <span className="label">Confirm Password</span>
-                          <input 
-                            type="password"
-                            value={form.confirmPassword || ''} 
-                            onChange={handleChange}
-                            name="confirmPassword"
-                            placeholder="Leave blank to keep current password"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </form>
+                  </form>
+                </div>
               </div>
             </div>
+          </div>
+          <div className="column2_2">
+            {profile?.role === 'admin' && (
+              <button
+                onClick={() => router.push("/register")}
+                className="action-btn-register"
+              >
+                <UserPlus size={16} style={{ marginRight: 6 }} />
+                Register New User
+              </button>
+            )}
+            <button
+              onClick={handleLogout}
+              className="logout-btn"
+            >
+              <LogOut size={16} style={{ marginRight: 6 }} />
+              Logout
+            </button>
           </div>
         </div>
       </div>

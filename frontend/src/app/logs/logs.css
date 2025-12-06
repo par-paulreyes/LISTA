@@ -1,14 +1,14 @@
 .main-container {
-    max-width: 1100px;
-    margin: 0 auto 70px auto;
     background: #fff;
     border-radius: 24px;
     box-shadow: 0 4px 32px rgba(0,0,0,0.10);
     padding: 0px 16px 40px 16px;
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 120px);
     font-family: 'Host Grotesk', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
 }
 
 .logs-header-row {
@@ -400,6 +400,12 @@
     box-shadow: 0 4px 32px rgba(0,0,0,0.10);
     border-radius: 0 0 15px 15px;
     margin-top: 0;
+}
+
+.inventory-action-buttons {
+    display: flex;
+    gap: 12px;
+    margin: 0;
 }
 
 /* Export Dropdown Styles */

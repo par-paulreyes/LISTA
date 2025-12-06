@@ -193,7 +193,7 @@ export default function LogsPage() {
         <div className="inventory-search-container">
           <div className="search-icon">
             <svg
-              width="20"
+              width="40"
               height="20"
               fill="none"
               stroke="currentColor"
